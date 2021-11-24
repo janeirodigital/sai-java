@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class ApplicationTests {
+class ApplicationTests {
 
     @Test
     @DisplayName("Construct an Application")
