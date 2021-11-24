@@ -1,9 +1,6 @@
 name: Build and Analyze
 
 on:
-  push:
-    branches:
-      - develop
   pull_request:
     branches:
       - main
