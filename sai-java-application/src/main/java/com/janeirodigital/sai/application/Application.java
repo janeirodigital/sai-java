@@ -21,4 +21,12 @@ public class Application {
     private String description ;
     private URL author ;
 
+    /**
+     * Temporary method to test test infrastructure
+     * @return Concatenated string of name and description
+     */
+    String getFullDescription() {
+        return this.name + " - " + this.description;
+    }
+
 }

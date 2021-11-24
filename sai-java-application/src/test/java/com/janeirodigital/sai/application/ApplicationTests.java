@@ -9,11 +9,17 @@ import java.net.URL;
 
 class ApplicationTests {
 
+    private final String PROJECTRON_NAME = "Projectron";
+    private final String PROJECTRON_DESCRIPTION = "Manage applications with ease";
+    private final URL PROJECTRON_URL = new URL("https://projectron.example");
+
+    ApplicationTests() throws MalformedURLException { }
+
     @Test
     @DisplayName("Construct an Application")
-    void constructApplication() throws MalformedURLException {
-        Application app = new Application("Projectron", "Manage applications with ease", new URL("https://projectron.example"));
-        Assertions.assertEquals("Projectron", app.getName());
+    void testFullDescription() throws MalformedURLException {
+        Application app = new Application(PROJECTRON_NAME, PROJECTRON_DESCRIPTION, PROJECTRON_URL);
+        Assertions.assertEquals(PROJECTRON_NAME + " - " + PROJECTRON_DESCRIPTION, app.getFullDescription());
     }
 
 }
