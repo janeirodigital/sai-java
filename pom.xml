@@ -84,6 +84,7 @@
                 <artifactId>multi-module-maven-release-plugin</artifactId>
                 <version>${multi-module-maven-release-plugin.version}</version>
                 <configuration>
+                    <serverId>github</serverId>
                     <releaseGoals>
                         <releaseGoal>deploy</releaseGoal>
                     </releaseGoals>
