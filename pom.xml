@@ -7,7 +7,7 @@
     <groupId>com.janeirodigital</groupId>
     <artifactId>sai-java</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
 
     <modules>
         <module>sai-java-application</module>
@@ -31,7 +31,6 @@
         <maven-site-plugin.version>3.9.0</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
-        <multi-module-maven-release-plugin.version>3.5.8</multi-module-maven-release-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <sonar.organization>xformativ</sonar.organization>
@@ -41,6 +40,12 @@
         <aggregate.report.dir>sai-java-coverage/target/site/jacoco-aggregate/jacoco.xml</aggregate.report.dir>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
+
+    <scm>
+        <connection>scm:git:git@github.com:xformativ/sai-java.git</connection>
+        <developerConnection>scm:git:git@github.com:xformativ/sai-java.git</developerConnection>
+        <url>http://github.com/xformativ/sai-java</url>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -80,15 +85,9 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.github.danielflower.mavenplugins</groupId>
-                <artifactId>multi-module-maven-release-plugin</artifactId>
-                <version>${multi-module-maven-release-plugin.version}</version>
-                <configuration>
-                    <serverId>github</serverId>
-                    <releaseGoals>
-                        <releaseGoal>deploy</releaseGoal>
-                    </releaseGoals>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0-M4</version>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
