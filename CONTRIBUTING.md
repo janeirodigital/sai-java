@@ -19,6 +19,25 @@ will be reviewed by one or more core contributors.
 
 ## Releases
 
+### Ensure Github Credentials are Setup
+
+Your Maven settings in `$HOME/.m2/settings.xml` will need to be updated with an entry for github that includes a 
+[personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+
+It will look something like:
+
+```shell
+<servers>
+  <server>
+      <id>github</id>
+      <username>your-github-username<username>
+      <password>your-long-password-token</password>
+  </server>
+</servers>
+```
+
+### Run Maven Release Process
+
 Releases are performed by the 
 [Maven Release Plugin](https://maven.apache.org/maven-release/maven-release-plugin/).
 
