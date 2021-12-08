@@ -11,6 +11,17 @@ on:
         description: Major version increment
         required: true
         default: 'false'
+      is_draft_release:
+        description: Is this a draft (not finalized) release?
+        required: true
+        default: 'false'
+      is_prerelease:
+        description: Is this a prerelease (not production ready)?
+        required: true
+        default: 'false'
+      summary:
+        description: Release summary
+        required: false
 
 jobs:
   build:
@@ -23,7 +34,7 @@ jobs:
         with:
           maven-args: "clean install -Ddockerfile.skip -DdockerCompose.skip -Djib.skip"
 
-      - name: Release
+      - name: Cut and Deploy Release
         uses: qcastel/github-actions-maven-release@master
         env:
           JAVA_HOME: /usr/lib/jvm/java-11-openjdk/
@@ -55,3 +66,19 @@ jobs:
           maven-repo-server-id: xformativ-nexus   # Value of the distributionManagement/repository/id field of the pom.xml
           maven-repo-server-username: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
           maven-repo-server-password: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Tag to create the github release from
+          tag_name: ${{ github.ref }}
+          # Name of the release (set to the tag)
+          release_name: ${{ github.ref }}
+          # Summary of the release
+          body: ${{ github.event.inputs.summary }}
+          # Whether this is a draft release or not
+          draft: ${{ github.event.inputs.is_draft_release }}
+          # Whether this is a prerelease or not
+          prerelease: ${{ github.event.inputs.is_prerelease }}
