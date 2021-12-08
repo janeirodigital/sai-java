@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Cut Release
 
 on: workflow_dispatch
 
@@ -31,10 +31,9 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build with Maven and Analyze with Sonar
-        run: mvn -B release:clean clean deploy --file pom.xml -s ${{ github.workspace }}/settings.xml org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=xformativ_sai-java
+      - name: Prepare and Perform Release
+        run: mvn -B release:prepare release:perform --file pom.xml -s ${{ github.workspace }}/settings.xml
         env:
           MAVEN_USERNAME: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
