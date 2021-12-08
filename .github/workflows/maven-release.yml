@@ -1,6 +1,16 @@
-name: Cut Release
+name: Publish Release
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      minor_increment:
+        description: Minor version increment
+        required: true
+        default: 'false'
+      major_increment:
+        description: Major version increment
+        required: true
+        default: 'false'
 
 jobs:
   build:
@@ -8,30 +18,40 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
+      - name: Build and Test
+        uses: qcastel/github-actions-maven-cmd@master
         with:
-          java-version: 11
-          server-id: xformativ-nexus # Value of the distributionManagement/repository/id field of the pom.xml
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          settings-path: ${{ github.workspace }} # location for the settings.xml file
+          maven-args: "clean install -Ddockerfile.skip -DdockerCompose.skip -Djib.skip"
+
+      - name: Release
+        uses: qcastel/github-actions-maven-release@master
         env:
-          MAVEN_USERNAME: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
-      - name: Configure Git user
-        run: |
-          git config user.email "git@github.com"
-          git config user.name "GitHub Actions"
-      - name: Cache Maven packages
-        uses: actions/cache@v1
+          JAVA_HOME: /usr/lib/jvm/java-11-openjdk/
         with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-      - name: Prepare and Perform Release
-        run: mvn -B release:prepare release:perform --file pom.xml -s ${{ github.workspace }}/settings.xml
-        env:
-          MAVEN_USERNAME: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # releases are done from the main branch
+          release-branch-name: "main"
+          ###########################################################
+          # minor version increment  e.g. 1.1.0 -> 1.2.0
+          version-minor: ${{github.event.inputs.minor_increment}}
+          # major version increment  e.g. 1.0.0 -> 2.0.0
+          version-major: ${{github.event.inputs.major_increment}}
+          # If both minor and major increment values are false, a patch
+          # version increment will be performed. e.g. 1.0.0 -> 1.0.1
+          ###########################################################
+          # name and email of the bot in git commits
+          git-release-bot-name: "xformer-bot"
+          git-release-bot-email: "xformer@janeirodigital.com"
+          ###########################################################
+          #maven-args: "-Dmaven.javadoc.skip=true -DskipTests -DskipITs -Dmaven.deploy.skip=true"
+          maven-args: ""
+          ###########################################################
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ###########################################################
+          gpg-enabled: true
+          gpg-key-id: ${{ secrets.XFORMER_GPG_KEY_ID }}
+          gpg-key: ${{ secrets.XFORMER_GPG_KEY }}
+          ###########################################################
+          # configure nexus repository
+          maven-repo-server-id: xformativ-nexus   # Value of the distributionManagement/repository/id field of the pom.xml
+          maven-repo-server-username: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
+          maven-repo-server-password: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
