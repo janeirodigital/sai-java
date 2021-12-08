@@ -73,9 +73,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # Tag to create the github release from
-          tag_name: ${{ github.ref }}
+          tag_name: ${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}.\${parsedVersion.qualifier?}
           # Name of the release (set to the tag)
-          release_name: ${{ github.ref }}
+          release_name: ${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}.\${parsedVersion.qualifier?}
           # Summary of the release
           body: ${{ github.event.inputs.summary }}
           # Whether this is a draft release or not
