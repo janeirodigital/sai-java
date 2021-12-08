@@ -91,7 +91,7 @@
                 <version>${maven-release-plugin.version}</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <scmCommentPrefix>[release]</scmCommentPrefix>
+                    <scmCommentPrefix>[skip actions]</scmCommentPrefix>
                     <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
