@@ -29,6 +29,7 @@
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc.version>3.3.1</maven-javadoc.version>
         <maven-site-plugin.version>3.9.0</maven-site-plugin.version>
+        <maven-release-plugin.version>3.0.0-M4</maven-release-plugin.version>
         <maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
         <project.scm.id>github</project.scm.id>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
@@ -43,9 +44,10 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git@github.com:xformativ/sai-java.git</connection>
-        <developerConnection>scm:git:git@github.com:xformativ/sai-java.git</developerConnection>
-        <url>http://github.com/xformativ/sai-java</url>
+        <connection>scm:git:${project.scm.url}</connection>
+        <developerConnection>scm:git:${project.scm.url}</developerConnection>
+        <url>https://github.com/xformativ/sai-java.git</url>
+        <tag>HEAD</tag>
     </scm>
 
     <dependencyManagement>
@@ -88,9 +90,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.0-M4</version>
+                <version>${maven-release-plugin.version}</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <scmCommentPrefix>[release]</scmCommentPrefix>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
             <plugin>
