@@ -5,7 +5,7 @@
     <groupId>com.janeirodigital</groupId>
     <artifactId>sai-java</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
 
     <modules>
         <module>sai-java-application</module>
@@ -44,7 +44,7 @@
         <connection>scm:git:git@github.com:xformativ/sai-java.git</connection>
         <developerConnection>scm:git:https://github.com/xformativ/sai-java.git</developerConnection>
         <url>http://github.com/xformativ/sai-java</url>
-      <tag>sai-java-0.1.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <dependencyManagement>
