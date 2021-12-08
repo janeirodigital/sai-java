@@ -59,4 +59,10 @@ mvn release:clean
 mvn release:prepare
 ```
 
+4. Perform the release
+
+```shell
+mvn release:perform
+```
+
 *Note that the above will run in interactive mode. Use `--batch-mode` for non-interactive processing.*
