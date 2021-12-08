@@ -33,7 +33,8 @@ jobs:
         uses: qcastel/github-actions-maven-cmd@master
         with:
           maven-args: "clean install -Ddockerfile.skip -DdockerCompose.skip -Djib.skip"
-
+      - name: Build with Maven
+          run: mvn --batch-mode --update-snapshots verify
       - name: Cut and Deploy Release
         uses: qcastel/github-actions-maven-release@master
         env:
@@ -66,16 +67,18 @@ jobs:
           maven-repo-server-id: xformativ-nexus   # Value of the distributionManagement/repository/id field of the pom.xml
           maven-repo-server-username: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
           maven-repo-server-password: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
-
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # Tag to create the github release from
-          tag_name: ${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}.\${parsedVersion.qualifier?}
+          tag_name: ${{ steps.previoustag.outputs.tag }}
           # Name of the release (set to the tag)
-          release_name: ${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}.\${parsedVersion.qualifier?}
+          release_name: ${{ steps.previoustag.outputs.tag }}
           # Summary of the release
           body: ${{ github.event.inputs.summary }}
           # Whether this is a draft release or not
