@@ -28,7 +28,6 @@
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc.version>3.3.1</maven-javadoc.version>
-        <maven-release-plugin.version>3.0.0-M4</maven-release-plugin.version>
         <maven-site-plugin.version>3.9.0</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
         <project.scm.id>github</project.scm.id>
@@ -44,10 +43,9 @@
     </properties>
 
     <scm>
-        <connection>scm:git:${project.scm.url}</connection>
-        <developerConnection>scm:git:${project.scm.url}</developerConnection>
-        <url>https://github.com/xformativ/sai-java.git</url>
-        <tag>HEAD</tag>
+        <connection>scm:git:git@github.com:xformativ/sai-java.git</connection>
+        <developerConnection>scm:git:git@github.com:xformativ/sai-java.git</developerConnection>
+        <url>http://github.com/xformativ/sai-java</url>
     </scm>
 
     <dependencyManagement>
@@ -90,10 +88,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>${maven-release-plugin.version}</version>
+                <version>3.0.0-M4</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
             <plugin>
