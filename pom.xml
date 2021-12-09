@@ -159,21 +159,21 @@
 
     <repositories>
         <repository>
-            <id>xformativ-github</id>
-            <name>GitHub Xformativ Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/xformativ/sai-java</url>
+            <id>xformativ-nexus</id>
+            <name>Xformativ Repository</name>
+            <url>https://repo.janeirodigital.com/repository/xformativ-maven/</url>
         </repository>
     </repositories>
     <distributionManagement>
         <snapshotRepository>
-            <id>xformativ-github</id>
-            <name>GitHub Xformativ Apache Maven Snapshots</name>
-            <url>https://maven.pkg.github.com/xformativ/sai-java</url>
+            <id>xformativ-nexus</id>
+            <name>Xformativ Repository</name>
+            <url>https://repo.janeirodigital.com/repository/xformativ-maven/</url>
         </snapshotRepository>
         <repository>
-            <id>xformativ-github</id>
-            <name>GitHub Xformativ Apache Maven Snapshots</name>
-            <url>https://maven.pkg.github.com/xformativ/sai-java</url>
+            <id>xformativ-nexus</id>
+            <name>Xformativ Repository</name>
+            <url>https://repo.janeirodigital.com/repository/xformativ-maven/</url>
         </repository>
     </distributionManagement>
 
