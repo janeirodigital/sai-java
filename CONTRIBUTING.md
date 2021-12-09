@@ -14,7 +14,7 @@ please consider participating in the [Solid Interoperability Panel](https://gith
 
 ## Contributions
 
-Contributions to sai-java should be made in the form of [pull requests](https://github.com/xformativ/sai-java/pulls). Each pull request
+Contributions to sai-java should be made in the form of [pull requests](https://github.com/janeirodigital/sai-java/pulls). Each pull request
 will be reviewed by one or more core contributors.
 
 ## Releases
@@ -22,7 +22,7 @@ will be reviewed by one or more core contributors.
 Releases are performed by the 
 [Maven Release Plugin](https://maven.apache.org/maven-release/maven-release-plugin/) as part
 of Github Actions. They must be triggered manually via the
-[Publish Release Workflow](https://github.com/xformativ/sai-java/actions/workflows/maven-release.yml).
+[Publish Release Workflow](https://github.com/janeirodigital/sai-java/actions/workflows/maven-release.yml).
 
 1. Choose `Run workflow`
 1. Adjust settings for the maven release
