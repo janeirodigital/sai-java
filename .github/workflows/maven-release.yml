@@ -69,8 +69,8 @@ jobs:
           ###########################################################
           # configure nexus repository
           maven-repo-server-id: xformativ-nexus   # Value of the distributionManagement/repository/id field of the pom.xml
-          MAVEN_USERNAME: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
+          maven-repo-server-username: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
+          maven-repo-server-password: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
 
       ###############################################################
       # Get the tag created by the previous release step
