@@ -11,7 +11,7 @@ A Java (JDK11+) implementation of the
 Consider participating in the [Solid Interoperability Panel](https://github.com/solid/data-interoperability-panel) if you're
 interested in collaborating on or learning more about the evolution of the specification.
 
-Take a look at [CONTRIBUTING](contributing.md) for specifics on how to contribute to this library.
+Take a look at [CONTRIBUTING](CONTRIBUTING.md) for specifics on how to contribute to this library.
 
 [JavaDocs](https://janeirodigital.github.io/sai-java/) are generated and published with each release.
 
