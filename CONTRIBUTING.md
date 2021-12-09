@@ -5,17 +5,45 @@ contributions are both welcomed and encouraged.
 
 ## Getting Started
 
-A thorough understanding of the [specification](https://solid.github.io/data-interoperability-panel/specification/),
+A thorough understanding of the [Solid Application Interoperability Specification](https://solid.github.io/data-interoperability-panel/specification/)
 implemented by this library is essential to any substantive contributions.
 
-Note that for those interested in contributing to the 
-[Solid Application Interoperability Specification](https://solid.github.io/data-interoperability-panel/specification/),
+For those interested in contributing to the 
+[specification](https://solid.github.io/data-interoperability-panel/specification/),
 please consider participating in the [Solid Interoperability Panel](https://github.com/solid/data-interoperability-panel/).
 
 ## Contributions
 
 Contributions to sai-java should be made in the form of [pull requests](https://github.com/janeirodigital/sai-java/pulls). Each pull request
 will be reviewed by one or more core contributors.
+
+## Build and Test
+
+To build from source:
+
+```shell
+$ mvn compile
+```
+
+To build with code coverage:
+
+```shell
+$ mvn verify
+```
+
+To run tests:
+
+```shell
+$ mvn test
+```
+
+To generate site and documentation (output in `./target/site/`):
+
+```shell
+$ mvn site
+```
+
+[JavaDocs](https://janeirodigital.github.io/sai-java/) are generated and published with each release. 
 
 ## Releases
 
