@@ -3,7 +3,7 @@
     <parent>
         <artifactId>sai-java</artifactId>
         <groupId>com.janeirodigital</groupId>
-        <version>0.1.4-SNAPSHOT</version>
+        <version>0.1.4</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
