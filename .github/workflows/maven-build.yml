@@ -4,8 +4,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
-permissions: read-all|write-all
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,7 +19,7 @@ jobs:
           server-password: MAVEN_PASSWORD
           settings-path: ${{ github.workspace }} # location for the settings.xml file
         env:
-          MAVEN_USERNAME: ${{ env.GITHUB_ACTOR }}
+          MAVEN_USERNAME: ${ GITHUB_ACTOR }
           MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
