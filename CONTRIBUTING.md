@@ -14,55 +14,30 @@ please consider participating in the [Solid Interoperability Panel](https://gith
 
 ## Contributions
 
-Contributions to sai-java should be made in the form of Github pull requests. Each pull request
+Contributions to sai-java should be made in the form of [pull requests](https://github.com/xformativ/sai-java/pulls). Each pull request
 will be reviewed by one or more core contributors.
 
 ## Releases
 
-### Ensure Github Credentials are Setup
-
-Your Maven settings in `$HOME/.m2/settings.xml` will need to be updated with an entry for github that includes a 
-[personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
-
-It will look something like:
-
-```shell
-<servers>
-  <server>
-      <id>github</id>
-      <username>your-github-username<username>
-      <password>your-long-password-token</password>
-  </server>
-</servers>
-```
-
-### Run Maven Release Process
-
 Releases are performed by the 
-[Maven Release Plugin](https://maven.apache.org/maven-release/maven-release-plugin/).
+[Maven Release Plugin](https://maven.apache.org/maven-release/maven-release-plugin/) as part
+of Github Actions. They must be triggered manually via the
+[Publish Release Workflow](https://github.com/xformativ/sai-java/actions/workflows/maven-release.yml).
 
-1. Perform a dry-run to catch any issues before any operations that change the project are executed.
-   
-```shell
-mvn release:prepare -DdryRun=true
-```
+1. Choose `Run workflow`
+1. Adjust settings for the maven release
+    * Use workflow from: `Brain: main`
+    * Minor version increment: `true` if a minor version increment (1.0.0 -> 1.1.0) is desired
+    * Major version increment: `true` if a major version increment (1.0.0 -> 2.0.0) is desired
+1. Adjust settings for the Github release
+    * Is this a draft (not finalized) release? `true` if the github release should be saved in draft form
+    * Is this a prerelease? `true` if this is not meant to be a production ready public release
+    * Release summary: Textual summary of the release
+1. Click the green `Run workflow` button
 
-2. Be sure to cleanup after any dry-run before doing a proper release.
+This will result in:
 
-```shell
-mvn release:clean
-```
-
-3. Prepare a proper release
-
-```shell
-mvn release:prepare
-```
-
-4. Perform the release
-
-```shell
-mvn release:perform
-```
-
-*Note that the above will run in interactive mode. Use `--batch-mode` for non-interactive processing.*
+* Git tag created for the release
+* Github release created off of that tag
+* Artifacts pushed to specified repositories 
+* Version numbers bumped in the pom.xml(s) and set to SNAPSHOT
