@@ -92,7 +92,7 @@
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <scmCommentPrefix>[skip actions]</scmCommentPrefix>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
             <plugin>
