@@ -68,9 +68,9 @@ jobs:
           gpg-key: ${{ secrets.XFORMER_GPG_KEY }}
           ###########################################################
           # configure nexus repository
-          maven-repo-server-id: xformativ-nexus   # Value of the distributionManagement/repository/id field of the pom.xml
-          maven-repo-server-username: ${{ secrets.XFORMATIV_MAVEN_USERNAME }}
-          maven-repo-server-password: ${{ secrets.XFORMATIV_MAVEN_PASSWORD }}
+          maven-repo-server-id: xformativ-github   # Value of the distributionManagement/repository/id field of the pom.xml
+          MAVEN_USERNAME: ${{ env.GITHUB_ACTOR }}
+          MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
       ###############################################################
       # Get the tag created by the previous release step
