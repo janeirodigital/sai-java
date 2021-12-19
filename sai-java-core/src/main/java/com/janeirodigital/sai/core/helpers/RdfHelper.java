@@ -10,6 +10,7 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RiotException;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -58,17 +59,20 @@ public class RdfHelper {
         }
     }
 
-    public static Model getModelFromFile(URI baseURI, String filePath, String contentType) throws SaiException {
+    public static Model getModelFromFile(URI baseURI, String filePath, String contentType) throws SaiException, IOException {
         Objects.requireNonNull(baseURI, "Must provide a baseURI to generate a model");
         Objects.requireNonNull(filePath, "Must provide an input file path to provide data for the generated model");
         Objects.requireNonNull(contentType, "Must provide content type for model generation");
+        InputStream in = null;
         try {
             Model model = ModelFactory.createDefaultModel();
-            InputStream in = RDFDataMgr.open(filePath);
+            in = RDFDataMgr.open(filePath);
             model.read(in, baseURI.toString(), contentType);
             return model;
         } catch (RiotException ex) {
             throw new SaiException("Error processing input - " + ex.getMessage());
+        } finally {
+            if (in != null) { in.close(); }
         }
     }
 

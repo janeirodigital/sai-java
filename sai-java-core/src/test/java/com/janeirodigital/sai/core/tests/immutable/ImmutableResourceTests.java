@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
@@ -44,9 +45,17 @@ class ImmutableResourceTests {
     @DisplayName("Store an Immutable resource")
     void storeImmutableResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/immutable/immutable-resource#project");
-        Model model = getModelFromFile(urlToUri(url), "fixtures/immutable/immutable-resource.ttl", "text/turtle");
+        Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", "text/turtle");
         TestableImmutableResource testable = new TestableImmutableResource(url, dataFactory, model.getResource(url.toString()));
         testable.store();
+    }
+
+    private Model loadModel(URL url, String filePath, String contentType) throws SaiException {
+        try {
+            return getModelFromFile(urlToUri(url), "fixtures/immutable/immutable-resource.ttl", contentType);
+        } catch (SaiException | IOException ex) {
+            throw new SaiException("Failed too load test model from file: " + filePath);
+        }
     }
 
 }

@@ -116,7 +116,10 @@ public class HttpHelper {
     }
 
     protected static Response checkResponse(Response response) throws SaiException {
-        if (response == null || !response.isSuccessful()) {
+        if (response == null) {
+            throw new SaiException("Failed to lookup remote resource");
+        }
+        if (!response.isSuccessful()) {
             throw new SaiException("Failed to lookup remote resource: " + response.request().url());
         }
         return response;
