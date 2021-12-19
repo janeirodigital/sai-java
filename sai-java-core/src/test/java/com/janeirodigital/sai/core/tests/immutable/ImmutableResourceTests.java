@@ -6,7 +6,9 @@ import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.tests.fixtures.DispatcherEntry;
 import com.janeirodigital.sai.core.tests.fixtures.RequestMatchingFixtureDispatcher;
+import com.janeirodigital.sai.core.tests.readable.TestableReadableResource;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.jena.rdf.model.Model;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -14,11 +16,15 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromFile;
 import static com.janeirodigital.sai.core.tests.fixtures.MockWebServerHelper.toUrl;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ImmutableResourceTests {
 
@@ -47,7 +53,19 @@ class ImmutableResourceTests {
         URL url = toUrl(server, "/immutable/immutable-resource#project");
         Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", "text/turtle");
         TestableImmutableResource testable = new TestableImmutableResource(url, dataFactory, model.getResource(url.toString()));
-        testable.store();
+        TestableReadableResource readable = testable.store();
+        assertNotNull(readable);
+        assertEquals(6, readable.getId());
+        assertEquals("Great Validations", readable.getName());
+        assertEquals(OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME), readable.getCreatedAt());
+        assertEquals(true, readable.isActive());
+        assertEquals(toUrl(server, "/data/projects/project-1/milestone-3/#milestone"), readable.getMilestone());
+
+        List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-1"), toUrl(server, "/tags/tag-2"), toUrl(server, "/tags/tag-3"));
+        assertTrue(CollectionUtils.isEqualCollection(tags, readable.getTags()));
+
+        List<String> comments = Arrays.asList("First original comment", "Second original comment", "Third original comment");
+        assertTrue(CollectionUtils.isEqualCollection(comments, readable.getComments()));
     }
 
     private Model loadModel(URL url, String filePath, String contentType) throws SaiException {

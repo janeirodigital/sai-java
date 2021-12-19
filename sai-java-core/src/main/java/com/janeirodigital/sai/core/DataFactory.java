@@ -14,8 +14,6 @@ public class DataFactory {
 
     private final OkHttpClient httpClient;
 
-    // TODO - Add caching
-
     public DataFactory(OkHttpClient httpClient) {
         this.httpClient = httpClient;
     }

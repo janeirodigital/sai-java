@@ -23,10 +23,8 @@ import static com.janeirodigital.sai.core.vocabularies.LdpVocabulary.LDP_NS;
 public class HttpHelper {
 
     private static final String PUT = "PUT";
-    private static final String POST = "POST";
     private static final String GET = "GET";
     private static final String DELETE = "DELETE";
-    private static final String PATCH = "PATCH";
 
     private static final String TEXT_TURTLE = "text/turtle";
     private static final String RDF_XML = "application/rdf+xml";
@@ -34,12 +32,14 @@ public class HttpHelper {
     private static final String LD_JSON = "application/ld+json";
     private static final Set<String> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
 
+    private HttpHelper() { }
+
     public static Response getResource(OkHttpClient httpClient, URL url) throws SaiException {
         Response response;
         try {
             Request.Builder requestBuilder = new Request.Builder();
             requestBuilder.url(url);
-            requestBuilder.method("GET", null);
+            requestBuilder.method(GET, null);
             response = checkResponse(httpClient.newCall(requestBuilder.build()).execute());
         } catch (IOException ex) {
             throw new SaiException("Failed to lookup remote resource: " + ex.getMessage());
@@ -48,30 +48,31 @@ public class HttpHelper {
     }
 
     public static Response putResource(OkHttpClient httpClient, URL url, Headers headers, String body, String contentType) throws SaiException {
-        Response response;
+        Response response = null;
+        RequestBody requestBody;
         try {
             Request.Builder requestBuilder = new Request.Builder();
             requestBuilder.url(url);
-            RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType));
-            requestBuilder.method("PUT", requestBody);
+            requestBody = RequestBody.create(body, MediaType.get(contentType));
+            requestBuilder.method(PUT, requestBody);
             if (headers != null) { requestBuilder.headers(headers); }
             response = checkResponse(httpClient.newCall(requestBuilder.build()).execute());
         } catch (IOException | SaiException ex) {
             throw new SaiException("Failed to put remote resource: " + ex.getMessage());
-        }
+        } finally { if (response != null) { response.body().close(); } }
         return response;
     }
 
     public static Response deleteResource(OkHttpClient httpClient, URL url) throws SaiException {
-        Response response;
+        Response response = null;
         try {
             Request.Builder requestBuilder = new Request.Builder();
             requestBuilder.url(url);
-            requestBuilder.method("DELETE", null);
+            requestBuilder.method(DELETE, null);
             response = checkResponse(httpClient.newCall(requestBuilder.build()).execute());
         } catch (IOException | SaiException ex) {
             throw new SaiException("Failed to delete remote resource: " + ex.getMessage());
-        }
+        } finally { if (response != null) { response.body().close(); } }
         return response;
     }
 
@@ -85,7 +86,7 @@ public class HttpHelper {
         HttpUrl requestUrl = response.request().url();
         try { body = response.body().string(); } catch (IOException ex) {
             throw new SaiException("Failed to access response body");
-        }
+        } finally { response.body().close(); }
         return getModelFromString(requestUrlToUri(requestUrl), body, getContentType(response));
     }
 
@@ -94,7 +95,7 @@ public class HttpHelper {
     }
 
     public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, Headers headers) throws SaiException {
-        // TODO - should content type of turtle be hardcoded here?
+        // TODO - May not want to hard-code a content type of turtle here
         String body = "";
         // Treat a null resource as an empty body
         if (resource != null) { body = getStringFromRdfModel(resource.getModel(), Lang.TURTLE); }

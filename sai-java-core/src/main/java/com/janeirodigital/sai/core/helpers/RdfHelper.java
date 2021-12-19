@@ -379,16 +379,18 @@ public class RdfHelper {
 
     /**
      * Returns a single literal value as Boolean from the object of the statement matching
-     * the provided <code>property</code> in the provided <code>resource</code>. Returns null
-     * when no match is found.
+     * the provided <code>property</code> in the provided <code>resource</code>. Returns an exception
+     * when no match is found. <i>Note: This method and the corresponding getRequiredBooleanObject
+     * both throw SaiNotFoundException when no data is found.</i>
      * @param resource Jena resource to navigate
      * @param property Jena property to search for
-     * @return Literal object value as Boolean or null
+     * @return Literal object value as Boolean
      * @throws SaiException
+     * @throws SaiNotFoundException when nothing is found
      */
-    public static Boolean getBooleanObject(Resource resource, Property property) throws SaiException {
+    public static Boolean getBooleanObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         RDFNode object = getObject(resource, property);
-        if (object == null) { return null; }
+        if (object == null) { throwNothingFound(resource, property, XSDboolean); }
         if (!object.isLiteral()) { throwInvalidDataType(resource, property, XSDboolean); }
         if (!object.asLiteral().getDatatype().equals(XSDboolean)) { throwInvalidDataType(resource, property, XSDboolean); }
         return object.asLiteral().getBoolean();
@@ -405,9 +407,7 @@ public class RdfHelper {
      * @throws SaiNotFoundException when nothing is found
      */
     public static Boolean getRequiredBooleanObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
-        Boolean bool = getBooleanObject(resource, property);
-        if (bool == null) { throwNothingFound(resource, property, XSDboolean); }
-        return bool;
+        return getBooleanObject(resource, property);
     }
 
     /**

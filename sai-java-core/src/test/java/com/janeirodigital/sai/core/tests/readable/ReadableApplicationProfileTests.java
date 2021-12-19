@@ -8,14 +8,17 @@ import com.janeirodigital.sai.core.readable.ReadableApplicationProfile;
 import com.janeirodigital.sai.core.tests.fixtures.DispatcherEntry;
 import com.janeirodigital.sai.core.tests.fixtures.RequestMatchingFixtureDispatcher;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.Assertions;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.sai.core.tests.fixtures.MockWebServerHelper.toUrl;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ReadableApplicationProfileTests {
 
@@ -42,14 +45,20 @@ class ReadableApplicationProfileTests {
     @DisplayName("Get a Readable Application Profile Document")
     void getReadableApplicationProfile() throws SaiException, SaiNotFoundException {
         ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(toUrl(server, "/projectron/id"));
-        Assertions.assertNotNull(applicationProfile);
+        assertNotNull(applicationProfile);
+        assertEquals("Projectron", applicationProfile.getName());
+        assertEquals("Manage projects with ease", applicationProfile.getDescription());
+        assertEquals("https://acme.example/#id", applicationProfile.getAuthorUrl().toString());
+        assertEquals("https://acme.example/thumb.svg", applicationProfile.getThumbnailUrl().toString());
+        List<URL> needGroups = Arrays.asList(toUrl(server, "/projectron/needs#need-group-pm"));
+        assertTrue(CollectionUtils.isEqualCollection(needGroups, applicationProfile.getAccessNeedGroupUrls()));
     }
 
     @Test
     @DisplayName("Get a Readable Application Profile Document as Fragment")
     void getReadableApplicationProfileAsFragment() throws SaiException, SaiNotFoundException {
         ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(toUrl(server, "/projectron/idf#profile"));
-        Assertions.assertNotNull(applicationProfile);
+        assertNotNull(applicationProfile);
     }
 
     // Get a readable resource

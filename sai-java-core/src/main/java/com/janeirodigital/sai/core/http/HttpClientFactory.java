@@ -18,6 +18,8 @@ public class HttpClientFactory {
 
     private static final OkHttpClient[][] okHttpClients = {{null, null}, {null, null}};
 
+    private HttpClientFactory() { }
+
     /**
      * Factory to provide an OkHttpClient configured to enable or disable SSL and/or
      * Shape Tree validation based on the provided options. A small array of clients is
