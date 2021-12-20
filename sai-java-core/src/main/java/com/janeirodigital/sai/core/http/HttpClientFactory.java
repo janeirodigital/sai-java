@@ -98,12 +98,14 @@ public class HttpClientFactory {
         return new TrustManager[] {
                 new X509TrustManager() {
                     @Override
-                    // All clients are trusted when SSL validation is skipped
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) { }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                        // All clients are trusted when SSL validation is skipped
+                    }
 
                     @Override
-                    // All servers are trusted when SSL validation is skipped
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) { }
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                        // All servers are trusted when SSL validation is skipped
+                    }
 
                     @Override
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {
