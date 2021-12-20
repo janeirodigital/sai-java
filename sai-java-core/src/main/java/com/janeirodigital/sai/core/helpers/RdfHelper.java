@@ -38,11 +38,11 @@ public class RdfHelper {
     private RdfHelper() { }
 
     /**
-     * Deserializes a string into a Model
+     * Deserializes the provided String <code>rawContent</code> into a Jena Model
      * @param baseURI Base URI to use for statements
      * @param rawContent String of RDF
      * @param contentType Content type of content
-     * @return Deserialized model
+     * @return Deserialized Jean Model
      * @throws SaiException
      */
     public static Model getModelFromString(URI baseURI, String rawContent, String contentType) throws SaiException {
@@ -59,6 +59,15 @@ public class RdfHelper {
         }
     }
 
+    /**
+     * Deserializes the contents of the provided <code>filePath</code> into a Jena Model.
+     * @param baseURI Base URI to use for statements
+     * @param filePath Path to file containing input data
+     * @param contentType Content type of file data
+     * @return Deserialized Jena Model
+     * @throws SaiException
+     * @throws IOException
+     */
     public static Model getModelFromFile(URI baseURI, String filePath, String contentType) throws SaiException, IOException {
         Objects.requireNonNull(baseURI, "Must provide a baseURI to generate a model");
         Objects.requireNonNull(filePath, "Must provide an input file path to provide data for the generated model");
