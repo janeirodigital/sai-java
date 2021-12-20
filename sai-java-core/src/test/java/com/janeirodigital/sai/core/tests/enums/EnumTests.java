@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class EnumTests {
+class EnumTests {
 
     @Test
     @DisplayName("Evaluate enums for HTTP Headers")
