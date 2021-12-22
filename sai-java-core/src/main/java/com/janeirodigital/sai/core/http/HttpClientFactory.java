@@ -1,8 +1,10 @@
 package com.janeirodigital.sai.core.http;
 
+import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.shapetrees.okhttp.OkHttpValidatingShapeTreeInterceptor;
 import okhttp3.OkHttpClient;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -45,7 +47,7 @@ public class HttpClientFactory {
             OkHttpClient client = getClientForConfiguration(validateSsl, validateShapeTrees);
             okHttpClients[ssl][shapeTrees] = client;
             return client;
-        } catch (Exception ex) {
+        } catch (NoSuchAlgorithmException|KeyManagementException ex) {
             throw new SaiException(ex.getMessage());
         }
 
@@ -63,7 +65,7 @@ public class HttpClientFactory {
      * @throws NoSuchAlgorithmException
      * @throws KeyManagementException
      */
-    private static OkHttpClient
+    public static OkHttpClient
     getClientForConfiguration(boolean validateSsl, boolean validateShapeTrees) throws NoSuchAlgorithmException, KeyManagementException {
 
         okhttp3.OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
@@ -79,11 +81,26 @@ public class HttpClientFactory {
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             // Create an ssl socket factory with our all-trusting manager
             final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-            clientBuilder.sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0]).hostnameVerifier((hostname, session) -> true);
+            clientBuilder.sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0]);
+            clientBuilder.hostnameVerifier(new NoopHostnameVerifier());
         }
 
         return clientBuilder.build();
 
+    }
+
+    public static void
+    resetClients() {
+        for (OkHttpClient[] row : okHttpClients) {
+            for (OkHttpClient client : row) {
+                if (client != null) {
+                    client.dispatcher().executorService().shutdown();
+                    client.connectionPool().evictAll();
+                }
+            }
+            row[VALIDATE] = null;
+            row[NO_VALIDATION] = null;
+        }
     }
 
     /**
@@ -98,14 +115,14 @@ public class HttpClientFactory {
         return new TrustManager[] {
                 new X509TrustManager() {
                     @Override
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-                        // All clients are trusted when SSL validation is skipped
-                    }
+                    @ExcludeFromGeneratedCoverage
+                    // All clients are trusted when SSL validation is skipped
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) { }
 
                     @Override
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-                        // All servers are trusted when SSL validation is skipped
-                    }
+                    @ExcludeFromGeneratedCoverage
+                    // All servers are trusted when SSL validation is skipped
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) { }
 
                     @Override
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {

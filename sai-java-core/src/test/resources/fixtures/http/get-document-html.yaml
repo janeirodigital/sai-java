@@ -1,0 +1,12 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-Type: text/html; charset=UTF-8'
+body: >
+  <!DOCTYPE html>
+  <html>
+    <body>
+      <h1>Regular HTML Resource</h1>
+      <p>Used for testing.</p>
+    </body>
+  </html>

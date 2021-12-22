@@ -1,10 +1,11 @@
 package com.janeirodigital.sai.core.enums;
 
-public enum HttpHeaders {
+public enum HttpHeader {
     ACCEPT("Accept"),
     AUTHORIZATION("Authorization"),
     CONTENT_TYPE("Content-Type"),
     LINK("Link"),
+    IF_NONE_MATCH("If-None-Match"),
     LOCATION("Location"),
     SLUG("Slug");
 
@@ -14,7 +15,7 @@ public enum HttpHeaders {
 
     private final String value;
 
-    HttpHeaders(String value) {
+    HttpHeader(String value) {
         this.value = value;
     }
 }

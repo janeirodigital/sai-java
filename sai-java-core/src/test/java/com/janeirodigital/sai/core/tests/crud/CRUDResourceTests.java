@@ -7,17 +7,22 @@ import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.tests.fixtures.DispatcherEntry;
 import com.janeirodigital.sai.core.tests.fixtures.RequestMatchingFixtureDispatcher;
-import okhttp3.Response;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromFile;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.getResourceFromModel;
 import static com.janeirodigital.sai.core.tests.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,7 +50,7 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Initialize a CRUD resource")
-    void initializeCRUDResource() throws SaiException {
+    void initializeCRUDResource() {
         URL url = toUrl(server, "/crud/crud-resource");
         CRUDResource crud = new CRUDResource(url, dataFactory);
         assertNotNull(crud);
@@ -56,13 +61,34 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Bootstrap a CRUD resource")
-    void bootstrapCRUDResource() throws SaiException {
+    void bootstrapCRUDResource() {
         URL url = toUrl(server, "/crud/crud-resource");
         TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory);
         assertNotNull(testable);
         assertEquals(url, testable.getUrl());
         assertEquals(dataFactory, testable.getDataFactory());
         assertNull(testable.getDataset());
+    }
+
+    @Test
+    @DisplayName("Bootstrap a CRUD resource with existing Jena Model")
+    void bootstrapCRUDResourceWithDataset() throws SaiException {
+        URL url = toUrl(server, "/crud/crud-resource");
+        Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", "text/turtle");
+        Resource resource = getResourceFromModel(model, url);
+        TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory, resource);
+        assertNotNull(testable);
+        assertEquals(url, testable.getUrl());
+        assertEquals(dataFactory, testable.getDataFactory());
+        assertNotNull(testable.getDataset());
+        assertNotNull(testable.getResource());
+    }
+
+    @Test
+    @DisplayName("Fail to bootstrap a CRUD resource with a null Jena Model")
+    void failToBootstrapCRUDResourceWithNullDataset() {
+        URL url = toUrl(server, "/crud/crud-resource");
+        assertThrows(NullPointerException.class, () -> { new TestableCRUDResource(url, dataFactory, null); });
     }
 
     @Test
@@ -81,9 +107,7 @@ class CRUDResourceTests {
         testable.setMilestone(toUrl(server, "/crud/project/milestone-1#milestone"));
         testable.setTags(tags);
         testable.setComments(comments);
-        Response response = testable.update();
-        assertTrue(response.isSuccessful());
-
+        assertDoesNotThrow(() -> testable.update());
     }
 
     @Test
@@ -91,8 +115,15 @@ class CRUDResourceTests {
     void deleteCRUDResource() throws SaiNotFoundException, SaiException {
         URL url = toUrl(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.build(url, dataFactory);
-        Response response = testable.delete();
-        assertTrue(response.isSuccessful());
+        assertDoesNotThrow(() -> testable.delete());
+    }
+
+    private Model loadModel(URL url, String filePath, String contentType) throws SaiException {
+        try {
+            return getModelFromFile(urlToUri(url), "fixtures/crud/crud-resource.ttl", contentType);
+        } catch (SaiException | IOException ex) {
+            throw new SaiException("Failed too load test model from file: " + filePath);
+        }
     }
 
 }

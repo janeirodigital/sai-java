@@ -35,13 +35,11 @@ class ImmutableResourceTests {
     static void beforeAll() throws SaiException {
         // Initialize the Data Factory
         dataFactory = new DataFactory(HttpClientFactory.get(false, false));
-
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(
                 new DispatcherEntry(List.of("immutable/immutable-resource-ttl"), "GET", "/immutable/immutable-resource", null),
                 new DispatcherEntry(List.of("immutable/immutable-resource-ttl"), "PUT", "/immutable/immutable-resource", null)
         ));
-
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
@@ -58,7 +56,7 @@ class ImmutableResourceTests {
         assertEquals(6, readable.getId());
         assertEquals("Great Validations", readable.getName());
         assertEquals(OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME), readable.getCreatedAt());
-        assertEquals(true, readable.isActive());
+        assertTrue(readable.isActive());
         assertEquals(toUrl(server, "/data/projects/project-1/milestone-3/#milestone"), readable.getMilestone());
 
         List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-1"), toUrl(server, "/tags/tag-2"), toUrl(server, "/tags/tag-3"));

@@ -1,6 +1,10 @@
 package com.janeirodigital.sai.core.helpers;
 
+import com.janeirodigital.sai.core.enums.HttpHeader;
+import com.janeirodigital.sai.core.enums.LinkRelation;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.vocabularies.LdpVocabulary;
 import okhttp3.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -10,12 +14,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.Set;
 
-import static com.janeirodigital.sai.core.enums.HttpHeaders.LINK;
+import static com.janeirodigital.sai.core.enums.HttpHeader.LINK;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getStringFromRdfModel;
-import static com.janeirodigital.sai.core.vocabularies.LdpVocabulary.LDP_NS;
 
 /**
  * Assorted helper methods related to working with HTTP requests and responses
@@ -34,46 +38,59 @@ public class HttpHelper {
 
     private HttpHelper() { }
 
+    // The response MUST be closed outside of this call
     public static Response getResource(OkHttpClient httpClient, URL url) throws SaiException {
-        Response response;
         try {
             Request.Builder requestBuilder = new Request.Builder();
             requestBuilder.url(url);
             requestBuilder.method(GET, null);
-            response = checkResponse(httpClient.newCall(requestBuilder.build()).execute());
+            return checkResponse(httpClient.newCall(requestBuilder.build()).execute());
         } catch (IOException ex) {
             throw new SaiException("Failed to lookup remote resource: " + ex.getMessage());
+        }
+    }
+
+    public static Response getRequiredResource(OkHttpClient httpClient, URL url) throws SaiException, SaiNotFoundException {
+        Response response = getResource(httpClient, url);
+        if (!response.isSuccessful()) {
+            if (response.code() == 404) {
+                throw new SaiNotFoundException("No resource found at " + response.request().url());
+            } else {
+                throw new SaiException("HTTP " + response.request().method() + "operation failed on " + response.request().url());
+            }
         }
         return response;
     }
 
     public static Response putResource(OkHttpClient httpClient, URL url, Headers headers, String body, String contentType) throws SaiException {
-        Response response = null;
-        RequestBody requestBody;
-        try {
-            Request.Builder requestBuilder = new Request.Builder();
-            requestBuilder.url(url);
-            requestBody = RequestBody.create(body, MediaType.get(contentType));
-            requestBuilder.method(PUT, requestBody);
-            if (headers != null) { requestBuilder.headers(headers); }
-            response = checkResponse(httpClient.newCall(requestBuilder.build()).execute());
+
+        Request.Builder requestBuilder = new Request.Builder();
+        requestBuilder.url(url);
+        RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType));
+        requestBuilder.method(PUT, requestBody);
+        if (headers != null) { requestBuilder.headers(headers); }
+
+        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+            // wrapping the call in try-with-resources automatically closes the response
+            return checkResponse(response);
         } catch (IOException | SaiException ex) {
             throw new SaiException("Failed to put remote resource: " + ex.getMessage());
-        } finally { if (response != null) { response.body().close(); } }
-        return response;
+        }
     }
 
     public static Response deleteResource(OkHttpClient httpClient, URL url) throws SaiException {
-        Response response = null;
-        try {
-            Request.Builder requestBuilder = new Request.Builder();
-            requestBuilder.url(url);
-            requestBuilder.method(DELETE, null);
-            response = checkResponse(httpClient.newCall(requestBuilder.build()).execute());
+
+        Request.Builder requestBuilder = new Request.Builder();
+        requestBuilder.url(url);
+        requestBuilder.method(DELETE, null);
+
+        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+            // wrapping the call in try-with-resources automatically closes the response
+            return checkResponse(response);
         } catch (IOException | SaiException ex) {
             throw new SaiException("Failed to delete remote resource: " + ex.getMessage());
-        } finally { if (response != null) { response.body().close(); } }
-        return response;
+        }
+
     }
 
     public static Response getRdfResource(OkHttpClient httpClient, URL url) throws SaiException {
@@ -84,9 +101,9 @@ public class HttpHelper {
         checkRdfResponse(response);
         String body;
         HttpUrl requestUrl = response.request().url();
-        try { body = response.body().string(); } catch (IOException ex) {
+        try { body = response.peekBody(Long.MAX_VALUE).string(); } catch (IOException ex) {
             throw new SaiException("Failed to access response body");
-        } finally { response.body().close(); }
+        }
         return getModelFromString(requestUrlToUri(requestUrl), body, getContentType(response));
     }
 
@@ -103,26 +120,46 @@ public class HttpHelper {
     }
 
     public static Response putRdfContainer(OkHttpClient httpClient, URL url, Resource resource) throws SaiException {
-        Headers.Builder builder = new Headers.Builder();
-        builder.add(LINK + ":<" + LDP_NS + ">", "rel=type");
-        Headers headers = builder.build();
+        Headers headers = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.BASIC_CONTAINER.getURI());
         return putRdfResource(httpClient, url, resource, headers);
     }
 
-    public static Headers addHeaderIfNoneMatch(Headers headers) {
+    public static Headers setHttpHeader(HttpHeader name, String value, Headers headers) {
         Headers.Builder builder = new Headers.Builder();
         if (headers != null) { builder.addAll(headers); }
-        builder.add("If-None-Match", "*");
+        builder.set(name.getValue(), value);
         return builder.build();
     }
 
+    public static Headers setHttpHeader(HttpHeader name, String value) {
+        return setHttpHeader(name, value, null);
+    }
+
+    public static Headers addHttpHeader(HttpHeader name, String value, Headers headers) {
+        Headers.Builder builder = new Headers.Builder();
+        if (headers != null) { builder.addAll(headers); }
+        builder.add(name.getValue(), value);
+        return builder.build();
+    }
+
+    public static Headers addHttpHeader(HttpHeader name, String value) {
+        return addHttpHeader(name, value, null);
+    }
+
+    public static Headers addLinkRelationHeader(LinkRelation type, String target, Headers headers) {
+        return addHttpHeader(LINK, getLinkRelationString(type, target), headers);
+    }
+
+    public static Headers addLinkRelationHeader(LinkRelation type, String target) {
+        return addLinkRelationHeader(type, target, null);
+    }
+
+    public static String getLinkRelationString(LinkRelation type, String target) {
+        return "<"+target+">;"+" rel=\""+type.getValue()+"\"";
+    }
+
     protected static Response checkResponse(Response response) throws SaiException {
-        if (response == null) {
-            throw new SaiException("Failed to lookup remote resource");
-        }
-        if (!response.isSuccessful()) {
-            throw new SaiException("Failed to lookup remote resource: " + response.request().url());
-        }
+        Objects.requireNonNull(response, "Do not expect to receive a null response to an HTTP client request");
         return response;
     }
 

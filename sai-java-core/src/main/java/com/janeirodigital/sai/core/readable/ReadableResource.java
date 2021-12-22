@@ -23,7 +23,6 @@ public class ReadableResource {
     protected final OkHttpClient httpClient;
     protected Model dataset;
     protected Resource resource;
-    protected boolean container;
 
     public ReadableResource(URL resourceUrl, DataFactory dataFactory) {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
@@ -33,14 +32,14 @@ public class ReadableResource {
         this.dataFactory = dataFactory;
         this.httpClient = dataFactory.getHttpClient();
         this.dataset = null;
-        this.container = false;
     }
 
-    protected Response fetchData() throws SaiException {
-        Response response = getRdfResource(this.httpClient, this.url);
-        this.dataset = getRdfModelFromResponse(response);
-        this.resource = getResourceFromModel(this.dataset, this.url);
-        return response;
+    protected void fetchData() throws SaiException {
+        try (Response response = getRdfResource(this.httpClient, this.url)) {
+            // wrapping the call in try-with-resources automatically closes the response
+            this.dataset = getRdfModelFromResponse(response);
+            this.resource = getResourceFromModel(this.dataset, this.url);
+        }
     }
 
 }

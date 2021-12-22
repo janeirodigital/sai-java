@@ -1,18 +1,17 @@
 package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
-import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.addHeaderIfNoneMatch;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.putRdfResource;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 
 public class ImmutableResource {
 
@@ -34,9 +33,9 @@ public class ImmutableResource {
         this.resource = resource;
     }
 
-    public Response create() throws SaiException {
-        Headers headers = addHeaderIfNoneMatch(null);
-        return putRdfResource(this.httpClient, this.url, this.resource, headers);
+    public void create() throws SaiException {
+        Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
+        putRdfResource(this.httpClient, this.url, this.resource, headers);
     }
 
 }
