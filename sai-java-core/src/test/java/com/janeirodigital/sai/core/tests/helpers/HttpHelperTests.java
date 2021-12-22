@@ -33,7 +33,7 @@ import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
 import static com.janeirodigital.sai.core.tests.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HttpHelperTests {
+class HttpHelperTests {
 
     private static MockWebServer server;
     private static MockWebServer queuingServer;

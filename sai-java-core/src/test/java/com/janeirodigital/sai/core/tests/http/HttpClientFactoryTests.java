@@ -11,8 +11,7 @@ import org.mockito.Mockito;
 
 import java.security.NoSuchAlgorithmException;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 
 
@@ -56,24 +55,18 @@ class HttpClientFactoryTests {
     void resetClientCache() throws SaiException {
         HttpClientFactory.get(false, false);
         HttpClientFactory.get(true, true);
+        assertFalse(HttpClientFactory.isEmpty());
         HttpClientFactory.resetClients();
+        assertTrue(HttpClientFactory.isEmpty());
     }
 
     @Test
     @DisplayName("Fail to get an HTTP client with an invalid configuration")
     void failToGetHttpClientWithInvalidConfig() {
-
         try (MockedStatic<HttpClientFactory> mockFactory = Mockito.mockStatic(HttpClientFactory.class, Mockito.CALLS_REAL_METHODS)) {
-
             mockFactory.when(() -> HttpClientFactory.getClientForConfiguration(anyBoolean(),anyBoolean()) ).thenThrow(new NoSuchAlgorithmException("Invalid algorithm!"));
-
             assertThrows(SaiException.class, () -> { HttpClientFactory.get(false, false); });
-
             mockFactory.reset();
-
         }
-
-
-
     }
 }

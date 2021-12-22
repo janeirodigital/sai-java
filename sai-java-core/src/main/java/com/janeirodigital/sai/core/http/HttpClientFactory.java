@@ -103,6 +103,18 @@ public class HttpClientFactory {
         }
     }
 
+    public static boolean
+    isEmpty() {
+        for (OkHttpClient[] row : okHttpClients) {
+            for (OkHttpClient client : row) {
+                if (client != null) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     /**
      * Construct an all-trusting certificate manager to use when SSL validation has
      * been disabled. <b><b>SSL Validation should never be disabled in production!</b>
@@ -116,13 +128,15 @@ public class HttpClientFactory {
                 new X509TrustManager() {
                     @Override
                     @ExcludeFromGeneratedCoverage
-                    // All clients are trusted when SSL validation is skipped
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) { }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                        // Trust all clients to by skipping SSL validation
+                    }
 
                     @Override
                     @ExcludeFromGeneratedCoverage
-                    // All servers are trusted when SSL validation is skipped
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) { }
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                        // Trust all servers by skipping SSL validation
+                    }
 
                     @Override
                     public java.security.cert.X509Certificate[] getAcceptedIssuers() {

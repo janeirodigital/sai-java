@@ -73,7 +73,7 @@ public class HttpHelper {
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             // wrapping the call in try-with-resources automatically closes the response
             return checkResponse(response);
-        } catch (IOException | SaiException ex) {
+        } catch (IOException ex) {
             throw new SaiException("Failed to put remote resource: " + ex.getMessage());
         }
     }
@@ -87,7 +87,7 @@ public class HttpHelper {
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             // wrapping the call in try-with-resources automatically closes the response
             return checkResponse(response);
-        } catch (IOException | SaiException ex) {
+        } catch (IOException ex) {
             throw new SaiException("Failed to delete remote resource: " + ex.getMessage());
         }
 
@@ -158,7 +158,7 @@ public class HttpHelper {
         return "<"+target+">;"+" rel=\""+type.getValue()+"\"";
     }
 
-    protected static Response checkResponse(Response response) throws SaiException {
+    protected static Response checkResponse(Response response) {
         Objects.requireNonNull(response, "Do not expect to receive a null response to an HTTP client request");
         return response;
     }
