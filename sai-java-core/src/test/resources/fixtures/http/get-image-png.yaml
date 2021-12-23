@@ -1,0 +1,5 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:image/png'
+body: >

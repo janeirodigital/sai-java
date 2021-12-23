@@ -1,7 +1,12 @@
 package com.janeirodigital.sai.application;
 
+import com.janeirodigital.sai.core.ApplicationFactory;
+import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.http.HttpClientFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import okhttp3.OkHttpClient;
 
 import java.net.URL;
 
@@ -17,16 +22,15 @@ import java.net.URL;
 @AllArgsConstructor @Getter
 public class Application {
 
-    private String name ;
-    private String description ;
-    private URL author ;
+    private final URL id ;
 
-    /**
-     * Temporary method to test test infrastructure
-     * @return Concatenated string of name and description
-     */
-    String getFullDescription() {
-        return this.name + " - " + this.description;
+    private OkHttpClient httpClient;
+    private DataFactory dataFactory;
+
+    public Application(URL id, boolean validateSsl, boolean validateShapeTrees) throws SaiException {
+        this.id = id;
+        this.httpClient = HttpClientFactory.get(validateSsl, validateShapeTrees);
+        this.dataFactory = new ApplicationFactory(httpClient);
     }
 
 }

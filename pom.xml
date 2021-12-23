@@ -23,9 +23,12 @@
         <slf4j.version>1.7.32</slf4j.version>
         <okhttp.version>4.9.3</okhttp.version>
         <junit.version>5.8.2</junit.version>
+        <shapetrees.version>0.9.1</shapetrees.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc.version>3.3.1</maven-javadoc.version>
+        <snakeyaml.version>1.29</snakeyaml.version>
+        <mockito.version>4.2.0</mockito.version>
         <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
         <maven-release-plugin.version>3.0.0-M4</maven-release-plugin.version>
         <maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
@@ -50,11 +53,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>com.squareup.okhttp3</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
