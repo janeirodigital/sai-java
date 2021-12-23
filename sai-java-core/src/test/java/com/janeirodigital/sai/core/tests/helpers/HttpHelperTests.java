@@ -270,7 +270,7 @@ class HttpHelperTests {
         appended = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*", appended);
         assertEquals(2, appended.size());
         assertEquals("*", appended.get("If-None-Match"));
-        assertEquals("text/html", appended.get("Content-Type"));
+        assertEquals(TEXT_HTML.getValue(), appended.get("Content-Type"));
 
         // Ensure duplicates aren't added
         appended = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*", appended);
@@ -294,7 +294,7 @@ class HttpHelperTests {
         appended = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*", appended);
         assertEquals(2, appended.size());
         assertEquals("*", appended.get(HttpHeader.IF_NONE_MATCH.getValue()));
-        assertEquals("text/html", appended.get(CONTENT_TYPE.getValue()));
+        assertEquals(TEXT_HTML.getValue(), appended.get(CONTENT_TYPE.getValue()));
 
         Headers added = addHttpHeader(HttpHeader.LINK, LinkRelation.DESCRIBED_BY.getValue());
         added = addHttpHeader(HttpHeader.LINK, LinkRelation.MANAGED_BY.getValue(), added);

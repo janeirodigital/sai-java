@@ -107,7 +107,7 @@ public class HttpHelper {
     }
 
     public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, Headers headers) throws SaiException {
-        // TODO - May not want to hard-code a content type of turtle here
+        // REVISIT - May not want to hard-code a content type of turtle here
         String body = "";
         // Treat a null resource as an empty body
         if (resource != null) { body = getStringFromRdfModel(resource.getModel(), Lang.TURTLE); }

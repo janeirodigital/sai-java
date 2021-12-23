@@ -26,7 +26,7 @@ public enum ContentType {
     }
 
     static {
-        Map<String,ContentType> map = new ConcurrentHashMap<String, ContentType>();
+        Map<String,ContentType> map = new ConcurrentHashMap<>();
         for (ContentType instance : ContentType.values()) {
             map.put(instance.getValue().toLowerCase(),instance);
         }
