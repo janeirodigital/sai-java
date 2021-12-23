@@ -1,8 +1,9 @@
 package com.janeirodigital.sai.core.tests.enums;
 
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
+import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.enums.LinkRelation;
-import com.janeirodigital.sai.core.exceptions.SaiException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -12,30 +13,26 @@ class EnumTests {
 
     @Test
     @DisplayName("Evaluate enums for HTTP Headers")
-    void evaluateHttpHeaders() throws SaiException {
-
-        assertEquals("Accept", HttpHeader.ACCEPT.getValue());
-        assertEquals("Authorization", HttpHeader.AUTHORIZATION.getValue());
+    void evaluateHttpHeaders() {
         assertEquals("Content-Type", HttpHeader.CONTENT_TYPE.getValue());
-        assertEquals("Link", HttpHeader.LINK.getValue());
-        assertEquals("Location", HttpHeader.LOCATION.getValue());
-        assertEquals("Slug", HttpHeader.SLUG.getValue());
-
     }
 
     @Test
     @DisplayName("Evaluate enums for Link Relations")
-    void evaluateLinkRelations() throws SaiException {
-
-        assertEquals("describedby", LinkRelation.DESCRIBED_BY.getValue());
-        assertEquals("http://www.w3.org/ns/shapetrees#FocusNode", LinkRelation.FOCUS_NODE.getValue());
-        assertEquals("http://www.w3.org/ns/shapetrees#managedBy", LinkRelation.MANAGED_BY.getValue());
-        assertEquals("http://www.w3.org/ns/shapetrees#manages", LinkRelation.MANAGES.getValue());
-        assertEquals("http://www.w3.org/ns/shapetrees#TargetShapeTree", LinkRelation.TARGET_SHAPETREE.getValue());
+    void evaluateLinkRelations() {
         assertEquals("type", LinkRelation.TYPE.getValue());
-        assertEquals("acl", LinkRelation.ACL.getValue());
+    }
 
+    @Test
+    @DisplayName("Evaluate enums for HTTP Content Types")
+    void evaluateContentTypes() {
+        assertEquals("text/turtle", ContentType.TEXT_TURTLE.getValue());
+    }
 
+    @Test
+    @DisplayName("Evaluate enums for HTTP Methods")
+    void evaluateHttpMethods() {
+        assertEquals("GET", HttpMethod.GET.getValue());
     }
 
 }

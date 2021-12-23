@@ -1,6 +1,7 @@
 package com.janeirodigital.sai.core.tests.immutable;
 
 import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -49,7 +50,7 @@ class ImmutableResourceTests {
     @DisplayName("Store an Immutable resource")
     void storeImmutableResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/immutable/immutable-resource#project");
-        Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", "text/turtle");
+        Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", ContentType.TEXT_TURTLE);
         TestableImmutableResource testable = new TestableImmutableResource(url, dataFactory, model.getResource(url.toString()));
         TestableReadableResource readable = testable.store();
         assertNotNull(readable);
@@ -66,7 +67,7 @@ class ImmutableResourceTests {
         assertTrue(CollectionUtils.isEqualCollection(comments, readable.getComments()));
     }
 
-    private Model loadModel(URL url, String filePath, String contentType) throws SaiException {
+    private Model loadModel(URL url, String filePath, ContentType contentType) throws SaiException {
         try {
             return getModelFromFile(urlToUri(url), "fixtures/immutable/immutable-resource.ttl", contentType);
         } catch (SaiException | IOException ex) {

@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.helpers;
 
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import org.apache.jena.datatypes.RDFDatatype;
@@ -45,7 +46,7 @@ public class RdfHelper {
      * @return Deserialized Jean Model
      * @throws SaiException
      */
-    public static Model getModelFromString(URI baseURI, String rawContent, String contentType) throws SaiException {
+    public static Model getModelFromString(URI baseURI, String rawContent, ContentType contentType) throws SaiException {
         Objects.requireNonNull(baseURI, "Must provide a baseURI to generate a model");
         Objects.requireNonNull(rawContent, "Must provide content to generate a model from");
         Objects.requireNonNull(contentType, "Must provide content type for model generation");
@@ -68,7 +69,7 @@ public class RdfHelper {
      * @throws SaiException
      * @throws IOException
      */
-    public static Model getModelFromFile(URI baseURI, String filePath, String contentType) throws SaiException, IOException {
+    public static Model getModelFromFile(URI baseURI, String filePath, ContentType contentType) throws SaiException, IOException {
         Objects.requireNonNull(baseURI, "Must provide a baseURI to generate a model");
         Objects.requireNonNull(filePath, "Must provide an input file path to provide data for the generated model");
         Objects.requireNonNull(contentType, "Must provide content type for model generation");
@@ -76,13 +77,27 @@ public class RdfHelper {
         try {
             Model model = ModelFactory.createDefaultModel();
             in = RDFDataMgr.open(filePath);
-            model.read(in, baseURI.toString(), contentType);
+            model.read(in, baseURI.toString(), contentType.getValue());
             return model;
         } catch (RiotException ex) {
             throw new SaiException("Error processing input - " + ex.getMessage());
         } finally {
             if (in != null) { in.close(); }
         }
+    }
+
+    /**
+     * Get a String of the provided <code>model</code> serialized in <code>lang</code>.
+     * @param model Jena Model to serialize
+     * @param lang Format to serialize into
+     * @return Serialized string of the provided model
+     */
+    public static String getStringFromRdfModel(Model model, Lang lang) {
+        Objects.requireNonNull(model, "Cannot serialize a null model");
+        Objects.requireNonNull(lang, "Must provide a serialization format");
+        StringWriter sw = new StringWriter();
+        RDFDataMgr.write(sw, model, lang);
+        return sw.toString();
     }
 
     /**
@@ -120,7 +135,7 @@ public class RdfHelper {
      */
     public static Statement getRequiredStatement(Resource resource, Property property) throws SaiNotFoundException {
         Statement statement = getStatement(resource, property);
-        if (statement == null) { throwNothingFound(resource, property); }
+        if (statement == null) { throw new SaiNotFoundException(msgNothingFound(resource, property)); }
         return statement;
     }
 
@@ -135,6 +150,18 @@ public class RdfHelper {
         Statement statement = getStatement(resource, property);
         if (statement == null) { return null; }
         return statement.getObject();
+    }
+
+    /**
+     * Returns a single Jena RDFNode matching the provided <code>property</code> in the
+     * provided <code>resource</code>. When nothing is found an exception is thrown.
+     * @param resource Jena Resource to navigate
+     * @param property Jena Property to search for
+     * @return Jena RDFNode matching the provided property
+     * @throws SaiNotFoundException when nothing is found
+     */
+    public static RDFNode getRequiredObject(Resource resource, Property property) throws SaiNotFoundException {
+        return getRequiredStatement(resource, property).getObject();
     }
 
     /**
@@ -165,7 +192,7 @@ public class RdfHelper {
      */
     public static List<RDFNode> getRequiredObjects(Resource resource, Property property) throws SaiNotFoundException {
         List<RDFNode> objects = getObjects(resource, property);
-        if (objects.isEmpty()) { throwNothingFound(resource, property); }
+        if (objects.isEmpty()) { throw new SaiNotFoundException(msgNothingFound(resource, property)); }
         return objects;
     }
 
@@ -184,7 +211,7 @@ public class RdfHelper {
         while (it.hasNext()) {
             Statement statement = it.next();
             RDFNode object = statement.getObject();
-            if (!object.isResource()) { throwNotUrlResource(resource, property, object); }
+            if (!object.isResource()) { throw new SaiException(msgNotUrlResource(resource, property, object)); }
             urls.add(nodeToUrl(object));
         }
         return urls;
@@ -199,7 +226,7 @@ public class RdfHelper {
      */
     public static List<URL> getRequiredUrlObjects(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         List<URL> urls = getUrlObjects(resource, property);
-        if (urls.isEmpty()) { throwNothingFound(resource, property); }
+        if (urls.isEmpty()) { throw new SaiNotFoundException(msgNothingFound(resource, property)); }
         return urls;
     }
 
@@ -218,8 +245,8 @@ public class RdfHelper {
         while (it.hasNext()) {
             Statement statement = it.next();
             RDFNode object = statement.getObject();
-            if (!object.isLiteral()) { throwInvalidDataType(resource, property, XSDstring); }
-            if (!object.asLiteral().getDatatype().equals(XSDstring)) { throwInvalidDataType(resource, property, XSDstring); }
+            if (!object.isLiteral()) { throw new SaiException(msgInvalidDataType(resource, property, XSDstring)); }
+            if (!object.asLiteral().getDatatype().equals(XSDstring)) { throw new SaiException(msgInvalidDataType(resource, property, XSDstring)); }
             strings.add(object.asLiteral().getString());
         }
         return strings;
@@ -234,20 +261,8 @@ public class RdfHelper {
      */
     public static List<String> getRequiredStringObjects(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         List<String> strings = getStringObjects(resource, property);
-        if (strings.isEmpty()) { throwNothingFound(resource, property); }
+        if (strings.isEmpty()) { throw new SaiNotFoundException(msgNothingFound(resource, property)); }
         return strings;
-    }
-
-    /**
-     * Returns a single Jena RDFNode matching the provided <code>property</code> in the
-     * provided <code>resource</code>. When nothing is found an exception is thrown.
-     * @param resource Jena Resource to navigate
-     * @param property Jena Property to search for
-     * @return Jena RDFNode matching the provided property
-     * @throws SaiNotFoundException when nothing is found
-     */
-    public static RDFNode getRequiredObject(Resource resource, Property property) throws SaiNotFoundException {
-        return getRequiredStatement(resource, property).getObject();
     }
 
     /**
@@ -262,13 +277,8 @@ public class RdfHelper {
     public static URL getUrlObject(Resource resource, Property property) throws SaiException {
         RDFNode object = getObject(resource, property);
         if (object == null) { return null; }
-        if (!object.isResource()) { throwNotUrlResource(resource, property, object); }
-        try {
-            return new URL(object.asResource().getURI());
-        } catch (MalformedURLException ex) {
-            throw new SaiException(("Failed to get malformed object URL at " +
-                    resource.getURI() + " -- " + property.getURI() + " -- " + object));
-        }
+        if (!object.isResource()) { throw new SaiException(msgNotUrlResource(resource, property, object)); }
+        return nodeToUrl(object);
     }
 
     /**
@@ -283,7 +293,7 @@ public class RdfHelper {
      */
     public static URL getRequiredUrlObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         URL url = getUrlObject(resource, property);
-        if (url == null) { throwNothingFound(resource, property); }
+        if (url == null) { throw new SaiNotFoundException(msgNothingFound(resource, property)); }
         return url;
     }
 
@@ -299,8 +309,8 @@ public class RdfHelper {
     public static String getStringObject(Resource resource, Property property) throws SaiException {
         RDFNode object = getObject(resource, property);
         if (object == null) { return null; }
-        if (!object.isLiteral()) { throwInvalidDataType(resource, property, XSDstring); }
-        if (!object.asLiteral().getDatatype().equals(XSDstring)) { throwInvalidDataType(resource, property, XSDstring); }
+        if (!object.isLiteral()) { throw new SaiException(msgInvalidDataType(resource, property, XSDstring)); }
+        if (!object.asLiteral().getDatatype().equals(XSDstring)) { throw new SaiException(msgInvalidDataType(resource, property, XSDstring)); }
         return object.asLiteral().getString();
     }
 
@@ -316,7 +326,7 @@ public class RdfHelper {
      */
     public static String getRequiredStringObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         String string = getStringObject(resource, property);
-        if (string == null) { throwNothingFound(resource, property, XSDstring); }
+        if (string == null) { throw new SaiNotFoundException(msgNothingFound(resource, property, XSDstring)); }
         return string;
     }
 
@@ -332,8 +342,8 @@ public class RdfHelper {
     public static Integer getIntegerObject(Resource resource, Property property) throws SaiException {
         RDFNode object = getObject(resource, property);
         if (object == null) { return null; }
-        if (!object.isLiteral()) { throwInvalidDataType(resource, property, XSDinteger); }
-        if (!object.asLiteral().getDatatype().equals(XSDinteger)) { throwInvalidDataType(resource, property, XSDinteger); }
+        if (!object.isLiteral()) { throw new SaiException(msgInvalidDataType(resource, property, XSDinteger)); }
+        if (!object.asLiteral().getDatatype().equals(XSDinteger)) { throw new SaiException(msgInvalidDataType(resource, property, XSDinteger)); }
         return object.asLiteral().getInt();
     }
 
@@ -349,7 +359,7 @@ public class RdfHelper {
      */
     public static Integer getRequiredIntegerObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         Integer i = getIntegerObject(resource, property);
-        if (i == null) { throwNothingFound(resource, property, XSDinteger); }
+        if (i == null) { throw new SaiNotFoundException(msgNothingFound(resource, property, XSDinteger)); }
         return i;
     }
 
@@ -365,8 +375,8 @@ public class RdfHelper {
     public static OffsetDateTime getDateTimeObject(Resource resource, Property property) throws SaiException {
         RDFNode object = getObject(resource, property);
         if (object == null) { return null; }
-        if (!object.isLiteral()) { throwInvalidDataType(resource, property, XSDdateTime); }
-        if (!object.asLiteral().getDatatype().equals(XSDdateTime)) { throwInvalidDataType(resource, property, XSDdateTime); }
+        if (!object.isLiteral()) { throw new SaiException(msgInvalidDataType(resource, property, XSDdateTime)); }
+        if (!object.asLiteral().getDatatype().equals(XSDdateTime)) { throw new SaiException(msgInvalidDataType(resource, property, XSDdateTime)); }
         return OffsetDateTime.parse(object.asLiteral().getString(), DateTimeFormatter.ISO_DATE_TIME);
     }
 
@@ -382,7 +392,7 @@ public class RdfHelper {
      */
     public static OffsetDateTime getRequiredDateTimeObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         OffsetDateTime dateTime = getDateTimeObject(resource, property);
-        if (dateTime == null) { throwNothingFound(resource, property, XSDdateTime); }
+        if (dateTime == null) { throw new SaiNotFoundException(msgNothingFound(resource, property, XSDdateTime)); }
         return dateTime;
     }
 
@@ -397,11 +407,11 @@ public class RdfHelper {
      * @throws SaiException
      * @throws SaiNotFoundException when nothing is found
      */
-    public static Boolean getBooleanObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
+    public static boolean getBooleanObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         RDFNode object = getObject(resource, property);
-        if (object == null) { throwNothingFound(resource, property, XSDboolean); }
-        if (!object.isLiteral()) { throwInvalidDataType(resource, property, XSDboolean); }
-        if (!object.asLiteral().getDatatype().equals(XSDboolean)) { throwInvalidDataType(resource, property, XSDboolean); }
+        if (object == null) { throw new SaiNotFoundException(msgNothingFound(resource, property, XSDboolean)); }
+        if (!object.isLiteral()) { throw new SaiException(msgInvalidDataType(resource, property, XSDboolean)); }
+        if (!object.asLiteral().getDatatype().equals(XSDboolean)) { throw new SaiException(msgInvalidDataType(resource, property, XSDboolean)); }
         return object.asLiteral().getBoolean();
     }
 
@@ -559,20 +569,6 @@ public class RdfHelper {
     }
 
     /**
-     * Get a String of the provided <code>model</code> serialized in <code>lang</code>.
-     * @param model Jena Model to serialize
-     * @param lang Format to serialize into
-     * @return Serialized string of the provided model
-     */
-    public static String getStringFromRdfModel(Model model, Lang lang) {
-        Objects.requireNonNull(model, "Cannot serialize a null model");
-        Objects.requireNonNull(lang, "Must provide a serialization format");
-        StringWriter sw = new StringWriter();
-        RDFDataMgr.write(sw, model, lang);
-        return sw.toString();
-    }
-
-    /**
      * Convert an RDFNode value to URL
      * @param node RDFNode to convert
      * @return Converted URL
@@ -584,7 +580,7 @@ public class RdfHelper {
         try {
             return new URL(node.asResource().getURI());
         } catch (MalformedURLException ex) {
-            throw new SaiException("Failed to convert node to URL - " + node.asResource().getURI());
+            throw new SaiException("Failed to convert node to URL - " + node.asResource().getURI() + ": " + ex.getMessage());
         }
     }
 
@@ -593,16 +589,16 @@ public class RdfHelper {
      * @param contentType Content type string
      * @return Serialization language
      */
-    public static Lang getLangForContentType(String contentType) {
+    public static Lang getLangForContentType(ContentType contentType) {
         if (contentType == null) {
             return Lang.TURTLE;
         }
         switch (contentType) {
-            case "application/ld+json":
+            case LD_JSON:
                 return Lang.JSONLD;
-            case "application/rdf+xml":
+            case RDF_XML:
                 return Lang.RDFXML;
-            case "application/n-triples":
+            case N_TRIPLES:
                 return Lang.NTRIPLES;
             default:
                 return Lang.TURTLE;
@@ -611,35 +607,30 @@ public class RdfHelper {
 
     /**
      * Convenience function for common condition when the expected data type isn't found
-     * @throws SaiException
      */
-    private static void throwInvalidDataType(Resource resource, Property property, RDFDatatype type) throws SaiException {
-        throw new SaiException("Excepted literal value of type " + type.toString() +
-                "for " + resource.getURI() + " -- " + property.getURI());
+    private static String msgInvalidDataType(Resource resource, Property property, RDFDatatype type) {
+        return "Excepted literal value of type " + type.toString() + "for " + resource.getURI() + " -- " + property.getURI();
     }
 
     /**
      * Convenience function for common condition when the expected data type isn't found
-     * @throws SaiNotFoundException
      */
-    private static void throwNothingFound(Resource resource, Property property, RDFDatatype type) throws SaiNotFoundException {
-        throw new SaiNotFoundException("Nothing found for " + resource.getURI() + " -- " + property.getURI() + " of type " + type.toString());
+    private static String msgNothingFound(Resource resource, Property property, RDFDatatype type) {
+        return "Nothing found for " + resource.getURI() + " -- " + property.getURI() + " of type " + type.toString();
     }
 
     /**
      * Convenience function for common condition when the expected data type isn't found
-     * @throws SaiNotFoundException
      */
-    private static void throwNothingFound(Resource resource, Property property) throws SaiNotFoundException {
-        throw new SaiNotFoundException("Nothing found for " + resource.getURI() + " -- " + property.getURI());
+    private static String msgNothingFound(Resource resource, Property property) {
+        return "Nothing found for " + resource.getURI() + " -- " + property.getURI();
     }
 
     /**
      * Convenience function for common condition when an object type isn't a URL resource
-     * @throws SaiException
      */
-    private static void throwNotUrlResource(Resource resource, Property property, RDFNode object) throws SaiException {
-        throw new SaiException("Expected non-literal value for object at " + resource.getURI() + " -- " + property.getURI() + " -- " + object);
+    private static String msgNotUrlResource(Resource resource, Property property, RDFNode object) {
+        return "Expected non-literal value for object at " + resource.getURI() + " -- " + property.getURI() + " -- " + object;
     }
 
 }

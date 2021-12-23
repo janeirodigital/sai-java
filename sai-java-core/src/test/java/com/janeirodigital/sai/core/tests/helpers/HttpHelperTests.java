@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.tests.helpers;
 
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.enums.LinkRelation;
 import com.janeirodigital.sai.core.exceptions.SaiException;
@@ -28,6 +29,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.janeirodigital.sai.core.enums.ContentType.TEXT_HTML;
+import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
 import static com.janeirodigital.sai.core.tests.fixtures.MockWebServerHelper.toUrl;
@@ -112,7 +116,7 @@ class HttpHelperTests {
     @Test
     @DisplayName("Fail to get a resource without content-type")
     void FailToGetHttpResourceNoContentType() throws IOException {
-        URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-io");
+        URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-no-ct");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setBody(getRdfBody()));
@@ -122,10 +126,21 @@ class HttpHelperTests {
     @Test
     @DisplayName("Fail to get an RDF resource with bad content-type")
     void failToGetRdfHttpResourceBadContentType() throws SaiException {
-        URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-io");
+        URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-coolweb");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .addHeader("Content-Type", "cool/web")
+                .setBody(getRdfBody()));
+        assertThrows(SaiException.class, () -> { getRdfResource(httpClient, url); });
+    }
+
+    @Test
+    @DisplayName("Fail to get an RDF resource with non-rdf content-type")
+    void failToGetRdfHttpResourceNonRdfContentType() throws SaiException {
+        URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-nonrdf");
+        queuingServer.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .addHeader("Content-Type", "application/octet-stream")
                 .setBody(getRdfBody()));
         assertThrows(SaiException.class, () -> { getRdfResource(httpClient, url); });
     }
@@ -136,7 +151,7 @@ class HttpHelperTests {
         URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-io");
         queuingServer.enqueue(new MockResponse()
                               .setResponseCode(200)
-                              .addHeader("Content-Type", "text/turtle")
+                              .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
                               .setBody(getRdfBody())
                               .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY));
         Response response = getResource(httpClient, url);
@@ -172,7 +187,7 @@ class HttpHelperTests {
     @Test
     @DisplayName("Update a resource")
     void updateHttpResource() throws SaiException {
-        Response response = putResource(httpClient, toUrl(server, "/http/put-update-resource"), null, getHtmlBody(), "text/html");
+        Response response = putResource(httpClient, toUrl(server, "/http/put-update-resource"), null, getHtmlBody(), ContentType.TEXT_HTML);
         assertTrue(response.isSuccessful());
     }
 
@@ -180,7 +195,7 @@ class HttpHelperTests {
     @DisplayName("Update an RDF resource")
     void updateRdfHttpResource() throws SaiException {
         URL url = toUrl(server, "/http/put-update-resource");
-        Model model = getModelFromString(urlToUri(url), getRdfBody(), "text/turtle");
+        Model model = getModelFromString(urlToUri(url), getRdfBody(), TEXT_TURTLE);
         Resource resource = model.getResource(url.toString() + "#project");
         // Update with resource content
         Response response = putRdfResource(httpClient, url, resource);
@@ -196,7 +211,7 @@ class HttpHelperTests {
     @DisplayName("Create an RDF container")
     void createRdfContainerHttpResource() throws SaiException {
         URL url = toUrl(server, "/http/put-create-resource");
-        Model model = getModelFromString(urlToUri(url), getRdfContainerBody(), "text/turtle");
+        Model model = getModelFromString(urlToUri(url), getRdfContainerBody(), TEXT_TURTLE);
         Resource resource = model.getResource(url.toString() + "#project");
         Response response = putRdfContainer(httpClient, url, resource);
         assertTrue(response.isSuccessful());
@@ -210,14 +225,14 @@ class HttpHelperTests {
                 .setBody(new Buffer().write(new byte[4096]))
                 .setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
         assertThrows(SaiException.class, () -> {
-            putResource(httpClient, toUrl(queuingServer, "/http/put-update-resource-io"), null, getHtmlBody(), "text/html");
+            putResource(httpClient, toUrl(queuingServer, "/http/put-update-resource-io"), null, getHtmlBody(), TEXT_TURTLE);
         });
     }
 
     @Test
     @DisplayName("Create a resource")
     void createHttpResource() throws SaiException {
-        Response response = putResource(httpClient, toUrl(server, "/http/put-create-resource"), null, getHtmlBody(), "text/html");
+        Response response = putResource(httpClient, toUrl(server, "/http/put-create-resource"), null, getHtmlBody(), TEXT_TURTLE);
         assertTrue(response.isSuccessful());
     }
 
@@ -250,7 +265,7 @@ class HttpHelperTests {
 
         // Append to an existing list of headers
         Headers.Builder builder = new Headers.Builder();
-        builder.add("Content-Type", "text/html");
+        builder.add(CONTENT_TYPE.getValue(), TEXT_HTML.getValue());
         Headers appended = builder.build();
         appended = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*", appended);
         assertEquals(2, appended.size());
@@ -274,12 +289,12 @@ class HttpHelperTests {
 
         // Append to an existing list of headers
         Headers.Builder builder = new Headers.Builder();
-        builder.add(HttpHeader.CONTENT_TYPE.getValue(), "text/html");
+        builder.add(CONTENT_TYPE.getValue(), TEXT_HTML.getValue());
         Headers appended = builder.build();
         appended = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*", appended);
         assertEquals(2, appended.size());
         assertEquals("*", appended.get(HttpHeader.IF_NONE_MATCH.getValue()));
-        assertEquals("text/html", appended.get(HttpHeader.CONTENT_TYPE.getValue()));
+        assertEquals("text/html", appended.get(CONTENT_TYPE.getValue()));
 
         Headers added = addHttpHeader(HttpHeader.LINK, LinkRelation.DESCRIBED_BY.getValue());
         added = addHttpHeader(HttpHeader.LINK, LinkRelation.MANAGED_BY.getValue(), added);

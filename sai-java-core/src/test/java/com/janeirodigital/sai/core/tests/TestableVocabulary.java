@@ -23,5 +23,6 @@ public final class TestableVocabulary {
     public static final Property TESTABLE_HAS_MILESTONE = model.createProperty(NS + "hasMilestone");
     public static final Property TESTABLE_HAS_TAG = model.createProperty(NS + "hasTag");
     public static final Property TESTABLE_HAS_COMMENT = model.createProperty(NS + "hasComment");
+    public static final Property TESTABLE_MISSING = model.createProperty(NS + "isMissing");
 
 }

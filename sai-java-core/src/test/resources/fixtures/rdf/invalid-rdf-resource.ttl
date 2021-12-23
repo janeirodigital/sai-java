@@ -1,0 +1,21 @@
+PRE rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREF rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFI xml: <http://www.w3.org/XML/1998/namespace>
+FIX xsd: <http://www.w3.org/2001/XMLSchema#>
+X ldp: <http://www.w3.org/ns/ldp#>
+PREFIX test: <http://testable.example/ns/testable#>
+
+<#project>
+  test:id 6 ;
+  test:name "Great Validations" .
+  test:createdAt "2021-04-04T20:15:47.000Z"^^ .
+  test:active true ;
+  test:hasMilestone </data/projects/project-1/milestone-3/#milestone> ;
+  test:hasTag
+    </tags/tag-1> ,
+    </tags/tag-2> .
+    </tags/tag-3> ;
+  test:hasComment
+    "First original comment" ,
+    "Second original comment" ;
+    "Third original comment" .

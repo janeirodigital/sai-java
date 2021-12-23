@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.helpers;
 
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.enums.LinkRelation;
 import com.janeirodigital.sai.core.exceptions.SaiException;
@@ -17,7 +18,9 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.Set;
 
+import static com.janeirodigital.sai.core.enums.ContentType.*;
 import static com.janeirodigital.sai.core.enums.HttpHeader.LINK;
+import static com.janeirodigital.sai.core.enums.HttpMethod.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getStringFromRdfModel;
 
@@ -26,15 +29,7 @@ import static com.janeirodigital.sai.core.helpers.RdfHelper.getStringFromRdfMode
  */
 public class HttpHelper {
 
-    private static final String PUT = "PUT";
-    private static final String GET = "GET";
-    private static final String DELETE = "DELETE";
-
-    private static final String TEXT_TURTLE = "text/turtle";
-    private static final String RDF_XML = "application/rdf+xml";
-    private static final String N_TRIPLES = "application/n-triples";
-    private static final String LD_JSON = "application/ld+json";
-    private static final Set<String> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
+    private static final Set<ContentType> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
 
     private HttpHelper() { }
 
@@ -43,7 +38,7 @@ public class HttpHelper {
         try {
             Request.Builder requestBuilder = new Request.Builder();
             requestBuilder.url(url);
-            requestBuilder.method(GET, null);
+            requestBuilder.method(GET.getValue(), null);
             return checkResponse(httpClient.newCall(requestBuilder.build()).execute());
         } catch (IOException ex) {
             throw new SaiException("Failed to lookup remote resource: " + ex.getMessage());
@@ -62,12 +57,12 @@ public class HttpHelper {
         return response;
     }
 
-    public static Response putResource(OkHttpClient httpClient, URL url, Headers headers, String body, String contentType) throws SaiException {
+    public static Response putResource(OkHttpClient httpClient, URL url, Headers headers, String body, ContentType contentType) throws SaiException {
 
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
-        RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType));
-        requestBuilder.method(PUT, requestBody);
+        RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType.getValue()));
+        requestBuilder.method(PUT.getValue(), requestBody);
         if (headers != null) { requestBuilder.headers(headers); }
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
@@ -82,7 +77,7 @@ public class HttpHelper {
 
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
-        requestBuilder.method(DELETE, null);
+        requestBuilder.method( DELETE.getValue(), null);
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             // wrapping the call in try-with-resources automatically closes the response
@@ -165,18 +160,21 @@ public class HttpHelper {
 
     protected static Response checkRdfResponse(Response response) throws SaiException {
         checkResponse(response);
-        String contentType = getContentType(response);
+        ContentType contentType = getContentType(response);
         if (!RDF_CONTENT_TYPES.contains(contentType)) {
             throw new SaiException("Invalid Content-Type for RDF resource: " + contentType);
         }
         return response;
     }
 
-    protected static String getContentType(Response response) throws SaiException {
-        if (response.header("Content-Type") == null) {
+    protected static ContentType getContentType(Response response) throws SaiException {
+        if (response.header(HttpHeader.CONTENT_TYPE.getValue()) == null) {
             throw new SaiException("Content-type header is missing");
         }
-        return response.header("Content-Type");
+        String responseType = response.header(HttpHeader.CONTENT_TYPE.getValue());
+        ContentType contentType = ContentType.get(responseType);
+        if (contentType == null) { throw new SaiException("Unrecognized content-type"); }
+        return contentType;
     }
 
     /**

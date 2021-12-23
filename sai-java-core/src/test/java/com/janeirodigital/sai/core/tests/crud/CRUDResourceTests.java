@@ -2,6 +2,7 @@ package com.janeirodigital.sai.core.tests.crud;
 
 import com.janeirodigital.sai.core.DataFactory;
 import com.janeirodigital.sai.core.crud.CRUDResource;
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -74,7 +75,7 @@ class CRUDResourceTests {
     @DisplayName("Bootstrap a CRUD resource with existing Jena Model")
     void bootstrapCRUDResourceWithDataset() throws SaiException {
         URL url = toUrl(server, "/crud/crud-resource");
-        Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", "text/turtle");
+        Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", ContentType.TEXT_TURTLE);
         Resource resource = getResourceFromModel(model, url);
         TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory, resource);
         assertNotNull(testable);
@@ -118,7 +119,7 @@ class CRUDResourceTests {
         assertDoesNotThrow(() -> testable.delete());
     }
 
-    private Model loadModel(URL url, String filePath, String contentType) throws SaiException {
+    private Model loadModel(URL url, String filePath, ContentType contentType) throws SaiException {
         try {
             return getModelFromFile(urlToUri(url), "fixtures/crud/crud-resource.ttl", contentType);
         } catch (SaiException | IOException ex) {
