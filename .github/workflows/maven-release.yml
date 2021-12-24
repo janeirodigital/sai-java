@@ -96,17 +96,3 @@ jobs:
           draft: ${{ github.event.inputs.is_draft_release }}
           # Whether this is a prerelease or not
           prerelease: ${{ github.event.inputs.is_prerelease }}
-         
-      ###############################################################
-      # Add debug information on failure
-      ###############################################################
-      - name: Output root configuration
-        if: failure()
-        run: sudo cat /root/.m2/settings.xml
-      - name: Output global configuration
-        if: failure()
-        run: sudo cat /usr/share/maven/conf/settings.xml
-      - name: Output pom.xml
-        if: failure()
-        run: sudo cat /github/workspace/pom.xml
-
