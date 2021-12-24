@@ -102,11 +102,11 @@ jobs:
       ###############################################################
       - name: Output root configuration
         if: failure()
-        run: cat /root/.m2/settings.xml
+        run: sudo cat /root/.m2/settings.xml
       - name: Output global configuration
         if: failure()
-        run: cat /usr/share/maven/conf/settings.xml
+        run: sudo cat /usr/share/maven/conf/settings.xml
       - name: Output pom.xml
         if: failure()
-        run: cat /github/workspace/pom.xml
+        run: sudo cat /github/workspace/pom.xml
 
