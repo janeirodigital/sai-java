@@ -13,6 +13,12 @@ import javax.net.ssl.X509TrustManager;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * Factory to get, cache, and clear OkHttp HTTP clients matching provided configurations.
+ * <br>Can enable / disable SSL validation and/or Shape Tree validation
+ * @see <a href="https://square.github.io/okhttp/">OkHttp</a> - HTTP client library from Square
+ * @see <a href="https://github.com/janeirodigital/shapetrees-java">shapetrees-java</a> - Shape Trees client library implementation
+ */
 public class HttpClientFactory {
 
     static final int NO_VALIDATION = 0;
@@ -89,6 +95,10 @@ public class HttpClientFactory {
 
     }
 
+    /**
+     * Shuts down each initialized OkHttp client in the local cache, and then
+     * empties them from it.
+     */
     public static void
     resetClients() {
         for (OkHttpClient[] row : okHttpClients) {
@@ -103,6 +113,10 @@ public class HttpClientFactory {
         }
     }
 
+    /**
+     * Identifies whether the local OkHttp client cache is empty or not
+     * @return true when the cache is empty
+     */
     public static boolean
     isEmpty() {
         for (OkHttpClient[] row : okHttpClients) {

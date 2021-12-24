@@ -1,5 +1,8 @@
 package com.janeirodigital.sai.core.enums;
 
+/**
+ * Enumerated list of application HTTP Link relations
+ */
 public enum LinkRelation {
     DESCRIBED_BY("describedby"),
     FOCUS_NODE("http://www.w3.org/ns/shapetrees#FocusNode"),

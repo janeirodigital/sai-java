@@ -13,6 +13,10 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 
+/**
+ * Represents a corresponding RDF Resource and provides create, read, and
+ * delete capabilities. Immutable resources don't provide an update capability.
+ */
 public class ImmutableResource {
 
     protected final URL url;
@@ -21,6 +25,13 @@ public class ImmutableResource {
     protected Model dataset;
     protected Resource resource;
 
+    /**
+     * Construct an immutable resource for <code>resourceUrl</code> based on the dataset
+     * from the provided Jena <code>resource</code>.
+     * @param resourceUrl URL of the immutable resource
+     * @param dataFactory Data factory to assign
+     * @param resource Jena resource to populate with
+     */
     public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource) {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
         Objects.requireNonNull(dataFactory, "Must provide a data factory");
@@ -33,6 +44,13 @@ public class ImmutableResource {
         this.resource = resource;
     }
 
+    /**
+     * Create the corresponding resource over HTTP with the current contents
+     * of <code>dataset</code>. If-None-Match header is used to ensure another
+     * resource at <code>url</code> doesn't already exist.
+     *
+     * @throws SaiException
+     */
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
         putRdfResource(this.httpClient, this.url, this.resource, headers);
