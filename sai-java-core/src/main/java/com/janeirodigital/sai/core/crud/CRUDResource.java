@@ -11,13 +11,31 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 
+/**
+ * Represents a corresponding RDF Resource and provides create, read, update,
+ * and delete capabilities.
+ */
 @Getter
 public class CRUDResource extends ReadableResource {
 
+    /**
+     * Construct a CRUD resource for <code>resourceUrl</code>. Calls the parent
+     * {@link ReadableResource} constructor which assigns the provided
+     * <code>dataFactory</code>, and gets an HTTP client.
+     * @param resourceUrl URL of the CRUD resource
+     * @param dataFactory Data factory to assign
+     */
     public CRUDResource(URL resourceUrl, DataFactory dataFactory) {
         super(resourceUrl, dataFactory);
     }
 
+    /**
+     * Additional constructor which initializes the RDF dataset with the provided
+     * Jena <code>resource</code> and its corresponding Jena Model.
+     * @param resourceUrl URL of the CRUD resource
+     * @param dataFactory Data factory to assign
+     * @param resource Jena Resource to initialize with
+     */
     public CRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource) {
         super(resourceUrl, dataFactory);
         Objects.requireNonNull(resource, "Cannot provide a null resource when initializing a crud resource with a dataset");
@@ -25,12 +43,19 @@ public class CRUDResource extends ReadableResource {
         this.dataset = resource.getModel();
     }
 
-    // update
+    /**
+     * Updates the corresponding resource over HTTP with the current contents of
+     * <code>dataset</code>.
+     * @throws SaiException
+     */
     public void update() throws SaiException {
         putRdfResource(this.httpClient, this.url, this.resource);
     }
 
-    // delete
+    /**
+     * Deletes the corresponding resource over HTTP
+     * @throws SaiException
+     */
     public void delete() throws SaiException {
         deleteResource(this.httpClient, this.url);
     }

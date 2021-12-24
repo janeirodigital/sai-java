@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Enumerated list of applicable HTTP Content-Type values
+ */
 public enum ContentType {
     TEXT_TURTLE("text/turtle"),
     RDF_XML("application/rdf+xml"),

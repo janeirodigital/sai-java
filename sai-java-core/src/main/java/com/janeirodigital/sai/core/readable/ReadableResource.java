@@ -15,6 +15,9 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResp
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfResource;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getResourceFromModel;
 
+/**
+ * Represents a corresponding RDF Resource and provides read-only capabilities.
+ */
 @Getter
 public class ReadableResource {
 
@@ -24,6 +27,13 @@ public class ReadableResource {
     protected Model dataset;
     protected Resource resource;
 
+    /**
+     * Construct a Readable resource for <code>resourceUrl</code>, assigning the provided
+     * <code>dataFactory</code> for subsequent operations, along with an HTTP client to
+     * facilitate them.
+     * @param resourceUrl URL of the Readable resource
+     * @param dataFactory Data factory to assign
+     */
     public ReadableResource(URL resourceUrl, DataFactory dataFactory) {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
         Objects.requireNonNull(dataFactory, "Must provide a data factory");
@@ -34,6 +44,11 @@ public class ReadableResource {
         this.dataset = null;
     }
 
+    /**
+     * Populates the <code>dataset</code> based on the contents of the corresponding
+     * resource requested and returned over HTTP.
+     * @throws SaiException
+     */
     protected void fetchData() throws SaiException {
         try (Response response = getRdfResource(this.httpClient, this.url)) {
             // wrapping the call in try-with-resources automatically closes the response

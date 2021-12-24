@@ -1,5 +1,8 @@
 package com.janeirodigital.sai.core.enums;
 
+/**
+ * Enumerated list of applicable HTTP headers
+ */
 public enum HttpHeader {
     ACCEPT("Accept"),
     AUTHORIZATION("Authorization"),

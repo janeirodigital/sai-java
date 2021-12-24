@@ -1,5 +1,8 @@
 package com.janeirodigital.sai.core.enums;
 
+/**
+ * Enumerated list of HTTP methods
+ */
 public enum HttpMethod {
     POST("POST"),
     PUT("PUT"),
