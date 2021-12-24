@@ -59,7 +59,6 @@ jobs:
           git-release-bot-email: "xformer@janeirodigital.com"
           ###########################################################
           #maven-args: "-Dmaven.javadoc.skip=true -DskipTests -DskipITs -Dmaven.deploy.skip=true"
-          maven-args: ""
           ###########################################################
           ssh-private-key: ${{ secrets.XFORMER_SAI_JAVA_PRIVATE }}
           ###########################################################
