@@ -159,19 +159,19 @@
         <repository>
             <id>xformativ-nexus</id>
             <name>Xformativ Repository</name>
-            <url>https://repo.janeirodigital.com/repository/xformativ-maven/</url>
+            <url>https://repo.janeirodigital.com/repository/oss/</url>
         </repository>
     </repositories>
     <distributionManagement>
         <snapshotRepository>
             <id>xformativ-nexus</id>
             <name>Xformativ Repository</name>
-            <url>https://repo.janeirodigital.com/repository/xformativ-maven/</url>
+            <url>https://repo.janeirodigital.com/repository/oss/</url>
         </snapshotRepository>
         <repository>
             <id>xformativ-nexus</id>
             <name>Xformativ Repository</name>
-            <url>https://repo.janeirodigital.com/repository/xformativ-maven/</url>
+            <url>https://repo.janeirodigital.com/repository/oss/</url>
         </repository>
     </distributionManagement>
 
