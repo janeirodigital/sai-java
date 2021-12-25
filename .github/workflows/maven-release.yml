@@ -32,7 +32,7 @@ jobs:
       - name: Build and Test
         uses: qcastel/github-actions-maven-cmd@master
         with:
-          maven-args: "clean install --file pom.xml -s /root/.m2/settings.xml -Ddockerfile.skip -DdockerCompose.skip -Djib.skip -e -X"
+          maven-args: "clean install --file pom.xml -s /usr/share/maven/conf/settings.xml -Ddockerfile.skip -DdockerCompose.skip -Djib.skip -e -X"
       ###############################################################
       # Prepare and deploy the release via maven, which will create
       # a git tag for the release, then increment it and set to
