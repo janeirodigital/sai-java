@@ -29,7 +29,7 @@
         <maven-javadoc.version>3.3.1</maven-javadoc.version>
         <snakeyaml.version>1.29</snakeyaml.version>
         <mockito.version>4.2.0</mockito.version>
-        <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
+        <maven-site-plugin.version>3.10.0</maven-site-plugin.version>
         <maven-release-plugin.version>3.0.0-M4</maven-release-plugin.version>
         <maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
         <project.scm.id>github</project.scm.id>
