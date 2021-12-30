@@ -35,7 +35,7 @@ class CRUDResourceTests {
     @BeforeAll
     static void beforeAll() throws SaiException {
         // Initialize the Data Factory
-        dataFactory = new DataFactory(HttpClientFactory.get(false, false));
+        dataFactory = new DataFactory(new HttpClientFactory(false, false));
 
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(
@@ -51,7 +51,7 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Initialize a CRUD resource")
-    void initializeCRUDResource() {
+    void initializeCRUDResource() throws SaiException {
         URL url = toUrl(server, "/crud/crud-resource");
         CRUDResource crud = new CRUDResource(url, dataFactory);
         assertNotNull(crud);
@@ -62,7 +62,7 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Bootstrap a CRUD resource")
-    void bootstrapCRUDResource() {
+    void bootstrapCRUDResource() throws SaiException {
         URL url = toUrl(server, "/crud/crud-resource");
         TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory);
         assertNotNull(testable);

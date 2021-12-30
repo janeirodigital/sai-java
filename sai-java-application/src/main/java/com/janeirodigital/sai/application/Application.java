@@ -24,13 +24,13 @@ public class Application {
 
     private final URL id ;
 
-    private OkHttpClient httpClient;
     private DataFactory dataFactory;
+    private HttpClientFactory clientFactory;
 
     public Application(URL id, boolean validateSsl, boolean validateShapeTrees) throws SaiException {
         this.id = id;
-        this.httpClient = HttpClientFactory.get(validateSsl, validateShapeTrees);
-        this.dataFactory = new ApplicationFactory(httpClient);
+        this.clientFactory = new HttpClientFactory(validateSsl, validateShapeTrees);
+        this.dataFactory = new ApplicationFactory(clientFactory);
     }
 
 }

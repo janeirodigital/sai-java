@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core;
 
+import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.OkHttpClient;
 
 /**
@@ -9,8 +10,8 @@ import okhttp3.OkHttpClient;
  */
 public class ApplicationFactory extends DataFactory {
 
-    public ApplicationFactory(OkHttpClient httpClient) {
-        super(httpClient);
+    public ApplicationFactory(HttpClientFactory clientFactory) {
+        super(clientFactory);
     }
 
 }

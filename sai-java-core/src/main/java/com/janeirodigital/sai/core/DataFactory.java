@@ -2,6 +2,7 @@ package com.janeirodigital.sai.core;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.readable.ReadableApplicationProfile;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
@@ -16,15 +17,25 @@ import java.net.URL;
 @Getter
 public class DataFactory {
 
-    private final OkHttpClient httpClient;
+    private final HttpClientFactory clientFactory;
 
     /**
      * Initialize a data factory with the provided http client, which
      * will be used for subsequent operations by the factory.
-     * @param httpClient OkHttp client provided by {@link com.janeirodigital.sai.core.http.HttpClientFactory}
+     * @param clientFactory Initialized {@link HttpClientFactory}
      */
-    public DataFactory(OkHttpClient httpClient) {
-        this.httpClient = httpClient;
+    public DataFactory(HttpClientFactory clientFactory) {
+        this.clientFactory = clientFactory;
+    }
+
+    /**
+     * Get an OkHttpClient from the {@link HttpClientFactory} based on the
+     * default configuration provided when the client factory was initialized.
+     * @return OkHttpClient
+     * @throws SaiException
+     */
+    public OkHttpClient getHttpClient() throws SaiException {
+        return this.clientFactory.get();
     }
 
     /**

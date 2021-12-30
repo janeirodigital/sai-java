@@ -20,7 +20,7 @@ public class ReadableApplicationProfile extends ReadableResource {
     private URL thumbnailUrl;
     private List<URL> accessNeedGroupUrls;
 
-    public ReadableApplicationProfile(URL url, DataFactory dataFactory) {
+    public ReadableApplicationProfile(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory);
     }
 

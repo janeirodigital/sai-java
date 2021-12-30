@@ -38,8 +38,6 @@ public class HttpHelper {
 
     private HttpHelper() { }
 
-    //
-
     /**
      * Perform an HTTP GET on the resource at <code>url</code>.
      * The response MUST be closed outside of this call. The body of the response
@@ -101,6 +99,7 @@ public class HttpHelper {
 
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
+        if (body == null) { body = ""; }
         RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType.getValue()));
         requestBuilder.method(PUT.getValue(), requestBody);
         if (headers != null) { requestBuilder.headers(headers); }

@@ -41,6 +41,7 @@ class HttpHelperTests {
 
     private static MockWebServer server;
     private static MockWebServer queuingServer;
+    private static HttpClientFactory clientFactory;
     private static OkHttpClient httpClient;
 
     @BeforeAll
@@ -61,7 +62,8 @@ class HttpHelperTests {
         server.setDispatcher(dispatcher);
         // Initialize another Mock Web Server used specifically for queuing exceptions and assign a queue dispatcher
         // Initialize HTTP client
-        httpClient = HttpClientFactory.get(true, false);
+        clientFactory = new HttpClientFactory(true, false);
+        httpClient = clientFactory.get();
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
     }
 
@@ -188,6 +190,8 @@ class HttpHelperTests {
     @DisplayName("Update a resource")
     void updateHttpResource() throws SaiException {
         Response response = putResource(httpClient, toUrl(server, "/http/put-update-resource"), null, getHtmlBody(), ContentType.TEXT_HTML);
+        assertTrue(response.isSuccessful());
+        response = putResource(httpClient, toUrl(server, "/http/put-update-resource"), null, null, ContentType.TEXT_HTML);
         assertTrue(response.isSuccessful());
     }
 

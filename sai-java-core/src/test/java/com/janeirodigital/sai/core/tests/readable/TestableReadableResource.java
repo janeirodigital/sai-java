@@ -24,7 +24,7 @@ public class TestableReadableResource extends CRUDResource {
     private List<URL> tags;
     private List<String> comments;
 
-    public TestableReadableResource(URL resourceUrl, DataFactory dataFactory) {
+    public TestableReadableResource(URL resourceUrl, DataFactory dataFactory) throws SaiException {
         super(resourceUrl, dataFactory);
     }
 

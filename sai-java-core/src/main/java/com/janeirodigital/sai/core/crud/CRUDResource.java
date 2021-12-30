@@ -25,7 +25,7 @@ public class CRUDResource extends ReadableResource {
      * @param resourceUrl URL of the CRUD resource
      * @param dataFactory Data factory to assign
      */
-    public CRUDResource(URL resourceUrl, DataFactory dataFactory) {
+    public CRUDResource(URL resourceUrl, DataFactory dataFactory) throws SaiException {
         super(resourceUrl, dataFactory);
     }
 
@@ -36,7 +36,7 @@ public class CRUDResource extends ReadableResource {
      * @param dataFactory Data factory to assign
      * @param resource Jena Resource to initialize with
      */
-    public CRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource) {
+    public CRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource) throws SaiException {
         super(resourceUrl, dataFactory);
         Objects.requireNonNull(resource, "Cannot provide a null resource when initializing a crud resource with a dataset");
         this.resource = resource;
