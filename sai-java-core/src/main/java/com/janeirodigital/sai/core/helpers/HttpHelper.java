@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.janeirodigital.sai.core.enums.ContentType.*;
+import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.enums.HttpHeader.LINK;
 import static com.janeirodigital.sai.core.enums.HttpMethod.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
@@ -102,8 +103,8 @@ public class HttpHelper {
         if (body == null) { body = ""; }
         RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType.getValue()));
         requestBuilder.method(PUT.getValue(), requestBody);
-        if (headers != null) { requestBuilder.headers(headers); }
-
+        headers = setHttpHeader(CONTENT_TYPE, contentType.getValue(), headers);
+        requestBuilder.headers(headers);
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             // wrapping the call in try-with-resources automatically closes the response
             return checkResponse(response);

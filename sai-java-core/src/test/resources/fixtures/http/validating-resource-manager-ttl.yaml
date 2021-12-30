@@ -1,0 +1,21 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX st: <http://www.w3.org/ns/shapetrees#>
+  PREFIX ex: <http://www.example.com/ns/ex#>
+
+  <>
+    a st:Manager ;
+    st:hasAssignment <#ln1> .
+
+  <#ln1>
+    st:assigns <${SERVER_BASE}/http/shapetree#TestableTree> ;
+    st:manages </http/validating-resource/> ;
+    st:hasRootAssignment <#ln1> ;
+    st:focusNode <${SERVER_BASE}/http/validating-resource#testable> ;
+    st:shape <${SERVER_BASE}/http/shape#TestableShape> .
