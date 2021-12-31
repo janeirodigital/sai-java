@@ -2,9 +2,12 @@ package com.janeirodigital.sai.core.tests.http;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
+import com.janeirodigital.shapetrees.okhttp.OkHttpValidatingClientFactory;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.security.KeyManagementException;
@@ -46,6 +49,24 @@ class HttpClientFactoryTests {
     }
 
     @Test
+    @DisplayName("Fail to get an HTTP client with validation enabled")
+    void failToGetHttpClientValidationOn() {
+        HttpClientFactory factory = new HttpClientFactory(false, true);
+        try (MockedStatic<OkHttpValidatingClientFactory> mockValidatingFactory = Mockito.mockStatic(OkHttpValidatingClientFactory.class)) {
+            mockValidatingFactory.when(() -> OkHttpValidatingClientFactory.get()).thenThrow(ShapeTreeException.class);
+            assertThrows(SaiException.class, () -> { factory.get(); });
+        }
+    }
+
+    @Test
+    @DisplayName("Fail to get an HTTP client from shape tree client interface provider")
+    void failToGetHttpClientFromShapeTreeInterface() throws ShapeTreeException, SaiException {
+        HttpClientFactory mockFactory = Mockito.mock(HttpClientFactory.class, withSettings().useConstructor(false, true).defaultAnswer(CALLS_REAL_METHODS));
+        when(mockFactory.get(anyBoolean(), anyBoolean())).thenThrow(SaiException.class);
+        assertThrows(ShapeTreeException.class, () -> { mockFactory.getOkHttpClient(); });
+    }
+
+    @Test
     @DisplayName("Get an HTTP client with SSL enabled : validation disabled")
     void getHttpClientSslOnValidationOff() throws SaiException {
         HttpClientFactory factory = new HttpClientFactory(true, false);
@@ -69,7 +90,6 @@ class HttpClientFactoryTests {
         HttpClientFactory factory = new HttpClientFactory(false, false);
         factory.get(true, false);
         factory.get(true, true);
-        factory.get(false, true);
         assertFalse(factory.isEmpty());
         factory.resetClients();
         assertTrue(factory.isEmpty());
