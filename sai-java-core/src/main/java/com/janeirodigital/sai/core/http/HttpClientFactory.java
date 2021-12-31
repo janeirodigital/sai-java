@@ -2,7 +2,10 @@ package com.janeirodigital.sai.core.http;
 
 import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.shapetrees.okhttp.OkHttpValidatingShapeTreeInterceptor;
+import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
+import com.janeirodigital.shapetrees.okhttp.OkHttpClientFactory;
+import com.janeirodigital.shapetrees.okhttp.OkHttpClientFactoryManager;
+import com.janeirodigital.shapetrees.okhttp.OkHttpValidatingClientFactory;
 import okhttp3.OkHttpClient;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 
@@ -19,14 +22,24 @@ import java.security.NoSuchAlgorithmException;
  * @see <a href="https://square.github.io/okhttp/">OkHttp</a> - HTTP client library from Square
  * @see <a href="https://github.com/janeirodigital/shapetrees-java">shapetrees-java</a> - Shape Trees client library implementation
  */
-public class HttpClientFactory {
+public class HttpClientFactory implements OkHttpClientFactory {
 
     static final int NO_VALIDATION = 0;
     static final int VALIDATE = 1;
 
-    private static final OkHttpClient[][] okHttpClients = {{null, null}, {null, null}};
+    private final OkHttpClient[][] okHttpClients = {{null, null}, {null, null}};
+    private final boolean validateSsl;
+    private final boolean validateShapeTrees;
 
-    private HttpClientFactory() { }
+    public HttpClientFactory(boolean validateSsl, boolean validateShapeTrees) {
+        this.validateSsl = validateSsl;
+        this.validateShapeTrees = validateShapeTrees;
+    }
+
+    public OkHttpClient
+    get() throws SaiException {
+        return get(this.validateSsl, this.validateShapeTrees);
+    }
 
     /**
      * Factory to provide an OkHttpClient configured to enable or disable SSL and/or
@@ -39,24 +52,21 @@ public class HttpClientFactory {
      * @return Configured OkHttpClient
      * @throws SaiException
      */
-    public static synchronized OkHttpClient
+    public OkHttpClient
     get(boolean validateSsl, boolean validateShapeTrees) throws SaiException {
 
         int ssl = validateSsl ? VALIDATE : NO_VALIDATION;
         int shapeTrees = validateShapeTrees ? VALIDATE : NO_VALIDATION;
 
-        if (okHttpClients[ssl][shapeTrees] != null) {
-            return okHttpClients[ssl][shapeTrees];
-        }
+        if (this.okHttpClients[ssl][shapeTrees] != null) { return this.okHttpClients[ssl][shapeTrees]; }
         try {
             // Just call an internal factory here to produce the appropriate client configuration
             OkHttpClient client = getClientForConfiguration(validateSsl, validateShapeTrees);
-            okHttpClients[ssl][shapeTrees] = client;
+            this.okHttpClients[ssl][shapeTrees] = client;
             return client;
         } catch (NoSuchAlgorithmException|KeyManagementException ex) {
             throw new SaiException(ex.getMessage());
         }
-
     }
 
     /**
@@ -71,13 +81,25 @@ public class HttpClientFactory {
      * @throws NoSuchAlgorithmException
      * @throws KeyManagementException
      */
-    public static OkHttpClient
-    getClientForConfiguration(boolean validateSsl, boolean validateShapeTrees) throws NoSuchAlgorithmException, KeyManagementException {
+    public OkHttpClient
+    getClientForConfiguration(boolean validateSsl, boolean validateShapeTrees) throws NoSuchAlgorithmException, KeyManagementException, SaiException {
 
         okhttp3.OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
 
+        // Invoke the shapetrees-java-client-okhttp library to give us an OkHttpClient that
+        // has been configured to intercept requests and perform client-side shape tree
+        // validation.
         if (validateShapeTrees) {
-            clientBuilder.interceptors().add(new OkHttpValidatingShapeTreeInterceptor());
+            // Tell the shapetrees-java-client-okhttp library to use this client factory
+            // for basic okhttp clients. This ensures that validating clients handed back
+            // from shapetrees-java-client-okhttp will include any other configuration
+            // options we set.
+            OkHttpClientFactoryManager.setFactory(this);
+            try {
+                return OkHttpValidatingClientFactory.get();
+            } catch (ShapeTreeException ex) {
+                throw new SaiException(ex.getMessage());
+            }
         }
 
         if (!validateSsl) {
@@ -96,12 +118,34 @@ public class HttpClientFactory {
     }
 
     /**
+     * Implementation of the {@link OkHttpClientFactory} interface provided from
+     * shapetrees-java-client-okhttp. Allows this factory to be used as the source
+     * of okhttp clients by that library.
+     *
+     * <br>This call explicitly sets <code>validateShapeTrees</code> to false because
+     * it is the responsibility of {@link OkHttpClientFactory} enable validation, and
+     * would create an infinite loop if it were set to true.
+     *
+     * @return OkHttpClient
+     * @throws ShapeTreeException
+     */
+    @Override
+    public OkHttpClient getOkHttpClient() throws ShapeTreeException {
+        try {
+            // the OkHttpClientFactory
+            return get(this.validateSsl, false);
+        } catch (SaiException ex) {
+            throw new ShapeTreeException(500, ex.getMessage());
+        }
+    }
+
+    /**
      * Shuts down each initialized OkHttp client in the local cache, and then
      * empties them from it.
      */
-    public static void
+    public void
     resetClients() {
-        for (OkHttpClient[] row : okHttpClients) {
+        for (OkHttpClient[] row : this.okHttpClients) {
             for (OkHttpClient client : row) {
                 if (client != null) {
                     client.dispatcher().executorService().shutdown();
@@ -117,9 +161,9 @@ public class HttpClientFactory {
      * Identifies whether the local OkHttp client cache is empty or not
      * @return true when the cache is empty
      */
-    public static boolean
+    public boolean
     isEmpty() {
-        for (OkHttpClient[] row : okHttpClients) {
+        for (OkHttpClient[] row : this.okHttpClients) {
             for (OkHttpClient client : row) {
                 if (client != null) {
                     return false;
@@ -131,10 +175,10 @@ public class HttpClientFactory {
 
     /**
      * Construct an all-trusting certificate manager to use when SSL validation has
-     * been disabled. <b><b>SSL Validation should never be disabled in production!</b>
+     * been disabled. <b>SSL Validation should never be disabled in production!</b>
      * @return Fully permissive TrustManager
      */
-    private static TrustManager[]
+    private TrustManager[]
     getTrustAllCertsManager() {
         // Create a trust manager that does not validate certificate chains
         // NOT FOR PRODUCTION USE

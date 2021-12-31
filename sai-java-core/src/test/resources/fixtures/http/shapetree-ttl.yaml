@@ -1,0 +1,12 @@
+statusCode: 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+  PREFIX st: <http://www.w3.org/ns/shapetrees#>
+  PREFIX sh: <${SERVER_BASE}/http/shape#>
+
+  <#TestableTree>
+    a st:ShapeTree ;
+    st:expectsType st:Resource ;
+    st:shape sh:TestableShape ;

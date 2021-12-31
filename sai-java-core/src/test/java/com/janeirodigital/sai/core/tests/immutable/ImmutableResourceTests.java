@@ -35,7 +35,7 @@ class ImmutableResourceTests {
     @BeforeAll
     static void beforeAll() throws SaiException {
         // Initialize the Data Factory
-        dataFactory = new DataFactory(HttpClientFactory.get(false, false));
+        dataFactory = new DataFactory(new HttpClientFactory(false, false));
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(
                 new DispatcherEntry(List.of("immutable/immutable-resource-ttl"), "GET", "/immutable/immutable-resource", null),

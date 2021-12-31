@@ -2,11 +2,9 @@ package com.janeirodigital.sai.application;
 
 import com.janeirodigital.sai.core.ApplicationFactory;
 import com.janeirodigital.sai.core.DataFactory;
-import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import okhttp3.OkHttpClient;
 
 import java.net.URL;
 
@@ -24,13 +22,13 @@ public class Application {
 
     private final URL id ;
 
-    private OkHttpClient httpClient;
     private DataFactory dataFactory;
+    private HttpClientFactory clientFactory;
 
-    public Application(URL id, boolean validateSsl, boolean validateShapeTrees) throws SaiException {
+    public Application(URL id, boolean validateSsl, boolean validateShapeTrees) {
         this.id = id;
-        this.httpClient = HttpClientFactory.get(validateSsl, validateShapeTrees);
-        this.dataFactory = new ApplicationFactory(httpClient);
+        this.clientFactory = new HttpClientFactory(validateSsl, validateShapeTrees);
+        this.dataFactory = new ApplicationFactory(clientFactory);
     }
 
 }

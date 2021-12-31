@@ -25,11 +25,11 @@ public class TestableCRUDResource extends CRUDResource {
     private List<URL> tags;
     private List<String> comments;
 
-    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory) {
+    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory) throws SaiException {
         super(resourceUrl, dataFactory);
     }
 
-    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource) {
+    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource) throws SaiException {
         super(resourceUrl, dataFactory, resource);
     }
 

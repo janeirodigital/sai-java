@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.janeirodigital.sai.core.enums.ContentType.*;
+import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.enums.HttpHeader.LINK;
 import static com.janeirodigital.sai.core.enums.HttpMethod.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
@@ -37,8 +38,6 @@ public class HttpHelper {
     private static final Set<ContentType> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
 
     private HttpHelper() { }
-
-    //
 
     /**
      * Perform an HTTP GET on the resource at <code>url</code>.
@@ -101,10 +100,11 @@ public class HttpHelper {
 
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
+        if (body == null) { body = ""; }
         RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType.getValue()));
         requestBuilder.method(PUT.getValue(), requestBody);
-        if (headers != null) { requestBuilder.headers(headers); }
-
+        headers = setHttpHeader(CONTENT_TYPE, contentType.getValue(), headers);
+        requestBuilder.headers(headers);
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             // wrapping the call in try-with-resources automatically closes the response
             return checkResponse(response);
@@ -331,7 +331,7 @@ public class HttpHelper {
         }
         String responseType = response.header(HttpHeader.CONTENT_TYPE.getValue());
         ContentType contentType = ContentType.get(responseType);
-        if (contentType == null) { throw new SaiException("Unrecognized content-type"); }
+        if (contentType == null) { contentType = OCTET_STREAM; }
         return contentType;
     }
 

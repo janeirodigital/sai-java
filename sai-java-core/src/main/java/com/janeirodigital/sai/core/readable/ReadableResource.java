@@ -34,7 +34,7 @@ public class ReadableResource {
      * @param resourceUrl URL of the Readable resource
      * @param dataFactory Data factory to assign
      */
-    public ReadableResource(URL resourceUrl, DataFactory dataFactory) {
+    public ReadableResource(URL resourceUrl, DataFactory dataFactory) throws SaiException {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
         Objects.requireNonNull(dataFactory, "Must provide a data factory");
         Objects.requireNonNull(dataFactory.getHttpClient(), "Must provide a valid HTTP client");

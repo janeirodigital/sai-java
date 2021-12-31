@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>com.janeirodigital</groupId>
-            <artifactId>shapetrees-java-okhttp</artifactId>
+            <artifactId>shapetrees-java-client-okhttp</artifactId>
             <version>${shapetrees.version}</version>
         </dependency>
         <dependency>

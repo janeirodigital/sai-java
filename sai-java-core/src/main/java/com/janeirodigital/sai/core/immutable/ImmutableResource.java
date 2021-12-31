@@ -32,7 +32,7 @@ public class ImmutableResource {
      * @param dataFactory Data factory to assign
      * @param resource Jena resource to populate with
      */
-    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource) {
+    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource) throws SaiException {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
         Objects.requireNonNull(dataFactory, "Must provide a data factory");
         Objects.requireNonNull(dataFactory.getHttpClient(), "Must provide a valid HTTP client");
