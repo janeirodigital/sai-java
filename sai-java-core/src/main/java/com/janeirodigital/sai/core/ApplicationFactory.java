@@ -1,7 +1,6 @@
 package com.janeirodigital.sai.core;
 
 import com.janeirodigital.sai.core.http.HttpClientFactory;
-import okhttp3.OkHttpClient;
 
 /**
  * Data factory specifically for use by client applications

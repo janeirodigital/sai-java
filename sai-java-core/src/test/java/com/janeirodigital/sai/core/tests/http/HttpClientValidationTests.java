@@ -24,7 +24,7 @@ import static com.janeirodigital.sai.core.tests.fixtures.MockWebServerHelper.toU
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class HttpClientValidationTests {
+class HttpClientValidationTests {
 
     private static HttpClientFactory factory;
     private static MockWebServer server;

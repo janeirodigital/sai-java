@@ -26,7 +26,7 @@ class HttpClientFactoryTests {
         HttpClientFactory factory = new HttpClientFactory(true, true);
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
-        assertTrue(httpClient.equals(factory.get(true, true)));
+        assertEquals(httpClient, factory.get(true, true));
     }
 
 
@@ -36,7 +36,7 @@ class HttpClientFactoryTests {
         HttpClientFactory factory = new HttpClientFactory(true, true);
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
-        assertTrue(httpClient.equals(factory.get(true, true)));
+        assertEquals(httpClient, factory.get(true, true));
     }
 
     @Test
@@ -45,7 +45,7 @@ class HttpClientFactoryTests {
         HttpClientFactory factory = new HttpClientFactory(false, true);
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
-        assertTrue(httpClient.equals(factory.get(false, true)));
+        assertEquals(httpClient, factory.get(false, true));
     }
 
     @Test
@@ -72,7 +72,7 @@ class HttpClientFactoryTests {
         HttpClientFactory factory = new HttpClientFactory(true, false);
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
-        assertTrue(httpClient.equals(factory.get(true, false)));
+        assertEquals(httpClient, factory.get(true, false));
     }
 
     @Test
@@ -81,7 +81,7 @@ class HttpClientFactoryTests {
         HttpClientFactory factory = new HttpClientFactory(false, false);
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
-        assertTrue(httpClient.equals(factory.get(false, false)));
+        assertEquals(httpClient, factory.get(false, false));
     }
 
     @Test
