@@ -331,8 +331,7 @@ public class HttpHelper {
         }
         String responseType = response.header(HttpHeader.CONTENT_TYPE.getValue());
         ContentType contentType = ContentType.get(responseType);
-        // TODO - log and then set to OCTET_STREAM instead of raising an exception
-        if (contentType == null) { throw new SaiException("Unrecognized content-type"); }
+        if (contentType == null) { contentType = OCTET_STREAM; }
         return contentType;
     }
 
