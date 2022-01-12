@@ -1,6 +1,5 @@
 package com.janeirodigital.sai.core.http;
 
-import com.janeirodigital.sai.core.exceptions.SaiException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Authenticator;
 import okhttp3.Request;
@@ -34,18 +33,15 @@ public class AccessTokenAuthenticator implements Authenticator {
      * by the OkHttp client (if added during client initialization), and will attempt to get a valid token,
      * refreshing if it must. This authenticator blocks all requests while an updated token is being obtained.
      * In-flight requests that fail with a 401 are automatically retried.
-     * @param route Optional OkHtttp Route
+     * @param route Optional OkHttp Route
      * @param response OkHttp Response
      * @return OkHttp Request with updated token in Authorization header
      */
     @Override
     public Request authenticate(Route route, @NotNull Response response) {
 
-        AccessTokenProvider tokenProvider = getTokenProvider();
-        if (tokenProvider == null) { return null; }
-
         // Get current access token
-        String originalToken = getAccessToken(tokenProvider);
+        String originalToken = getAccessToken(this.tokenProvider);
         // If we can't get an access token, or the original request didn't include an authorization header
         if (originalToken == null || response.request().header(AUTHORIZATION.getValue()) == null) { return null; }
 
@@ -53,7 +49,7 @@ public class AccessTokenAuthenticator implements Authenticator {
         synchronized (this) {
 
             // Check and see if the token has been updated (e.g. by another thread that already went through this)
-            String recentToken = getAccessToken(tokenProvider);
+            String recentToken = getAccessToken(this.tokenProvider);
             if (recentToken == null) { return null; }
 
             // Check if the initial request (that the 401 was sent for) included an access token in the Authorization header
@@ -63,7 +59,7 @@ public class AccessTokenAuthenticator implements Authenticator {
                 if (!recentToken.equals(originalToken)) { return replaceAuthorizationValue(response, recentToken); }
 
                 // Otherwise refresh the token
-                String refreshedToken = refreshAccessToken(tokenProvider);
+                String refreshedToken = refreshAccessToken(this.tokenProvider);
                 if (refreshedToken == null) { return null; }
 
                 // Retry the request with the refreshed token
@@ -71,14 +67,6 @@ public class AccessTokenAuthenticator implements Authenticator {
             }
         }
         return null;
-    }
-
-    private AccessTokenProvider getTokenProvider() {
-        try { return AccessTokenProviderManager.getProvider(); } catch (SaiException ex) {
-            // No access token provider has been set
-            log.error("Unable to get an access token: {}", ex.getMessage());
-            return null;
-        }
     }
 
     private String getAccessToken(AccessTokenProvider tokenProvider) {
