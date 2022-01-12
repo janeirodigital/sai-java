@@ -27,6 +27,7 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
     private final String clientSecret;
     private final URI tokenEndpoint;
     private final List<String> scopes;
+    private AccessToken accessToken;
 
     public BasicAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint, List<String> scopes) {
         Objects.requireNonNull(clientIdentifier, "Must provide a client identifier for authentication");
@@ -36,6 +37,7 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
         this.clientSecret = clientSecret;
         this.tokenEndpoint = tokenEndpoint;
         if (scopes == null) { this.scopes = new ArrayList<>(); } else { this.scopes = scopes; }
+        this.accessToken = null;
     }
 
     public BasicAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint) {
@@ -43,12 +45,31 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
     }
 
     /**
-     * Get an Access Token via a client_credentials grant flow, using the client identifier
-     * and secret provided on construction of the BasicAccessTokenProvider.
+     * Provide an existing access token if it has already been obtained, otherwise obtain one.
      * @return AccessToken
      */
     @Override
     public String getAccessToken() throws IOException {
+        if (this.accessToken == null) { this.accessToken = obtainToken(); }
+        return this.accessToken.toString();
+    }
+
+    /**
+     * Refreshes an existing access token. This call should be made synchronously.
+     * @return Refreshed AccessToken
+     */
+    @Override
+    public String refreshAccessToken() throws IOException {
+        this.accessToken = obtainToken();
+        return this.accessToken.toString();
+    }
+
+    /**
+     * Get an Access Token via a client_credentials grant flow, using the client identifier
+     * and secret provided on construction of the BasicAccessTokenProvider.
+     * @return AccessToken
+     */
+    private synchronized AccessToken obtainToken() throws IOException {
 
         AuthorizationGrant clientGrant = new ClientCredentialsGrant();
 
@@ -74,19 +95,10 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
         }
 
         AccessTokenResponse successResponse = response.toSuccessResponse();
-        AccessToken accessToken = successResponse.getTokens().getAccessToken();
+        AccessToken newToken = successResponse.getTokens().getAccessToken();
         log.debug("Access token received from {}", this.tokenEndpoint);
 
-        return accessToken.toString();
-    }
-
-    /**
-     *
-     * @return Refreshed AccessToken
-     */
-    @Override
-    public String refreshAccessToken() throws IOException {
-        return getAccessToken();
+        return newToken;
     }
 
 }

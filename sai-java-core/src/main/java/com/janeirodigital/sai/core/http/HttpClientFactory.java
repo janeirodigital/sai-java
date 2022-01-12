@@ -113,6 +113,9 @@ public class HttpClientFactory implements OkHttpClientFactory {
             clientBuilder.hostnameVerifier(new NoopHostnameVerifier());
         }
 
+        // Add OkHttp authenticator which will automatically attempt to refresh tokens when necessary
+        clientBuilder.authenticator(new AccessTokenAuthenticator());
+
         return clientBuilder.build();
 
     }
