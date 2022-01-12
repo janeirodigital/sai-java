@@ -3,9 +3,9 @@ package com.janeirodigital.sai.core.http;
 import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
-import com.janeirodigital.shapetrees.okhttp.OkHttpClientFactory;
-import com.janeirodigital.shapetrees.okhttp.OkHttpClientFactoryManager;
-import com.janeirodigital.shapetrees.okhttp.OkHttpValidatingClientFactory;
+import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactory;
+import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactoryManager;
+import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
 import okhttp3.OkHttpClient;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 

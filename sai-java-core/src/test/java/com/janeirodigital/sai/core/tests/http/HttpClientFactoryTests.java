@@ -3,7 +3,7 @@ package com.janeirodigital.sai.core.tests.http;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
-import com.janeirodigital.shapetrees.okhttp.OkHttpValidatingClientFactory;
+import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
