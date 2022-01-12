@@ -9,6 +9,7 @@ import okhttp3.Route;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 
@@ -20,6 +21,13 @@ import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
  */
 @Slf4j
 public class AccessTokenAuthenticator implements Authenticator {
+
+    private final AccessTokenProvider tokenProvider;
+
+    public AccessTokenAuthenticator(AccessTokenProvider tokenProvider) {
+        Objects.requireNonNull(tokenProvider, "Must supply a token provider for the access token authenticator");
+        this.tokenProvider = tokenProvider;
+    }
 
     /**
      * In the event that a request receives a 401 Unauthorized, this method will be automatically called

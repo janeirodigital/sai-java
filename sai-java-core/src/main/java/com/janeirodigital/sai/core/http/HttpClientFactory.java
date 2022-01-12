@@ -113,8 +113,10 @@ public class HttpClientFactory implements OkHttpClientFactory {
             clientBuilder.hostnameVerifier(new NoopHostnameVerifier());
         }
 
-        // Add OkHttp authenticator which will automatically attempt to refresh tokens when necessary
-        clientBuilder.authenticator(new AccessTokenAuthenticator());
+        // If an AccessTokenProvider is available, and OkHttp authenticator that automatically attempts
+        // to refresh tokens when needed (e.g. when a 401 response is received)
+        AccessTokenProvider tokenProvider = AccessTokenProviderManager.getProvider();
+        if (tokenProvider != null) { clientBuilder.authenticator(new AccessTokenAuthenticator(tokenProvider)); }
 
         return clientBuilder.build();
 

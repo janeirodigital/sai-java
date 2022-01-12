@@ -3,11 +3,13 @@ package com.janeirodigital.sai.core.http;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import lombok.Setter;
 import lombok.Synchronized;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Manage the {@link AccessTokenProvider} in use by sai-js, which provides
  * access tokens to use for requests to protected resources
  */
+@Slf4j
 public class AccessTokenProviderManager {
 
     @Setter(onMethod_={@Synchronized})
@@ -22,7 +24,7 @@ public class AccessTokenProviderManager {
      */
     @Synchronized
     public static AccessTokenProvider getProvider() throws SaiException {
-        if (provider == null) { throw new SaiException("Must provide a valid access token provider for requests to protected resources"); }
+        if (provider == null) { log.warn("Must provide a valid access token provider for requests to protected resources"); }
         return provider;
     }
 
