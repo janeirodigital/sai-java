@@ -1,15 +1,19 @@
 package com.janeirodigital.sai.core.tests.http;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.http.AccessTokenProvider;
+import com.janeirodigital.sai.core.http.AccessTokenProviderManager;
+import com.janeirodigital.sai.core.http.BasicAccessTokenProvider;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
-import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
+import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
@@ -82,6 +86,18 @@ class HttpClientFactoryTests {
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
         assertEquals(httpClient, factory.get(false, false));
+    }
+
+    @Test
+    @DisplayName("Get an HTTP client with the access token authenticator enabled")
+    void getHttpClientAccessTokenAuthenticator() throws SaiException {
+        AccessTokenProvider tokenProvider = new BasicAccessTokenProvider("client", "secret", URI.create("https://cool.com/token"));
+        AccessTokenProviderManager.setProvider(tokenProvider);
+        HttpClientFactory factory = new HttpClientFactory(false, false);
+        OkHttpClient httpClient = factory.get();
+        assertNotNull(httpClient);
+        assertEquals(httpClient, factory.get(false, false));
+        AccessTokenProviderManager.setProvider(null);
     }
 
     @Test

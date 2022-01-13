@@ -26,7 +26,7 @@ class ReadableApplicationProfileTests {
     private static MockWebServer server;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() {
         // Initialize the Data Factory
         dataFactory = new DataFactory(new HttpClientFactory(false, false));
 

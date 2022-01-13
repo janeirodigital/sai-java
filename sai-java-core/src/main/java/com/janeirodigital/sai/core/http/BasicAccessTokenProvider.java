@@ -6,6 +6,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ import java.util.Objects;
  * client_credentials flow, a refresh_token isn't actually needed. Consequently,
  * calls to refresh the token simply make another client_credentials token request.
  */
-@Slf4j
+@Slf4j @Getter
 public class BasicAccessTokenProvider implements AccessTokenProvider {
 
     private final String clientIdentifier;
