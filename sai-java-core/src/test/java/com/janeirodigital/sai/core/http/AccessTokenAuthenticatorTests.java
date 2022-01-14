@@ -69,15 +69,8 @@ class AccessTokenAuthenticatorTests {
         AccessToken accessToken = tokenProvider.getAccessToken();
         Headers headers = setAuthorizationHeaders(accessToken, HttpMethod.GET, MockWebServerHelper.toUrl(server, "/protected"), null);
         Response response = getResource(httpClient, MockWebServerHelper.toUrl(server, "/protected"), headers);
-        assertEquals(TOKEN_STRING, accessToken.getValue());
+        assertEquals(200, response.code());
     }
-
-    // Fail to get original access token (getAccessToken returns null)
-    // Original request didn't include authorization header (response has no authz header)
-    // Second call to get access token returns null (recent token is null)
-    // Second call to get access token return a different token ( so use that instead )
-    // Return a null refresh token
-    // Fail to replace authorization headers
 
     @Test
     @DisplayName("Fail to get original access token")

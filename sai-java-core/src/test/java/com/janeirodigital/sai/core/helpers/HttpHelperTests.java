@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_HTML;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
@@ -116,8 +117,21 @@ class HttpHelperTests {
     }
 
     @Test
+    @DisplayName("Get an RDF resource with headers")
+    void getRdfHttpResourceHeaders() throws SaiException {
+        URL url = toUrl(server, "/http/get-rdf-resource-ttl");
+        Headers headers = setHttpHeader(AUTHORIZATION, "some-token-value");
+        Response response = getRdfResource(httpClient, url, headers);
+        assertTrue(response.isSuccessful());
+        Model model = getRdfModelFromResponse(response);
+        assertNotNull(model);
+        assertNotNull(model.getResource(url.toString()));
+        response.close();
+    }
+
+    @Test
     @DisplayName("Fail to get a resource without content-type")
-    void FailToGetHttpResourceNoContentType() throws IOException {
+    void FailToGetHttpResourceNoContentType() {
         URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-no-ct");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -127,7 +141,7 @@ class HttpHelperTests {
 
     @Test
     @DisplayName("Fail to get an RDF resource with bad content-type")
-    void failToGetRdfHttpResourceBadContentType() throws SaiException {
+    void failToGetRdfHttpResourceBadContentType() {
         URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-coolweb");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -138,7 +152,7 @@ class HttpHelperTests {
 
     @Test
     @DisplayName("Fail to get an RDF resource with non-rdf content-type")
-    void failToGetRdfHttpResourceNonRdfContentType() throws SaiException {
+    void failToGetRdfHttpResourceNonRdfContentType() {
         URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-nonrdf");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -149,7 +163,7 @@ class HttpHelperTests {
 
     @Test
     @DisplayName("Fail to get an RDF resource due to IO issue")
-    void failToGetRdfHttpResourceIO() throws SaiException, IOException {
+    void failToGetRdfHttpResourceIO() throws SaiException {
         URL url = toUrl(queuingServer, "/http/get-rdf-resource-ttl-io");
         queuingServer.enqueue(new MockResponse()
                               .setResponseCode(200)
@@ -164,7 +178,7 @@ class HttpHelperTests {
 
     @Test
     @DisplayName("Fail to get a required resource")
-    void FailToGetRequiredMissingHttpResource() throws IOException {
+    void FailToGetRequiredMissingHttpResource() {
         queuingServer.enqueue(new MockResponse().setResponseCode(404).setBody(""));
         assertThrows(SaiNotFoundException.class, () -> {
             getRequiredResource(httpClient, toUrl(queuingServer, "/http/no-resource"));
@@ -177,7 +191,7 @@ class HttpHelperTests {
 
     @Test
     @DisplayName("Fail to get a resource due to IO issue")
-    void FailToGetHttpResourceIO() throws IOException {
+    void FailToGetHttpResourceIO() {
         queuingServer.enqueue(new MockResponse()
                 .setBody(new Buffer().write(new byte[4096]))
                 .setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
@@ -200,7 +214,7 @@ class HttpHelperTests {
     void updateRdfHttpResource() throws SaiException {
         URL url = toUrl(server, "/http/put-update-resource");
         Model model = getModelFromString(urlToUri(url), getRdfBody(), TEXT_TURTLE);
-        Resource resource = model.getResource(url.toString() + "#project");
+        Resource resource = model.getResource(url + "#project");
         // Update with resource content
         Response response = putRdfResource(httpClient, url, resource);
         assertTrue(response.isSuccessful());
@@ -216,7 +230,7 @@ class HttpHelperTests {
     void createRdfContainerHttpResource() throws SaiException {
         URL url = toUrl(server, "/http/put-create-resource");
         Model model = getModelFromString(urlToUri(url), getRdfContainerBody(), TEXT_TURTLE);
-        Resource resource = model.getResource(url.toString() + "#project");
+        Resource resource = model.getResource(url + "#project");
         Response response = putRdfContainer(httpClient, url, resource);
         assertTrue(response.isSuccessful());
         response.close();
@@ -224,7 +238,7 @@ class HttpHelperTests {
 
     @Test
     @DisplayName("Fail to update a resource due to IO issue")
-    void failToUpdateHttpResourceIO() throws SaiException, IOException {
+    void failToUpdateHttpResourceIO() {
         queuingServer.enqueue(new MockResponse()
                 .setBody(new Buffer().write(new byte[4096]))
                 .setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
@@ -243,7 +257,8 @@ class HttpHelperTests {
     @Test
     @DisplayName("Delete a resource")
     void deleteHttpResource() throws SaiException {
-        Response response = deleteResource(httpClient, toUrl(server, "/http/delete-resource"));
+        Headers headers = setHttpHeader(AUTHORIZATION, "some-token-value");
+        Response response = deleteResource(httpClient, toUrl(server, "/http/delete-resource"), headers);
         assertTrue(response.isSuccessful());
     }
 
