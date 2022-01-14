@@ -1,24 +1,26 @@
 package com.janeirodigital.sai.core.http;
 
+import com.janeirodigital.sai.core.enums.HttpMethod;
+import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.net.URL;
+import java.util.*;
+
+import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 
 /**
  * Default implementation of {@link AccessTokenProvider} that can be used in the
- * absence of another option. Since this basic implementation uses the
- * client_credentials flow, a refresh_token isn't actually needed. Consequently,
+ * absence of another option. This provider uses Bearer tokens in a
+ * client_credentials flow. A refresh_token isn't actually needed. Consequently,
  * calls to refresh the token simply make another client_credentials token request.
  */
 @Slf4j @Getter
@@ -47,30 +49,44 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
 
     /**
      * Provide an existing access token if it has already been obtained, otherwise obtain one.
-     * @return AccessToken
+     * @return AccessToken (in generic sai-java format)
      */
     @Override
-    public String getAccessToken() throws IOException {
-        if (this.accessToken == null) { this.accessToken = obtainToken(); }
-        return this.accessToken.toString();
+    public AccessToken getAccessToken() throws IOException {
+        if (this.accessToken == null) { this.accessToken = translate(obtainToken()); }
+        return this.accessToken;
     }
 
     /**
      * Refreshes an existing access token. This call should be made synchronously.
-     * @return Refreshed AccessToken
+     * @return Refreshed AccessToken (in generic sai-java format)
      */
     @Override
-    public String refreshAccessToken() throws IOException {
-        this.accessToken = obtainToken();
-        return this.accessToken.toString();
+    public AccessToken refreshAccessToken() throws IOException {
+        this.accessToken = translate(obtainToken());
+        return this.accessToken;
+    }
+
+    /**
+     * Returns an immutable map with a single entry for the HTTP Authorization header
+     * and the provided access token as a Bearer token
+     * @param accessToken to get Authorization headers for
+     * @param method Not used for Bearer tokens - can be null
+     * @param url Not used for Bearer tokens - can be null
+     * @return Map with single HTTP Authorization Header populated
+     */
+    @Override
+    public Map<String, String> getAuthorizationHeaders(AccessToken accessToken, HttpMethod method, URL url) throws SaiException {
+        Objects.requireNonNull(accessToken, "Must provide an access token to get authorization headers");
+        return Map.of(AUTHORIZATION.getValue(), "Bearer " + accessToken.getValue());
     }
 
     /**
      * Get an Access Token via a client_credentials grant flow, using the client identifier
      * and secret provided on construction of the BasicAccessTokenProvider.
-     * @return AccessToken
+     * @return AccessToken (nimbus native format)
      */
-    private synchronized AccessToken obtainToken() throws IOException {
+    protected synchronized com.nimbusds.oauth2.sdk.token.AccessToken obtainToken() throws IOException {
 
         AuthorizationGrant clientGrant = new ClientCredentialsGrant();
 
@@ -96,10 +112,19 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
         }
 
         AccessTokenResponse successResponse = response.toSuccessResponse();
-        AccessToken newToken = successResponse.getTokens().getAccessToken();
+        com.nimbusds.oauth2.sdk.token.AccessToken newToken = successResponse.getTokens().getAccessToken();
         log.debug("Access token received from {}", this.tokenEndpoint);
 
         return newToken;
+    }
+
+    /**
+     * Translates a nimbus native AccessToken into the generic sai-java format
+     * @param nimbusToken Nimbus AccessToken
+     * @return AccessToken in sai-java format
+     */
+    private AccessToken translate(com.nimbusds.oauth2.sdk.token.AccessToken nimbusToken) {
+        return new BearerToken(nimbusToken.toString(), this);
     }
 
 }

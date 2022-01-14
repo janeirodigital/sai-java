@@ -2,9 +2,11 @@ package com.janeirodigital.sai.core.helpers;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
+import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.enums.LinkRelation;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.http.AccessToken;
 import com.janeirodigital.sai.core.vocabularies.LdpVocabulary;
 import okhttp3.*;
 import org.apache.jena.rdf.model.Model;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -47,18 +50,32 @@ public class HttpHelper {
      * @see <a href="https://square.github.io/okhttp/4.x/okhttp/okhttp3/-response-body/#the-response-body-must-be-closed">OkHttp - Closing the Response Body</a>
      * @param httpClient OkHttpClient to perform the GET with
      * @param url URL of the resource to GET
+     * @param headers Optional OkHttp Headers to include
      * @return OkHttp Response
      * @throws SaiException
      */
-    public static Response getResource(OkHttpClient httpClient, URL url) throws SaiException {
+    public static Response getResource(OkHttpClient httpClient, URL url, Headers headers) throws SaiException {
         try {
             Request.Builder requestBuilder = new Request.Builder();
             requestBuilder.url(url);
             requestBuilder.method(GET.getValue(), null);
+            if (headers != null) { requestBuilder.headers(headers); }
             return checkResponse(httpClient.newCall(requestBuilder.build()).execute());
         } catch (IOException ex) {
             throw new SaiException("Failed to lookup remote resource: " + ex.getMessage());
         }
+    }
+
+    /**
+     * Calls {@link #getResource(OkHttpClient, URL, Headers)} without any additional
+     * headers supplied.
+     * @param httpClient OkHttpClient to perform the GET with
+     * @param url URL of the resource to GET
+     * @return OkHttp Response
+     * @throws SaiException
+     */
+    public static Response getResource(OkHttpClient httpClient, URL url) throws SaiException {
+        return getResource(httpClient, url, null);
     }
 
     /**
@@ -118,14 +135,16 @@ public class HttpHelper {
      * <i>ResponseBody is closed automatically</i>.
      * @param httpClient OkHttpClient to perform the DELETE with
      * @param url URL of the resource to DELETE
+     * @param headers Optional OkHttp headers to include
      * @return OkHttp Response
      * @throws SaiException
      */
-    public static Response deleteResource(OkHttpClient httpClient, URL url) throws SaiException {
+    public static Response deleteResource(OkHttpClient httpClient, URL url, Headers headers) throws SaiException {
 
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
         requestBuilder.method( DELETE.getValue(), null);
+        if (headers != null) { requestBuilder.headers(headers); }
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             // wrapping the call in try-with-resources automatically closes the response
@@ -134,6 +153,17 @@ public class HttpHelper {
             throw new SaiException("Failed to delete remote resource: " + ex.getMessage());
         }
 
+    }
+
+    /**
+     * Calls {@link #deleteResource(OkHttpClient, URL, Headers)} without any additional headers supplied.
+     * @param httpClient OkHttpClient to perform the DELETE with
+     * @param url URL of the resource to DELETE
+     * @return OkHttp Response
+     * @throws SaiException
+     */
+    public static Response deleteResource(OkHttpClient httpClient, URL url) throws SaiException {
+        return deleteResource(httpClient, url, null);
     }
 
     /**
@@ -146,6 +176,19 @@ public class HttpHelper {
      */
     public static Response getRdfResource(OkHttpClient httpClient, URL url) throws SaiException {
         return checkRdfResponse(getResource(httpClient, url));
+    }
+
+    /**
+     * Perform an HTTP GET on an RDF resource at <code>url</code>. Checks that the
+     * response is representative of an RDF resource.
+     * @param httpClient OkHttpClient to perform the GET with
+     * @param url URL of the resource to GET
+     * @param headers Optional OkHttp headers to include
+     * @return OkHttp Response
+     * @throws SaiException
+     */
+    public static Response getRdfResource(OkHttpClient httpClient, URL url, Headers headers) throws SaiException {
+        return checkRdfResponse(getResource(httpClient, url, headers));
     }
 
     /**
@@ -292,6 +335,14 @@ public class HttpHelper {
      */
     public static String getLinkRelationString(LinkRelation type, String target) {
         return "<"+target+">;"+" rel=\""+type.getValue()+"\"";
+    }
+
+    public static Headers setAuthorizationHeaders(AccessToken accessToken, HttpMethod method, URL url, Headers headers) throws SaiException {
+        Map<String, String> authorizationHeaders = accessToken.getProvider().getAuthorizationHeaders(accessToken, method, url);
+        for (Map.Entry<String, String> entry : authorizationHeaders.entrySet()) {
+            headers = setHttpHeader(HttpHeader.get(entry.getKey()), entry.getValue(), headers);
+        }
+        return headers;
     }
 
     /**
