@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.http;
+package com.janeirodigital.sai.core.authorization;
 
 import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.exceptions.SaiException;
@@ -24,9 +24,9 @@ import java.util.Map;
 
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPost;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;

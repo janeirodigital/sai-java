@@ -1,11 +1,13 @@
-package com.janeirodigital.sai.core.http;
+package com.janeirodigital.sai.core.authorization;
 
+import com.janeirodigital.sai.core.authorization.*;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.fixtures.DispatcherHelper;
 import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
+import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.dpop.DefaultDPoPProofFactory;
 import okhttp3.*;

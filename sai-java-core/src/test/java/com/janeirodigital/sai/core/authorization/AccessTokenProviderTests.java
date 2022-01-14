@@ -1,5 +1,9 @@
-package com.janeirodigital.sai.core.http;
+package com.janeirodigital.sai.core.authorization;
 
+import com.janeirodigital.sai.core.authorization.AccessToken;
+import com.janeirodigital.sai.core.authorization.AccessTokenProvider;
+import com.janeirodigital.sai.core.authorization.AccessTokenProviderManager;
+import com.janeirodigital.sai.core.authorization.BasicAccessTokenProvider;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.fixtures.DispatcherHelper;
 import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;

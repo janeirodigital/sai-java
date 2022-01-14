@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.http;
+package com.janeirodigital.sai.core.authorization;
 
 import com.janeirodigital.sai.core.enums.AccessTokenType;
 import lombok.Getter;

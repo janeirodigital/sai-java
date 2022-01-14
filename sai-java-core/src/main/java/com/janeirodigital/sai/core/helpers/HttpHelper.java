@@ -6,7 +6,7 @@ import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.enums.LinkRelation;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.http.AccessToken;
+import com.janeirodigital.sai.core.authorization.AccessToken;
 import com.janeirodigital.sai.core.vocabularies.LdpVocabulary;
 import okhttp3.*;
 import org.apache.jena.rdf.model.Model;

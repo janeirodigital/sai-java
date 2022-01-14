@@ -1,10 +1,9 @@
 package com.janeirodigital.sai.core.http;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.http.AccessTokenProvider;
-import com.janeirodigital.sai.core.http.AccessTokenProviderManager;
-import com.janeirodigital.sai.core.http.BasicAccessTokenProvider;
-import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.authorization.AccessTokenProvider;
+import com.janeirodigital.sai.core.authorization.AccessTokenProviderManager;
+import com.janeirodigital.sai.core.authorization.BasicAccessTokenProvider;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import okhttp3.OkHttpClient;
