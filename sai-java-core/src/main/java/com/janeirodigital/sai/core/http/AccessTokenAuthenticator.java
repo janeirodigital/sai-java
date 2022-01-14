@@ -100,7 +100,7 @@ public class AccessTokenAuthenticator implements Authenticator {
             return null;
         }
         authorizationHeaders.forEach((header, value) -> requestBuilder.removeHeader(header));
-        authorizationHeaders.forEach((header, value) -> requestBuilder.addHeader(header, value));
+        authorizationHeaders.forEach(requestBuilder::addHeader);
         return requestBuilder.build();
     }
 

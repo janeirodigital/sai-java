@@ -31,4 +31,6 @@ public interface AccessTokenProvider {
      * @return Map of HTTP headers
      */
     Map<String, String> getAuthorizationHeaders(AccessToken accessToken, HttpMethod method, URL url) throws SaiException;
+
+
 }
