@@ -192,7 +192,7 @@ public class DPoPAccessTokenProvider implements AccessTokenProvider {
      * @return AccessToken in sai-java format
      */
     private AccessToken translate(com.nimbusds.oauth2.sdk.token.AccessToken nimbusToken) {
-        return new DPoPToken(nimbusToken.toString(), this);
+        return new AccessToken(DPOP, nimbusToken.toString(), this);
     }
 
 }

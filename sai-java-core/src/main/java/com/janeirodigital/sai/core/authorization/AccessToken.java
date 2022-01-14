@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.util.Objects;
 
 @Getter
-public abstract class AccessToken {
+public class AccessToken {
 
     protected final AccessTokenProvider provider;
     protected final AccessTokenType type;

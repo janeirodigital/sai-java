@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.*;
 
+import static com.janeirodigital.sai.core.enums.AccessTokenType.BEARER;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 
 /**
@@ -124,7 +125,7 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
      * @return AccessToken in sai-java format
      */
     private AccessToken translate(com.nimbusds.oauth2.sdk.token.AccessToken nimbusToken) {
-        return new BearerToken(nimbusToken.toString(), this);
+        return new AccessToken(BEARER, nimbusToken.toString(), this);
     }
 
 }
