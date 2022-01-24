@@ -1,24 +1,25 @@
 package com.janeirodigital.sai.core.authorization;
 
-import com.janeirodigital.sai.core.enums.AccessTokenType;
 import lombok.Getter;
 
 import java.util.Objects;
 
+/**
+ * General representation of an AccessToken used to support various token types
+ * returned from an {@link AccessTokenProvider}.
+ */
 @Getter
 public class AccessToken {
 
-    protected final AccessTokenProvider provider;
-    protected final AccessTokenType type;
     protected final String value;
 
-    protected AccessToken(AccessTokenType type, String value, AccessTokenProvider provider) {
-        Objects.requireNonNull(type, "Must provide an access token type");
-        Objects.requireNonNull(type, "Must provide an access token value");
-        Objects.requireNonNull(type, "Must provide an access token provider");
-        this.type = type;
+    /**
+     * Construct a new AccessToken
+     * @param value Value of the token itself
+     */
+    protected AccessToken(String value) {
+        Objects.requireNonNull(value, "Must provide an access token value");
         this.value = value;
-        this.provider = provider;
     }
 
 }

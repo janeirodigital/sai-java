@@ -1,5 +1,6 @@
-package com.janeirodigital.sai.core;
+package com.janeirodigital.sai.core.factories;
 
+import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -8,6 +9,7 @@ import lombok.Getter;
 import okhttp3.OkHttpClient;
 
 import java.net.URL;
+import java.util.Objects;
 
 /**
  * Base factory providing builders for many of the core data models
@@ -17,14 +19,19 @@ import java.net.URL;
 @Getter
 public class DataFactory {
 
+    private final AuthorizedSession authorizedSession;
     private final HttpClientFactory clientFactory;
 
     /**
-     * Initialize a data factory with the provided http client, which
-     * will be used for subsequent operations by the factory.
+     * Initialize a data factory with the provided authorized session and
+     * http client, which will be used for subsequent operations by the factory.
      * @param clientFactory Initialized {@link HttpClientFactory}
+     * @param authorizedSession {@link AuthorizedSession} with credentials used for access to protected resources
      */
-    public DataFactory(HttpClientFactory clientFactory) {
+    public DataFactory(AuthorizedSession authorizedSession, HttpClientFactory clientFactory) {
+        Objects.requireNonNull(authorizedSession, "Must provide an authorized session to initialize data factory");
+        Objects.requireNonNull(clientFactory, "Must provide a client factory to initialize data factory");
+        this.authorizedSession = authorizedSession;
         this.clientFactory = clientFactory;
     }
 
@@ -41,8 +48,8 @@ public class DataFactory {
     /**
      * Get a read-only version of an Application Profile
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#app">Solid - Application Profile</a>
-     * @param url
-     * @return Readable Application Profile
+     * @param url URL of the {@link ReadableApplicationProfile} to read
+     * @return {@link ReadableApplicationProfile}
      * @throws SaiException
      * @throws SaiNotFoundException
      */

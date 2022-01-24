@@ -2,11 +2,9 @@ package com.janeirodigital.sai.core.helpers;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
-import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.enums.LinkRelation;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.authorization.AccessToken;
 import com.janeirodigital.sai.core.vocabularies.LdpVocabulary;
 import okhttp3.*;
 import org.apache.jena.rdf.model.Model;
@@ -14,10 +12,10 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -55,6 +53,8 @@ public class HttpHelper {
      * @throws SaiException
      */
     public static Response getResource(OkHttpClient httpClient, URL url, Headers headers) throws SaiException {
+        Objects.requireNonNull(httpClient, "Must provide an http client to access resource");
+        Objects.requireNonNull(url, "Must provide a target URL to access resource");
         try {
             Request.Builder requestBuilder = new Request.Builder();
             requestBuilder.url(url);
@@ -62,7 +62,7 @@ public class HttpHelper {
             if (headers != null) { requestBuilder.headers(headers); }
             return checkResponse(httpClient.newCall(requestBuilder.build()).execute());
         } catch (IOException ex) {
-            throw new SaiException("Failed to lookup remote resource: " + ex.getMessage());
+            throw new SaiException("Failed to get remote resource: " + ex.getMessage());
         }
     }
 
@@ -115,6 +115,10 @@ public class HttpHelper {
      */
     public static Response putResource(OkHttpClient httpClient, URL url, Headers headers, String body, ContentType contentType) throws SaiException {
 
+        Objects.requireNonNull(httpClient, "Must provide an http client to access resource");
+        Objects.requireNonNull(url, "Must provide a target URL to access resource");
+        Objects.requireNonNull(contentType, "Must provide a content type to create resource");
+
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
         if (body == null) { body = ""; }
@@ -140,6 +144,9 @@ public class HttpHelper {
      * @throws SaiException
      */
     public static Response deleteResource(OkHttpClient httpClient, URL url, Headers headers) throws SaiException {
+
+        Objects.requireNonNull(httpClient, "Must provide an http client to access resource");
+        Objects.requireNonNull(url, "Must provide a target URL to access resource");
 
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
@@ -180,6 +187,20 @@ public class HttpHelper {
 
     /**
      * Perform an HTTP GET on an RDF resource at <code>url</code>. Checks that the
+     * response is representative of an RDF resource. Requires the resource to be found,
+     * or an exception is thrown.
+     * @param httpClient OkHttpClient to perform the GET with
+     * @param url URL of the resource to GET
+     * @return OkHttp Response
+     * @throws SaiException
+     * @throws SaiNotFoundException when no resource is found
+     */
+    public static Response getRequiredRdfResource(OkHttpClient httpClient, URL url) throws SaiException, SaiNotFoundException {
+        return checkRdfResponse(getRequiredResource(httpClient, url));
+    }
+
+    /**
+     * Perform an HTTP GET on an RDF resource at <code>url</code>. Checks that the
      * response is representative of an RDF resource.
      * @param httpClient OkHttpClient to perform the GET with
      * @param url URL of the resource to GET
@@ -198,6 +219,7 @@ public class HttpHelper {
      * @throws SaiException
      */
     public static Model getRdfModelFromResponse(Response response) throws SaiException {
+        Objects.requireNonNull(response, "Must provide a response to get RDF model from");
         checkRdfResponse(response);
         String body;
         HttpUrl requestUrl = response.request().url();
@@ -262,6 +284,8 @@ public class HttpHelper {
      * @return Updated OkHttp Headers
      */
     public static Headers setHttpHeader(HttpHeader name, String value, Headers headers) {
+        Objects.requireNonNull(name, "Must provide an http header to set");
+        Objects.requireNonNull(value, "Must provide a value for http header");
         Headers.Builder builder = new Headers.Builder();
         if (headers != null) { builder.addAll(headers); }
         builder.set(name.getValue(), value);
@@ -287,6 +311,8 @@ public class HttpHelper {
      * @return Populated OkHttp Headers
      */
     public static Headers addHttpHeader(HttpHeader name, String value, Headers headers) {
+        Objects.requireNonNull(name, "Must provide an http header to add");
+        Objects.requireNonNull(value, "Must provide a value for http header");
         Headers.Builder builder = new Headers.Builder();
         if (headers != null) { builder.addAll(headers); }
         builder.add(name.getValue(), value);
@@ -334,15 +360,9 @@ public class HttpHelper {
      * @return Formatted Link Relation string
      */
     public static String getLinkRelationString(LinkRelation type, String target) {
+        Objects.requireNonNull(type, "Must provide a link relation type");
+        Objects.requireNonNull(target, "Must provide a link relation target");
         return "<"+target+">;"+" rel=\""+type.getValue()+"\"";
-    }
-
-    public static Headers setAuthorizationHeaders(AccessToken accessToken, HttpMethod method, URL url, Headers headers) throws SaiException {
-        Map<String, String> authorizationHeaders = accessToken.getProvider().getAuthorizationHeaders(accessToken, method, url);
-        for (Map.Entry<String, String> entry : authorizationHeaders.entrySet()) {
-            headers = setHttpHeader(HttpHeader.get(entry.getKey()), entry.getValue(), headers);
-        }
-        return headers;
     }
 
     /**
@@ -377,6 +397,7 @@ public class HttpHelper {
      * @throws SaiException
      */
     protected static ContentType getContentType(Response response) throws SaiException {
+        Objects.requireNonNull(response, "Must provide a response to get content type for");
         if (response.header(HttpHeader.CONTENT_TYPE.getValue()) == null) {
             throw new SaiException("Content-type header is missing");
         }
@@ -392,6 +413,7 @@ public class HttpHelper {
      * @return IRI java native object for a URI (useful for Jena graph operations)
      */
     public static URI urlToUri(URL url) {
+        Objects.requireNonNull(url, "Must provide a URL to convert");
         try {
             return url.toURI();
         } catch (URISyntaxException ex) {
@@ -406,7 +428,50 @@ public class HttpHelper {
      * @return IRI java native object for a URI (useful for Jena graph operations)
      */
     public static URI requestUrlToUri(HttpUrl url) {
+        Objects.requireNonNull(url, "Must provide a URL to convert");
         return urlToUri(url.url());
+    }
+
+    /**
+     * Returns the scheme, domain name, port, and path of a URL, removing
+     * any query parameters or fragments.
+     * @param url to trim
+     * @return Base URL
+     */
+    public static URL urlToBase(URL url) throws SaiException {
+        Objects.requireNonNull(url, "Must provide a URL to convert");
+        URI uri = urlToUri(url);
+        if (uri.getFragment() == null && uri.getQuery() == null) { return url; }
+        try {
+            URI trimmed = new URI(uri.getScheme(), uri.getSchemeSpecificPart(), null);
+            return trimmed.toURL();
+        } catch(MalformedURLException|URISyntaxException ex) {
+            throw new SaiException("Unable to convert URL to Base URL: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Converts a string to a URL
+     * @param urlString String to convert to URL
+     * @return Converted URL
+     * @throws SaiException
+     */
+    public static URL stringToUrl(String urlString) throws SaiException {
+        Objects.requireNonNull(urlString, "Must provide a string to convert");
+        try {
+            return new URL(urlString);
+        } catch (MalformedURLException ex) {
+            throw new SaiException("Unable to convert String to URL: " + ex.getMessage());
+        }
+    }
+
+    public static URL uriToUrl(URI uri) throws SaiException {
+        Objects.requireNonNull(uri, "Must provide a URI to convert");
+        try {
+            return uri.toURL();
+        } catch (MalformedURLException ex) {
+            throw new SaiException("Unable to convert URI to URL: " + ex.getMessage());
+        }
     }
 
 }

@@ -7,15 +7,18 @@ import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-import static com.janeirodigital.sai.core.enums.AccessTokenType.BEARER;
+import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getOIDCProviderConfiguration;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 
 /**
@@ -29,23 +32,33 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
 
     private final String clientIdentifier;
     private final String clientSecret;
-    private final URI tokenEndpoint;
+    private final OIDCProviderMetadata oidcProvider;
     private final List<String> scopes;
     private AccessToken accessToken;
 
-    public BasicAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint, List<String> scopes) {
+    /**
+     * Construct a new basic access token provider
+     * @param clientIdentifier Identifier of the client (as used in authorization flows)
+     * @param clientSecret Secret used by the client for authorization with the OP
+     * @param oidcProvider URL of the OpenID Provider
+     * @param scopes Optional scopes for the token
+     */
+    public BasicAccessTokenProvider(String clientIdentifier, String clientSecret, URL oidcProvider, List<String> scopes) throws SaiException {
         Objects.requireNonNull(clientIdentifier, "Must provide a client identifier for authentication");
         Objects.requireNonNull(clientSecret, "Must provide a client secret for authentication");
-        Objects.requireNonNull(tokenEndpoint, "Must provide a token endpoint for authentication");
+        Objects.requireNonNull(oidcProvider, "Must provide a URL for the OpenID Provider");
         this.clientIdentifier = clientIdentifier;
         this.clientSecret = clientSecret;
-        this.tokenEndpoint = tokenEndpoint;
+        this.oidcProvider = getOIDCProviderConfiguration(oidcProvider);
         if (scopes == null) { this.scopes = new ArrayList<>(); } else { this.scopes = scopes; }
         this.accessToken = null;
     }
 
-    public BasicAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint) {
-        this(clientIdentifier, clientSecret, tokenEndpoint, null);
+    /**
+     * Construct a new BasicAccessTokenProvider without scopes
+     */
+    public BasicAccessTokenProvider(String clientIdentifier, String clientSecret, URL oidcProvider) throws SaiException {
+        this(clientIdentifier, clientSecret, oidcProvider, null);
     }
 
     /**
@@ -100,21 +113,21 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
         if (!this.scopes.isEmpty()) {
             String[] scopeArray = this.scopes.toArray(new String[0]);
             Scope scope = new Scope(scopeArray);
-            request = new TokenRequest(tokenEndpoint, clientAuth, clientGrant, scope);
+            request = new TokenRequest(this.oidcProvider.getTokenEndpointURI(), clientAuth, clientGrant, scope);
         } else {
-            request = new TokenRequest(tokenEndpoint, clientAuth, clientGrant);
+            request = new TokenRequest(this.oidcProvider.getTokenEndpointURI(), clientAuth, clientGrant);
         }
 
         try {
             response = TokenResponse.parse(request.toHTTPRequest().send());
             if (!response.indicatesSuccess()) { throw new IOException(response.toErrorResponse().toString()); }
         } catch (IOException | ParseException ex) {
-            throw new IOException("Request failed to token endpoint " + this.tokenEndpoint + ": " + ex.getMessage());
+            throw new IOException("Request failed to token endpoint " + this.oidcProvider.getTokenEndpointURI() + ": " + ex.getMessage());
         }
 
         AccessTokenResponse successResponse = response.toSuccessResponse();
         com.nimbusds.oauth2.sdk.token.AccessToken newToken = successResponse.getTokens().getAccessToken();
-        log.debug("Access token received from {}", this.tokenEndpoint);
+        log.debug("Access token received from {}", this.oidcProvider.getTokenEndpointURI());
 
         return newToken;
     }
@@ -125,7 +138,7 @@ public class BasicAccessTokenProvider implements AccessTokenProvider {
      * @return AccessToken in sai-java format
      */
     private AccessToken translate(com.nimbusds.oauth2.sdk.token.AccessToken nimbusToken) {
-        return new AccessToken(BEARER, nimbusToken.toString(), this);
+        return new AccessToken(nimbusToken.toString());
     }
 
 }

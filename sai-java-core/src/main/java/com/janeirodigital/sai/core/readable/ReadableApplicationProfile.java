@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import lombok.Getter;

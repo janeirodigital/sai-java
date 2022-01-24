@@ -106,7 +106,7 @@ public class RdfHelper {
      * @param resourceUrl URL of the resource to search for
      * @return Jena Resource at resourceUrl
      */
-    public static Resource getResourceFromModel(Model model, URL resourceUrl) {
+    public static Resource getResourceFromModel(Model model, URL resourceUrl) throws SaiException {
         Objects.requireNonNull(model, "Must provide a model to get a resource from it");
         Objects.requireNonNull(resourceUrl, "Must provide resource to get from model");
         return model.getResource(resourceUrl.toString());
@@ -595,7 +595,7 @@ public class RdfHelper {
         }
         switch (contentType) {
             case LD_JSON:
-                return Lang.JSONLD;
+                return Lang.JSONLD11;
             case RDF_XML:
                 return Lang.RDFXML;
             case N_TRIPLES:

@@ -1,12 +1,11 @@
-package com.janeirodigital.sai.core.immutable;
+package com.janeirodigital.sai.core.authorization;
 
-import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.TestableVocabulary;
+import com.janeirodigital.sai.core.crud.CRUDResource;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.readable.TestableReadableResource;
+import com.janeirodigital.sai.core.factories.DataFactory;
 import lombok.Getter;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -15,18 +14,23 @@ import java.util.List;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 
 @Getter
-public class TestableImmutableResource extends ImmutableResource {
+public class TestableProtectedResource extends CRUDResource {
 
-    private final int id;
-    private final String name;
-    private final OffsetDateTime createdAt;
-    private final URL milestone;
-    private final boolean active;
-    private final List<URL> tags;
-    private final List<String> comments;
+    private int id;
+    private String name;
+    private OffsetDateTime createdAt;
+    private URL milestone;
+    private boolean active;
+    private List<URL> tags;
+    private List<String> comments;
 
-    public TestableImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, boolean unprotected) throws SaiNotFoundException, SaiException {
-        super(resourceUrl, dataFactory, resource, unprotected);
+    public TestableProtectedResource(URL resourceUrl, DataFactory dataFactory) throws SaiException {
+        super(resourceUrl, dataFactory);
+    }
+
+    private void bootstrap() throws SaiException, SaiNotFoundException {
+        this.fetchData();
+        // populate the application profile fields
         this.id = getRequiredIntegerObject(this.resource, TestableVocabulary.TESTABLE_ID);
         this.name = getRequiredStringObject(this.resource, TestableVocabulary.TESTABLE_NAME);
         this.createdAt = getRequiredDateTimeObject(this.resource, TestableVocabulary.TESTABLE_CREATED_AT);
@@ -36,9 +40,10 @@ public class TestableImmutableResource extends ImmutableResource {
         this.comments = getStringObjects(this.resource, TestableVocabulary.TESTABLE_HAS_COMMENT);
     }
 
-    public TestableReadableResource store() throws SaiException, SaiNotFoundException {
-        this.create();
-        return TestableReadableResource.build(this.url, this.dataFactory, this.unprotected);
+    public static TestableProtectedResource build(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
+        TestableProtectedResource testable = new TestableProtectedResource(url, dataFactory);
+        testable.bootstrap();
+        return testable;
     }
 
 }

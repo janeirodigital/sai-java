@@ -12,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccessTokenProviderManager {
 
+    /**
+     * Set the access token provider that can be retrieved via {@link #getProvider()}
+     */
     @Setter(onMethod_={@Synchronized})
     private static AccessTokenProvider provider;
 

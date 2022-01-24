@@ -1,8 +1,9 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.fixtures.DispatcherEntry;
 import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class ReadableApplicationProfileTests {
 
@@ -25,9 +27,10 @@ class ReadableApplicationProfileTests {
     private static MockWebServer server;
 
     @BeforeAll
-    static void beforeAll() {
+    static void beforeAll() throws SaiException {
         // Initialize the Data Factory
-        dataFactory = new DataFactory(new HttpClientFactory(false, false));
+        AuthorizedSession mockSession = mock(AuthorizedSession.class);
+        dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(

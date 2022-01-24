@@ -1,14 +1,15 @@
 package com.janeirodigital.sai.core.http;
 
 import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
-import com.janeirodigital.sai.core.authorization.AccessTokenAuthenticator;
-import com.janeirodigital.sai.core.authorization.AccessTokenProvider;
-import com.janeirodigital.sai.core.authorization.AccessTokenProviderManager;
+import com.janeirodigital.sai.core.authorization.AccessTokenRefresher;
+import com.janeirodigital.sai.core.authorization.AuthorizedSessionAccessor;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactory;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactoryManager;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
+import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import okhttp3.OkHttpClient;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 
@@ -18,6 +19,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Factory to get, cache, and clear OkHttp HTTP clients matching provided configurations.
@@ -27,21 +29,31 @@ import java.security.NoSuchAlgorithmException;
  */
 public class HttpClientFactory implements OkHttpClientFactory {
 
-    static final int NO_VALIDATION = 0;
-    static final int VALIDATE = 1;
+    private final ConcurrentHashMap<HttpClientConfiguration, OkHttpClient> okHttpClients;
 
-    private final OkHttpClient[][] okHttpClients = {{null, null}, {null, null}};
+    // Default values for new clients
     private final boolean validateSsl;
     private final boolean validateShapeTrees;
+    private final boolean refreshTokens;
 
-    public HttpClientFactory(boolean validateSsl, boolean validateShapeTrees) {
+    private final AuthorizedSessionAccessor sessionAccessor;
+
+    public HttpClientFactory(boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens, AuthorizedSessionAccessor sessionAccessor) throws SaiException {
         this.validateSsl = validateSsl;
         this.validateShapeTrees = validateShapeTrees;
+        if (refreshTokens && sessionAccessor == null) { throw new SaiException("Must provide an authorized session accessor if when configured to refresh tokens"); }
+        this.refreshTokens = refreshTokens;
+        this.sessionAccessor = sessionAccessor;
+        this.okHttpClients = new ConcurrentHashMap<>();
+    }
+
+    public HttpClientFactory(boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens) throws SaiException {
+        this(validateSsl, validateShapeTrees, refreshTokens, null);
     }
 
     public OkHttpClient
     get() throws SaiException {
-        return get(this.validateSsl, this.validateShapeTrees);
+        return get(this.validateSsl, this.validateShapeTrees, this.refreshTokens);
     }
 
     /**
@@ -52,20 +64,21 @@ public class HttpClientFactory implements OkHttpClientFactory {
      * @see <a href="https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/#okhttpclients-should-be-shared">OkHttpClients should be shared</a>
      * @param validateSsl Disables client/server SSL validation when false.
      * @param validateShapeTrees Disables client-side shape tree validation when false.
+     * @param refreshTokens Disables automatic attempt to refresh access tokens on HTTP 401 responses when false
      * @return Configured OkHttpClient
      * @throws SaiException
      */
     public OkHttpClient
-    get(boolean validateSsl, boolean validateShapeTrees) throws SaiException {
+    get(boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens) throws SaiException {
 
-        int ssl = validateSsl ? VALIDATE : NO_VALIDATION;
-        int shapeTrees = validateShapeTrees ? VALIDATE : NO_VALIDATION;
+        // If there is already a client initialized matching this configuration return it
+        HttpClientConfiguration configuration = new HttpClientConfiguration(validateSsl, validateShapeTrees, refreshTokens);
+        if (this.okHttpClients.containsKey(configuration)) { return this.okHttpClients.get(configuration); }
 
-        if (this.okHttpClients[ssl][shapeTrees] != null) { return this.okHttpClients[ssl][shapeTrees]; }
+        // Otherwise create a new client matching the configuration
         try {
-            // Just call an internal factory here to produce the appropriate client configuration
-            OkHttpClient client = getClientForConfiguration(validateSsl, validateShapeTrees);
-            this.okHttpClients[ssl][shapeTrees] = client;
+            OkHttpClient client = getClientForConfiguration(validateSsl, validateShapeTrees, refreshTokens);
+            this.okHttpClients.put(configuration, client);
             return client;
         } catch (NoSuchAlgorithmException|KeyManagementException ex) {
             throw new SaiException(ex.getMessage());
@@ -74,18 +87,19 @@ public class HttpClientFactory implements OkHttpClientFactory {
 
     /**
      * Build and return an OkHttpClient based on the provided options for
-     * <code>validateSsl</code> and <code>validateShapeTrees</code>. SSL
+     * SSL Validation, Shape Tree Validation, and Token Refresh. SSL
      * is disabled by installing an all-trusting certificate manager.
      * Shape tree validation is enabled by injecting an OkHttp
      * <a href="https://square.github.io/okhttp/interceptors/">interceptor</a>.
-     * @param validateSsl
-     * @param validateShapeTrees
+     * @param validateSsl Disables client/server SSL validation when false.
+     * @param validateShapeTrees Disables client-side shape tree validation when false.
+     * @param refreshTokens Disables automatic attempt to refresh access tokens on HTTP 401 responses when false
      * @return Configured OkHttpClient
      * @throws NoSuchAlgorithmException
      * @throws KeyManagementException
      */
     public OkHttpClient
-    getClientForConfiguration(boolean validateSsl, boolean validateShapeTrees) throws NoSuchAlgorithmException, KeyManagementException, SaiException {
+    getClientForConfiguration(boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens) throws NoSuchAlgorithmException, KeyManagementException, SaiException {
 
         okhttp3.OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
 
@@ -116,13 +130,11 @@ public class HttpClientFactory implements OkHttpClientFactory {
             clientBuilder.hostnameVerifier(new NoopHostnameVerifier());
         }
 
-        // If an AccessTokenProvider is available, and OkHttp authenticator that automatically attempts
+        // If an AccessTokenProvider is available, an OkHttp authenticator that automatically attempts
         // to refresh tokens when needed (e.g. when a 401 response is received)
-        AccessTokenProvider tokenProvider = AccessTokenProviderManager.getProvider();
-        if (tokenProvider != null) { clientBuilder.authenticator(new AccessTokenAuthenticator(tokenProvider)); }
+        if (refreshTokens) { clientBuilder.authenticator(new AccessTokenRefresher(this.sessionAccessor)); }
 
         return clientBuilder.build();
-
     }
 
     /**
@@ -141,7 +153,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
     public OkHttpClient getOkHttpClient() throws ShapeTreeException {
         try {
             // the OkHttpClientFactory
-            return get(this.validateSsl, false);
+            return get(this.validateSsl, false, this.refreshTokens);
         } catch (SaiException ex) {
             throw new ShapeTreeException(500, ex.getMessage());
         }
@@ -153,15 +165,11 @@ public class HttpClientFactory implements OkHttpClientFactory {
      */
     public void
     resetClients() {
-        for (OkHttpClient[] row : this.okHttpClients) {
-            for (OkHttpClient client : row) {
-                if (client != null) {
-                    client.dispatcher().executorService().shutdown();
-                    client.connectionPool().evictAll();
-                }
-            }
-            row[VALIDATE] = null;
-            row[NO_VALIDATION] = null;
+        for (var entry : this.okHttpClients.entrySet()) {
+            OkHttpClient client = this.okHttpClients.get(entry.getKey());
+            client.dispatcher().executorService().shutdown();
+            client.connectionPool().evictAll();
+            this.okHttpClients.remove(entry.getKey());
         }
     }
 
@@ -170,16 +178,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
      * @return true when the cache is empty
      */
     public boolean
-    isEmpty() {
-        for (OkHttpClient[] row : this.okHttpClients) {
-            for (OkHttpClient client : row) {
-                if (client != null) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    isEmpty() { return this.okHttpClients.isEmpty(); }
 
     /**
      * Construct an all-trusting certificate manager to use when SSL validation has
@@ -210,6 +209,35 @@ public class HttpClientFactory implements OkHttpClientFactory {
                     }
                 }
         };
+    }
+
+    /**
+     * Internal class to manage configuration options for http clients
+     */
+    @Getter @AllArgsConstructor
+    protected static class HttpClientConfiguration {
+        private final boolean validateSsl;
+        private final boolean validateShapeTrees;
+        private final boolean refreshTokens;
+
+        @Override
+        public boolean equals(Object object) {
+            if (object == this) { return true; }
+            if (!(object instanceof HttpClientConfiguration)) { return false; }
+            HttpClientConfiguration configuration = (HttpClientConfiguration) object;
+            if (this.validateSsl != configuration.isValidateSsl()) { return false; }
+            if (this.validateShapeTrees != configuration.isValidateShapeTrees()) { return false; }
+            if (this.refreshTokens != configuration.isRefreshTokens()) { return false; }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Boolean.hashCode(this.validateSsl);
+            result = 31 * result + Boolean.hashCode(this.validateShapeTrees);
+            result = 31 * result + Boolean.hashCode(this.refreshTokens);
+            return result;
+        }
     }
 
 }

@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
@@ -24,9 +25,9 @@ import java.util.Map;
 
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
+import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPost;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -38,7 +39,7 @@ class DPoPAccessTokenProviderTests {
 
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
-    private static URI tokenEndpoint;
+    private static URL oidcProvider;
     private final String CLIENT_IDENTIFIER = "test--client";
     private final String CLIENT_SECRET = "test-secret";
     private final List<String> TOKEN_SCOPES = Arrays.asList("profile", "test");
@@ -50,10 +51,12 @@ class DPoPAccessTokenProviderTests {
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
         // In a given test, the first request to this endpoint will return provider-response, the second will return provider-refresh (a different token)
-        mockOnPost(dispatcher, "/token", List.of("http/dpop-token-provider-response-json", "http/dpop-token-provider-refresh-json"));
+        mockOnGet(dispatcher, "/op/.well-known/openid-configuration", "authorization/op-configuration-json");
+        mockOnGet(dispatcher, "/badop/.well-known/openid-configuration", "authorization/op-configuration-badtoken-json");
+        mockOnPost(dispatcher, "/op/token", List.of("http/dpop-token-provider-response-json", "http/dpop-token-provider-refresh-json"));
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
-        tokenEndpoint = urlToUri(toUrl(server, "/token"));
+        oidcProvider = toUrl(server, "/op/");
         AccessTokenProviderManager.setProvider(null);
     }
 
@@ -63,10 +66,10 @@ class DPoPAccessTokenProviderTests {
     @Test
     @DisplayName("Initialize DPoP access token provider")
     void initializeDPoPTokenProvider() throws SaiException {
-        DPoPAccessTokenProvider dpopProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint, TOKEN_SCOPES, Curve.P_256, null);
+        DPoPAccessTokenProvider dpopProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider, TOKEN_SCOPES, Curve.P_256, null);
         assertEquals(CLIENT_IDENTIFIER, dpopProvider.getClientIdentifier());
         assertEquals(CLIENT_SECRET, dpopProvider.getClientSecret());
-        assertEquals(tokenEndpoint, dpopProvider.getTokenEndpoint());
+        assertEquals(oidcProvider.toString(), dpopProvider.getOidcProvider().getIssuer().getValue());
         assertEquals(TOKEN_SCOPES, dpopProvider.getScopes());
     }
 
@@ -74,13 +77,13 @@ class DPoPAccessTokenProviderTests {
     @DisplayName("Fail to initialize DPoP access token provider")
     void failToInitializeDPoPTokenProvider() {
         Curve badCurve = new Curve("this", "not", "good");
-        assertThrows(SaiException.class, () -> { new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint, badCurve); });
+        assertThrows(SaiException.class, () -> { new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider, badCurve); });
     }
 
     @Test
     @DisplayName("Supply and get token provider from token provider manager")
     void setAndGetTokenProvider() throws SaiException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint);
+        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider);
         AccessTokenProviderManager.setProvider(tokenProvider);
         assertEquals(tokenProvider, AccessTokenProviderManager.getProvider());
     }
@@ -95,7 +98,7 @@ class DPoPAccessTokenProviderTests {
     @Test
     @DisplayName("Obtain taken with scopes")
     void getTokenWithScopes() throws IOException, SaiException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint, TOKEN_SCOPES);
+        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider, TOKEN_SCOPES);
         AccessToken accessToken = tokenProvider.getAccessToken();
         assertEquals(TOKEN_STRING, accessToken.getValue());
         // Confirm that getting the token fetches the cached version
@@ -105,22 +108,22 @@ class DPoPAccessTokenProviderTests {
     @Test
     @DisplayName("Obtain taken without scopes")
     void getTokenWithoutScopes() throws IOException, SaiException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint, Curve.P_256);
+        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider, Curve.P_256);
         AccessToken accessToken = tokenProvider.getAccessToken();
         assertEquals(TOKEN_STRING, accessToken.getValue());
     }
 
     @Test
     @DisplayName("Fail to obtain token from invalid endpoint")
-    void failToGetTokenBadEndpoint() throws SaiException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, URI.create("http://bad.com/token"));
+    void failToGetTokenBadEndpoint() throws SaiException, MalformedURLException {
+        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, toUrl(server, "/badop/"));
         assertThrows(IOException.class, () -> { tokenProvider.getAccessToken(); });
     }
 
     @Test
     @DisplayName("Fail to get DPoP proof for token request")
     void failToGetProofForTokenRequest(@Mock DefaultDPoPProofFactory mockProofFactory) throws SaiException, JOSEException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint, mockProofFactory);
+        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider, mockProofFactory);
         when(mockProofFactory.createDPoPJWT(anyString(), any(URI.class))).thenThrow(JOSEException.class);
         assertThrows(IOException.class, () -> { tokenProvider.getAccessToken(); });
     }
@@ -128,7 +131,7 @@ class DPoPAccessTokenProviderTests {
     @Test
     @DisplayName("Get authorization headers for token request")
     void getHeadersForTokenRequest() throws SaiException, IOException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint);
+        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider);
         AccessToken accessToken = tokenProvider.getAccessToken();
         URL url = new URL("https://cool.com/protected");
         Map<String, String> headers = tokenProvider.getAuthorizationHeaders(accessToken, HttpMethod.GET, url);
@@ -140,16 +143,16 @@ class DPoPAccessTokenProviderTests {
     @Test
     @DisplayName("Fail to get authorization headers for token request")
     void failToGetHeadersForTokenRequest(@Mock DefaultDPoPProofFactory mockProofFactory) throws SaiException, JOSEException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint, mockProofFactory);
+        DPoPAccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider, mockProofFactory);
         AccessToken token = mock(AccessToken.class);
         when(mockProofFactory.createDPoPJWT(anyString(), any(URI.class))).thenThrow(JOSEException.class);
-        assertThrows(SaiException.class, () -> { tokenProvider.getAuthorizationHeaders(token, HttpMethod.PUT, tokenEndpoint.toURL()); });
+        assertThrows(SaiException.class, () -> { tokenProvider.getAuthorizationHeaders(token, HttpMethod.PUT, tokenProvider.getOidcProvider().getTokenEndpointURI().toURL()); });
     }
 
     @Test
     @DisplayName("Refresh token")
     void refreshToken() throws IOException, SaiException {
-        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, tokenEndpoint);
+        AccessTokenProvider tokenProvider = new DPoPAccessTokenProvider(CLIENT_IDENTIFIER, CLIENT_SECRET, oidcProvider);
         AccessToken accessToken = tokenProvider.getAccessToken();
         assertEquals(TOKEN_STRING, accessToken.getValue());
         AccessToken refreshToken = tokenProvider.refreshAccessToken();

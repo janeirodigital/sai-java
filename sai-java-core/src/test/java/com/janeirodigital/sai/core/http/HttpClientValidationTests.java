@@ -55,7 +55,7 @@ class HttpClientValidationTests {
     @Test
     @DisplayName("Client shape tree validation allows valid data")
     void clientValidatesValidData() throws SaiException {
-        factory = new HttpClientFactory(false, true);
+        factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
         Response response = putRdfResource(validatingClient, validatingUrl, validResource);
         assertTrue(response.isSuccessful());
@@ -64,7 +64,7 @@ class HttpClientValidationTests {
     @Test
     @DisplayName("Client shape tree validation fails invalid data")
     void clientFailsInvalidData() throws SaiException {
-        factory = new HttpClientFactory(false, true);
+        factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
         Response response = putRdfResource(validatingClient, validatingUrl, invalidResource);
         assertFalse(response.isSuccessful());
@@ -73,7 +73,7 @@ class HttpClientValidationTests {
     @Test
     @DisplayName("Disabled client shape tree validation allows invalid data")
     void disabledClientAllowInvalidData() throws SaiException {
-        factory = new HttpClientFactory(false, false);
+        factory = new HttpClientFactory(false, false, false);
         OkHttpClient validatingClient = factory.get();
         Response response = putRdfResource(validatingClient, validatingUrl, invalidResource);
         assertTrue(response.isSuccessful());

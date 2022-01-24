@@ -17,17 +17,18 @@ import com.nimbusds.oauth2.sdk.dpop.DefaultDPoPProofFactory;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.DPoPAccessToken;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getOIDCProviderConfiguration;
 import static com.janeirodigital.sai.core.enums.AccessTokenType.DPOP;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
@@ -43,19 +44,29 @@ public class DPoPAccessTokenProvider implements AccessTokenProvider {
 
     private final String clientIdentifier;
     private final String clientSecret;
-    private final URI tokenEndpoint;
+    private final OIDCProviderMetadata oidcProvider;
     private final List<String> scopes;
     private AccessToken accessToken;  // This cached access token is in nimbus native format
     private final DPoPProofFactory proofFactory;
 
-    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint, List<String> scopes, Curve curve, DPoPProofFactory proofFactory) throws SaiException {
+    /**
+     * Construct a new DPoP access token provider
+     * @param clientIdentifier Identifier of the client (as used in authorization flows)
+     * @param clientSecret Secret used by the client for authorization with the OP
+     * @param oidcProvider URL of the OpenID Provider
+     * @param scopes Optional scopes for the token
+     * @param curve Optional cryptographic curve (or default used)
+     * @param proofFactory Optional proof factory (or default used)
+     * @throws SaiException
+     */
+    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URL oidcProvider, List<String> scopes, Curve curve, DPoPProofFactory proofFactory) throws SaiException {
         Objects.requireNonNull(clientIdentifier, "Must provide a client identifier for authentication");
         Objects.requireNonNull(clientSecret, "Must provide a client secret for authentication");
-        Objects.requireNonNull(tokenEndpoint, "Must provide a token endpoint for authentication");
-        Objects.requireNonNull(tokenEndpoint, "Must provide a value for elliptic curve key generation");
+        Objects.requireNonNull(oidcProvider, "Must provide a URL for the OpenID Provider");
+        Objects.requireNonNull(curve, "Must provide a value for elliptic curve key generation");
         this.clientIdentifier = clientIdentifier;
         this.clientSecret = clientSecret;
-        this.tokenEndpoint = tokenEndpoint;
+        this.oidcProvider = getOIDCProviderConfiguration(oidcProvider);
         this.accessToken = null;
         if (scopes == null) { this.scopes = new ArrayList<>(); } else { this.scopes = scopes; }
         if (proofFactory == null) {
@@ -73,29 +84,29 @@ public class DPoPAccessTokenProvider implements AccessTokenProvider {
     /**
      * Construct provider with no scopes
      */
-    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint, Curve curve) throws SaiException {
-        this(clientIdentifier, clientSecret, tokenEndpoint, null, curve, null);
+    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URL oidcProvider, Curve curve) throws SaiException {
+        this(clientIdentifier, clientSecret, oidcProvider, null, curve, null);
     }
 
     /**
      * Construct provider with scopes and default curve
      */
-    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint, List<String> scopes) throws SaiException {
-        this(clientIdentifier, clientSecret, tokenEndpoint, scopes, Curve.P_256, null);
+    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URL oidcProvider, List<String> scopes) throws SaiException {
+        this(clientIdentifier, clientSecret, oidcProvider, scopes, Curve.P_256, null);
     }
 
     /**
      * Construct provider with no scopes and default curve
      */
-    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint) throws SaiException {
-        this(clientIdentifier, clientSecret, tokenEndpoint, null, Curve.P_256, null);
+    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URL oidcProvider) throws SaiException {
+        this(clientIdentifier, clientSecret, oidcProvider, null, Curve.P_256, null);
     }
 
     /**
      * Construct provider with no scopes and custom proof factory
      */
-    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URI tokenEndpoint, DPoPProofFactory proofFactory) throws SaiException {
-        this(clientIdentifier, clientSecret, tokenEndpoint, null, Curve.P_256, proofFactory);
+    public DPoPAccessTokenProvider(String clientIdentifier, String clientSecret, URL oidcProvider, DPoPProofFactory proofFactory) throws SaiException {
+        this(clientIdentifier, clientSecret, oidcProvider, null, Curve.P_256, proofFactory);
     }
 
     /**
@@ -158,9 +169,9 @@ public class DPoPAccessTokenProvider implements AccessTokenProvider {
         if (!this.scopes.isEmpty()) {
             String[] scopeArray = this.scopes.toArray(new String[0]);
             Scope scope = new Scope(scopeArray);
-            request = new TokenRequest(tokenEndpoint, clientAuth, clientGrant, scope);
+            request = new TokenRequest(this.oidcProvider.getTokenEndpointURI(), clientAuth, clientGrant, scope);
         } else {
-            request = new TokenRequest(tokenEndpoint, clientAuth, clientGrant);
+            request = new TokenRequest(this.oidcProvider.getTokenEndpointURI(), clientAuth, clientGrant);
         }
 
         HTTPRequest httpRequest = request.toHTTPRequest();
@@ -176,12 +187,12 @@ public class DPoPAccessTokenProvider implements AccessTokenProvider {
             response = TokenResponse.parse(httpRequest.send());
             if (!response.indicatesSuccess()) { throw new IOException(response.toErrorResponse().toString()); }
         } catch (IOException | ParseException ex) {
-            throw new IOException("Request failed to token endpoint " + this.tokenEndpoint + ": " + ex.getMessage());
+            throw new IOException("Request failed to token endpoint " + this.oidcProvider.getTokenEndpointURI() + ": " + ex.getMessage());
         }
 
         AccessTokenResponse successResponse = response.toSuccessResponse();
         DPoPAccessToken dpopToken = successResponse.getTokens().getDPoPAccessToken();
-        log.debug("DPoP access token received from {}", this.tokenEndpoint);
+        log.debug("DPoP access token received from {}", this.oidcProvider.getTokenEndpointURI());
 
         return dpopToken;
     }
@@ -192,7 +203,7 @@ public class DPoPAccessTokenProvider implements AccessTokenProvider {
      * @return AccessToken in sai-java format
      */
     private AccessToken translate(com.nimbusds.oauth2.sdk.token.AccessToken nimbusToken) {
-        return new AccessToken(DPOP, nimbusToken.toString(), this);
+        return new AccessToken(nimbusToken.toString());
     }
 
 }

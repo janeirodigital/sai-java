@@ -130,7 +130,7 @@ class RdfHelperTests {
 
     @Test
     @DisplayName("Get resource from RDF model")
-    void checkGetResourceFromModel() {
+    void checkGetResourceFromModel() throws SaiException {
         Resource resource = getResourceFromModel(readableModel, resourceUrl);
         assertNotNull(resource);
         assertEquals(resourceUrl.toString(), resource.getURI());
@@ -535,7 +535,7 @@ class RdfHelperTests {
     void checkLangForContentType() {
         assertEquals(Lang.TURTLE, getLangForContentType(null));
         assertEquals(Lang.TURTLE, getLangForContentType(ContentType.TEXT_TURTLE));
-        assertEquals(Lang.JSONLD, getLangForContentType(ContentType.LD_JSON));
+        assertEquals(Lang.JSONLD11, getLangForContentType(ContentType.LD_JSON));
         assertEquals(Lang.RDFXML, getLangForContentType(ContentType.RDF_XML));
         assertEquals(Lang.NTRIPLES, getLangForContentType(ContentType.N_TRIPLES));
     }

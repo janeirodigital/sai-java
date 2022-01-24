@@ -1,8 +1,9 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import org.apache.jena.rdf.model.Model;
@@ -11,12 +12,14 @@ import org.apache.jena.rdf.model.Resource;
 import java.net.URL;
 import java.util.Objects;
 
+import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.putProtectedRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 
 /**
  * Represents a corresponding RDF Resource and provides create, read, and
  * delete capabilities. Immutable resources don't provide an update capability.
  */
+@Getter
 public class ImmutableResource {
 
     protected final URL url;
@@ -24,6 +27,7 @@ public class ImmutableResource {
     protected final OkHttpClient httpClient;
     protected Model dataset;
     protected Resource resource;
+    protected boolean unprotected;
 
     /**
      * Construct an immutable resource for <code>resourceUrl</code> based on the dataset
@@ -31,8 +35,9 @@ public class ImmutableResource {
      * @param resourceUrl URL of the immutable resource
      * @param dataFactory Data factory to assign
      * @param resource Jena resource to populate with
+     * @param unprotected When true no authorization credentials will be sent in requests to this resource
      */
-    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource) throws SaiException {
+    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, boolean unprotected) throws SaiException {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
         Objects.requireNonNull(dataFactory, "Must provide a data factory");
         Objects.requireNonNull(dataFactory.getHttpClient(), "Must provide a valid HTTP client");
@@ -42,17 +47,26 @@ public class ImmutableResource {
         this.httpClient = dataFactory.getHttpClient();
         this.dataset = resource.getModel();
         this.resource = resource;
+        this.unprotected = unprotected;
     }
 
     /**
      * Create the corresponding resource over HTTP with the current contents
      * of <code>dataset</code>. If-None-Match header is used to ensure another
      * resource at <code>url</code> doesn't already exist.
-     *
      * @throws SaiException
      */
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
+        if (this.isUnprotected()) { this.createUnprotected(headers); } else {
+            putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, headers);
+        }
+    }
+
+    /**
+     * Create the corresponding resource without sending any authorization headers
+     */
+    private void createUnprotected(Headers headers) throws SaiException {
         putRdfResource(this.httpClient, this.url, this.resource, headers);
     }
 

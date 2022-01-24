@@ -63,7 +63,7 @@ class HttpHelperTests {
         server.setDispatcher(dispatcher);
         // Initialize another Mock Web Server used specifically for queuing exceptions and assign a queue dispatcher
         // Initialize HTTP client
-        clientFactory = new HttpClientFactory(true, false);
+        clientFactory = new HttpClientFactory(true, false, false);
         httpClient = clientFactory.get();
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
     }

@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.TestableVocabulary;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
@@ -25,12 +25,12 @@ public class TestableCRUDResource extends CRUDResource {
     private List<URL> tags;
     private List<String> comments;
 
-    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory) throws SaiException {
-        super(resourceUrl, dataFactory);
+    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory, boolean unprotected) throws SaiException {
+        super(resourceUrl, dataFactory, unprotected);
     }
 
-    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource) throws SaiException {
-        super(resourceUrl, dataFactory, resource);
+    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource, boolean unprotected) throws SaiException {
+        super(resourceUrl, dataFactory, resource, unprotected);
     }
 
     private void bootstrap() throws SaiException, SaiNotFoundException {
@@ -45,8 +45,8 @@ public class TestableCRUDResource extends CRUDResource {
         this.comments = getStringObjects(this.resource, TestableVocabulary.TESTABLE_HAS_COMMENT);
     }
 
-    public static TestableCRUDResource build(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
-        TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory);
+    public static TestableCRUDResource build(URL url, DataFactory dataFactory, boolean unprotected) throws SaiException, SaiNotFoundException {
+        TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory, unprotected);
         testable.bootstrap();
         return testable;
     }
