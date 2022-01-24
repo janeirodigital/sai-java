@@ -243,4 +243,24 @@ public class AuthorizedSessionHelper {
         return new AccessToken(split[1]);
     }
 
+    /**
+     * Translates a nimbus native AccessToken into the generic sai-java format
+     * @param nimbusAccessToken Nimbus AccessToken
+     * @return AccessToken in sai-java format
+     */
+    public static AccessToken translateAccessToken(com.nimbusds.oauth2.sdk.token.AccessToken nimbusAccessToken) {
+        Objects.requireNonNull(nimbusAccessToken, "Must provide an access token to translate");
+        return new AccessToken(nimbusAccessToken.toString());
+    }
+
+    /**
+     * Translates a nimbus native AccessToken into the generic sai-java format
+     * @param nimbusRefreshToken Nimbus RefreshToken
+     * @return RefreshToken in sai-java format
+     */
+    public static RefreshToken translateRefreshToken(com.nimbusds.oauth2.sdk.token.RefreshToken nimbusRefreshToken) {
+        Objects.requireNonNull(nimbusRefreshToken, "Must provide a refresh token to translate");
+        return new RefreshToken(nimbusRefreshToken.toString());
+    }
+
 }

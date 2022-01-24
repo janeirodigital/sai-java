@@ -56,6 +56,7 @@ public class SolidOidcSession implements AuthorizedSession {
                              AccessToken accessToken, RefreshToken refreshToken, DPoPProofFactory proofFactory) {
         Objects.requireNonNull(socialAgentId, "Must provide a Social Agent identifier to construct a Solid OIDC session");
         Objects.requireNonNull(applicationId, "Must provide an application identifier to construct a Solid OIDC session");
+        Objects.requireNonNull(oidcProviderId, "Must provide an OIDC provider identifier to construct a Solid OIDC session");
         Objects.requireNonNull(oidcProviderMetadata, "Must provide OIDC provider metadata to construct a Solid OIDC session");
         Objects.requireNonNull(accessToken, "Must provide an access token to construct a Solid OIDC session");
         Objects.requireNonNull(proofFactory, "Must provide a DPoP proof factory to construct a Solid OIDC session");
@@ -81,6 +82,7 @@ public class SolidOidcSession implements AuthorizedSession {
     public Map<String, String> toHttpHeaders(HttpMethod method, URL url) throws SaiException {
         Objects.requireNonNull(method, "Must provide the HTTP method of the request to generate headers for");
         Objects.requireNonNull(url, "Must provide the target URL of the request to generate headers for");
+        Objects.requireNonNull(this.accessToken, "Cannot generate authorization headers for an uninitialized access token");
         SignedJWT proof = getProof(this.proofFactory, method, url);
         return Map.of(AUTHORIZATION.getValue(), "DPoP " + this.accessToken.getValue(), DPOP.getValue(), proof.serialize());
     }
@@ -140,26 +142,6 @@ public class SolidOidcSession implements AuthorizedSession {
         } catch (JOSEException ex) {
             throw new SaiException("Unable to create DPoP proof: " + ex.getMessage());
         }
-    }
-
-    /**
-     * Translates a nimbus native AccessToken into the generic sai-java format
-     * @param nimbusAccessToken Nimbus AccessToken
-     * @return AccessToken in sai-java format
-     */
-    protected static AccessToken translateAccessToken(com.nimbusds.oauth2.sdk.token.AccessToken nimbusAccessToken) {
-        Objects.requireNonNull(nimbusAccessToken, "Must provide an access token to translate");
-        return new AccessToken(nimbusAccessToken.toString());
-    }
-
-    /**
-     * Translates a nimbus native AccessToken into the generic sai-java format
-     * @param nimbusRefreshToken Nimbus RefreshToken
-     * @return RefreshToken in sai-java format
-     */
-    protected static RefreshToken translateRefreshToken(com.nimbusds.oauth2.sdk.token.RefreshToken nimbusRefreshToken) {
-        Objects.requireNonNull(nimbusRefreshToken, "Must provide a refresh token to translate");
-        return new RefreshToken(nimbusRefreshToken.toString());
     }
 
     /**

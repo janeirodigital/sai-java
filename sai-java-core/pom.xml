@@ -118,6 +118,10 @@
                 <configuration>
                     <excludes>
                         <exclude>**/AccessTokenRefresherTests.class</exclude>
+                        <exclude>**/AccessTokenProviderTests.class</exclude>
+                        <exclude>**/BasicAccessTokenProviderTests.class</exclude>
+                        <exclude>**/DPoPAccessTokenProviderTests.class</exclude>
+                        <exclude>**/ProtectedResourceTests.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>

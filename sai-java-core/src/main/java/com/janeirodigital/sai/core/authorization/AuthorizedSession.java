@@ -10,14 +10,53 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-// TODO - AUTH REFACTOR
+/**
+ * Interface implemented by different types of authorized sessions, typically
+ * different types of OAuth2/OIDC flows. Keeps sai-java classes that require
+ * credentials to access protected resources from having to care about the specifics
+ * of how those credentials are acquired and maintained. See {@link SolidOidcSession} and
+ * {@link ClientCredentialsSession} for implementation examples.
+ */
 public interface AuthorizedSession {
 
+    /**
+     * Gets the URL of the SocialAgent identity associated with the {@link AuthorizedSession}
+     * @return URL of SocialAgent identity
+     */
     URL getSocialAgentId();
+
+    /**
+     * Gets the URL of the Application identity associated with the {@link AuthorizedSession}
+     * @return URL of Application identity
+     */
     URL getApplicationId();
+
+    /**
+     * Gets the URL of the OIDC Provider that issued the tokens for the {@link AuthorizedSession}
+     * @return URL of Application identity
+     */
     URL getOidcProviderId();
+
+    /**
+     * Gets the {@link AccessToken} associated with the {@link AuthorizedSession}
+     * @return {@link AccessToken}
+     */
     AccessToken getAccessToken();
+
+    /**
+     * Gets the {@link RefreshToken} associated with the {@link AuthorizedSession}
+     * @return {@link RefreshToken}
+     */
     RefreshToken getRefreshToken();
+
+    /**
+     * Generates a map of HTTP authorization headers that can be added to an HTTP request when
+     * accessing protected resources. Some types of sessions (e.g. DPoP) need to know the
+     * HTTP method and target URL of the request to generate the headers.
+     * @param method HTTP method of the request
+     * @param url Target URL of the request
+     * @return Map of Authorization Headers
+     */
     Map<String, String> toHttpHeaders(HttpMethod method, URL url) throws SaiException;
     void refresh() throws SaiException;
 

@@ -1,8 +1,5 @@
 package com.janeirodigital.sai.core.http;
 
-import com.janeirodigital.sai.core.authorization.AccessTokenProvider;
-import com.janeirodigital.sai.core.authorization.AccessTokenProviderManager;
-import com.janeirodigital.sai.core.authorization.BasicAccessTokenProvider;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
@@ -19,7 +16,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
-import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
@@ -48,7 +44,6 @@ class HttpClientFactoryTests {
         assertNotNull(httpClient);
         assertEquals(httpClient, factory.get(true, true, false));
     }
-
 
     @Test
     @DisplayName("Get an HTTP client with SSL enabled : validation enabled")
@@ -102,18 +97,6 @@ class HttpClientFactoryTests {
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
         assertEquals(httpClient, factory.get(false, false, false));
-    }
-
-    @Test
-    @DisplayName("Get an HTTP client with the access token authenticator enabled")
-    void getHttpClientAccessTokenAuthenticator() throws SaiException {
-        AccessTokenProvider tokenProvider = new BasicAccessTokenProvider("client", "secret", toUrl(server, "/op/"));
-        AccessTokenProviderManager.setProvider(tokenProvider);
-        HttpClientFactory factory = new HttpClientFactory(false, false, false);
-        OkHttpClient httpClient = factory.get();
-        assertNotNull(httpClient);
-        assertEquals(httpClient, factory.get(false, false, false));
-        AccessTokenProviderManager.setProvider(null);
     }
 
     @Test
