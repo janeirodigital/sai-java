@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class BasicAuthorizedSessionAccessor implements AuthorizedSessionAccessor {
 
+    private final String DIGEST_ALGORITHM = "SHA-512";
     private final ConcurrentHashMap<String, AuthorizedSession> sessions;
 
     /**
@@ -23,18 +24,18 @@ public class BasicAuthorizedSessionAccessor implements AuthorizedSessionAccessor
     /**
      * Gets the provided {@link AuthorizedSession} from the in-memory store
      * @param session {@link AuthorizedSession} to get
-     * @return
+     * @return {@link AuthorizedSession} matching the provided session or null
      */
     @Override
     public AuthorizedSession get(AuthorizedSession session) throws SaiException {
-        return this.sessions.get(session.getId());
+        return this.sessions.get(session.getId(DIGEST_ALGORITHM));
     }
 
     /**
      * Searches the in-memory session store for an {@link AuthorizedSession} with the same access token value
      * as the one in the provided <code>accessToken</code>.
      * @param accessToken Access token to lookup session with
-     * @return {@link AuthorizedSession} matching the provided access token
+     * @return {@link AuthorizedSession} matching the provided access token or null
      */
     @Override
     public AuthorizedSession get(AccessToken accessToken) {
@@ -51,10 +52,21 @@ public class BasicAuthorizedSessionAccessor implements AuthorizedSessionAccessor
     @Override
     public AuthorizedSession refresh(AuthorizedSession session) throws SaiException {
         session.refresh();
-        this.sessions.replace(session.getId(), session);
+        this.sessions.replace(session.getId(DIGEST_ALGORITHM), session);
         return session;
     }
 
-    public void store(AuthorizedSession session) throws SaiException { this.sessions.put(session.getId(), session); }
+    /**
+     * Updates in-memory session store with the provided {@link AuthorizedSession}
+     * @param session session to store
+     * @throws SaiException
+     */
+    public void store(AuthorizedSession session) throws SaiException { this.sessions.put(session.getId(DIGEST_ALGORITHM), session); }
+
+    /**
+     * Returns the size of the in-memory session store
+     * @return number of sessions
+     */
+    public int size() { return this.sessions.size(); }
 
 }

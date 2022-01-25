@@ -154,6 +154,7 @@ public class ClientCredentialsSessionTests {
         assertNull(session.getRefreshToken());
         assertEquals(socialAgentId, session.getSocialAgentId());
         assertEquals(applicationId, session.getApplicationId());
+        assertNotNull(session.getId("SHA-512"));
     }
 
     @Test
@@ -169,6 +170,7 @@ public class ClientCredentialsSessionTests {
         assertNotNull(session);
         assertEquals("https://social.local/" + builder.getClientIdentifier(), session.getSocialAgentId().toString());
         assertEquals("https://clients.local/" + builder.getClientIdentifier(), session.getApplicationId().toString());
+        assertNotNull(session.getId("SHA-512"));
     }
 
     @Test

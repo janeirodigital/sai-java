@@ -389,6 +389,7 @@ public class SolidOidcSessionTests {
         assertTrue(session.toHttpHeaders(GET, redirect).containsKey(AUTHORIZATION.getValue()));
         assertTrue(session.toHttpHeaders(GET, redirect).get(AUTHORIZATION.getValue()).startsWith("DPoP"));
         assertTrue(session.toHttpHeaders(GET, redirect).containsKey(DPOP.getValue()));
+        assertNotNull(session.getId("SHA-512"));
     }
 
     @Test

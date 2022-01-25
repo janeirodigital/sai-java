@@ -58,22 +58,26 @@ public interface AuthorizedSession {
      * @return Map of Authorization Headers
      */
     Map<String, String> toHttpHeaders(HttpMethod method, URL url) throws SaiException;
+
+    /**
+     * Refreshes the token(s) associated with the {@link AuthorizedSession}
+     * @throws SaiException
+     */
     void refresh() throws SaiException;
 
     /**
      * Default method that returns a consistent session identifier across implementations
      * for an authorized session scoped to the social agent, application id, and openid provider.
+     * @param algorithm Message digest algorithm to use
      * @return String identifier of an authorized session
      */
-    default String getId() throws SaiException {
+    default String getId(String algorithm) throws SaiException {
         String combined = getSocialAgentId().toString() + getApplicationId().toString() + getOidcProviderId().toString();
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            MessageDigest md = MessageDigest.getInstance(algorithm);
             byte[] messageDigest = md.digest(combined.getBytes(StandardCharsets.UTF_8));
             BigInteger no = new BigInteger(1, messageDigest);
-            String hash = no.toString(16);
-            while (hash.length() < 32) { hash = "0" + hash; }
-            return hash;
+            return no.toString(16);
         } catch (NoSuchAlgorithmException ex) {
             throw new SaiException("Failed to generate identifier for authorized session: " + ex.getMessage());
         }
