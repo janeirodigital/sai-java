@@ -3,7 +3,10 @@ package com.janeirodigital.sai.core.authorization;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.oauth2.sdk.*;
+import com.nimbusds.oauth2.sdk.dpop.DefaultDPoPProofFactory;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.openid.connect.sdk.Prompt;
 import okhttp3.OkHttpClient;
@@ -19,6 +22,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getDPoPProofFactory;
+import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getProof;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
 import static com.janeirodigital.sai.core.enums.HttpMethod.GET;
@@ -27,6 +32,7 @@ import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPost;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +51,8 @@ public class SolidOidcSessionTests {
     private static URL socialAgentUnknownId;
     private static URL socialAgentNoRefreshId;
     private static URL socialAgentRefreshId;
+    private static URL socialAgentRefreshUnknownId;
+    private static URL socialAgentRefreshNoRefreshId;
     private static URL oidcProviderId;
     private static URL redirect;
 
@@ -86,6 +94,15 @@ public class SolidOidcSessionTests {
         mockOnGet(dispatcher, "/refresh/alice/id", "authorization/alice-webid-refresh-ttl");
         mockOnGet(dispatcher, "/refresh/op/.well-known/openid-configuration", "authorization/op-configuration-refresh-json");
         mockOnPost(dispatcher, "/refresh/op/token", "authorization/op-token-response-refresh-json");
+        // Request is made with an offline access scope and then a refresh is issued getting a different access token of unknown type
+        mockOnGet(dispatcher, "/refresh-unknown/alice/id", "authorization/alice-webid-refresh-unknown-ttl");
+        mockOnGet(dispatcher, "/refresh-unknown/op/.well-known/openid-configuration", "authorization/op-configuration-refresh-unknown-json");
+        mockOnPost(dispatcher, "/refresh-unknown/op/token", List.of("authorization/op-token-response-refresh-unknown-1-json", "authorization/op-token-response-refresh-unknown-2-json"));
+        // Request is made with an offline access scope and then a refresh is issued but an additional refresh token isn't provided
+        mockOnGet(dispatcher, "/refresh-norefresh/alice/id", "authorization/alice-webid-refresh-norefresh-ttl");
+        mockOnGet(dispatcher, "/refresh-norefresh/op/.well-known/openid-configuration", "authorization/op-configuration-refresh-norefresh-json");
+        mockOnPost(dispatcher, "/refresh-norefresh/op/token", List.of("authorization/op-token-response-refresh-norefresh-1-json", "authorization/op-token-response-refresh-norefresh-2-json"));
+        
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
         clientFactory = new HttpClientFactory(false, false, false);
@@ -99,6 +116,8 @@ public class SolidOidcSessionTests {
         socialAgentUnknownId = toUrl(server, "/unknown/alice/id#me");
         socialAgentNoRefreshId = toUrl(server, "/norefresh/alice/id#me");
         socialAgentRefreshId = toUrl(server, "/refresh/alice/id#me");
+        socialAgentRefreshUnknownId = toUrl(server, "/refresh-unknown/alice/id#me");
+        socialAgentRefreshNoRefreshId = toUrl(server, "/refresh-norefresh/alice/id#me");
 
         applicationId = toUrl(server, "/projectron/id");
         oidcProviderId = toUrl(server, "/op/");
@@ -373,7 +392,7 @@ public class SolidOidcSessionTests {
     }
 
     @Test
-    @DisplayName("Initialize solid-oidc builder - refresh session")
+    @DisplayName("Refresh solid-oidc session")
     void initBuilderRefreshSession() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
@@ -389,12 +408,54 @@ public class SolidOidcSessionTests {
         assertNotEquals(originalRefreshToken, session.getRefreshToken());
     }
 
-    // requestTokens - success
-    //   -- fail to parse response
-    //   -- fail when returned access token is not dpop
-    //   -- with refresh token / without refresh token
-    // build
-    // toHttpHeaders
-    // refresh
-    // getProof
+    @Test
+    @DisplayName("Fail to refresh session - no refresh token")
+    void failToRefreshSessionNullRefresh() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentNoRefreshId).setApplication(applicationId).setScope(scopes)
+                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
+        SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
+        assertThrows(SaiException.class, () -> session.refresh());
+    }
+
+    @Test
+    @DisplayName("Fail to refresh session - unknown token type returned")
+    void failToRefreshSessionUnknownToken() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentRefreshUnknownId).setApplication(applicationId).setScope(scopes)
+                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
+        SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
+        assertThrows(SaiException.class, () -> session.refresh());
+    }
+
+    @Test
+    @DisplayName("Refresh session - no refresh token returned")
+    void failToRefreshSessionNoRefresh() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentRefreshNoRefreshId).setApplication(applicationId).setScope(scopes)
+                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
+        SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
+        assertNotNull(session);
+        session.refresh();
+        assertNotNull(session.getAccessToken());
+        assertNull(session.getRefreshToken());
+    }
+
+    @Test
+    @DisplayName("Fail to get dpop proof factory - invalid curve")
+    void failToGetDpopProofFactory() {
+        assertThrows(SaiException.class, () -> getDPoPProofFactory(new Curve("NOTREAL")));
+    }
+
+    @Test
+    @DisplayName("Fail to get proof - jose error")
+    void failToGetDpopProofJose() throws JOSEException {
+        DefaultDPoPProofFactory mockProofFactory = mock(DefaultDPoPProofFactory.class);
+        when(mockProofFactory.createDPoPJWT(anyString(), any(URI.class))).thenThrow(JOSEException.class);
+        assertThrows(SaiException.class, () -> getProof(mockProofFactory, GET, redirect));
+    }
+
 }

@@ -52,7 +52,7 @@ public class SolidOidcSession implements AuthorizedSession {
     private RefreshToken refreshToken;
     private final DPoPProofFactory proofFactory;
 
-    private SolidOidcSession(URL socialAgentId, URL applicationId, URL oidcProviderId, OIDCProviderMetadata oidcProviderMetadata,
+    protected SolidOidcSession(URL socialAgentId, URL applicationId, URL oidcProviderId, OIDCProviderMetadata oidcProviderMetadata,
                              AccessToken accessToken, RefreshToken refreshToken, DPoPProofFactory proofFactory) {
         Objects.requireNonNull(socialAgentId, "Must provide a Social Agent identifier to construct a Solid OIDC session");
         Objects.requireNonNull(applicationId, "Must provide an application identifier to construct a Solid OIDC session");
@@ -105,7 +105,11 @@ public class SolidOidcSession implements AuthorizedSession {
         Tokens tokens = obtainTokens(this.oidcProviderMetadata, clientId, refreshTokenGrant, this.proofFactory);
         if (tokens.getDPoPAccessToken() == null) { throw new SaiException("Access token is not DPoP"); }
         this.accessToken = translateAccessToken(tokens.getDPoPAccessToken());
-        if (tokens.getRefreshToken() != null) { this.refreshToken = translateRefreshToken(tokens.getRefreshToken()); }
+        if (tokens.getRefreshToken() != null) {
+            this.refreshToken = translateRefreshToken(tokens.getRefreshToken());
+        } else {
+            this.refreshToken = null;
+        }
     }
 
     /**
@@ -125,6 +129,22 @@ public class SolidOidcSession implements AuthorizedSession {
             return proofFactory.createDPoPJWT(method.getValue(), urlToUri(url));
         } catch (JOSEException ex) {
             throw new SaiException("Unable to create DPoP proof: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Gets a DPoP proof factory that can be used for generate DPoP proofs for requests
+     * made by the session.
+     * @param curve JOSE cryptographic curve
+     * @return DPoPProofFactory
+     * @throws SaiException
+     */
+    protected static DPoPProofFactory getDPoPProofFactory(Curve curve) throws SaiException {
+        try {
+            ECKey ecJwk = new ECKeyGenerator(curve).keyID("1").generate();
+            return new DefaultDPoPProofFactory(ecJwk, JWSAlgorithm.ES256);
+        } catch (JOSEException ex) {
+            throw new SaiException("Failed to initiate DPoP proof generation infrastructure: " + ex.getMessage());
         }
     }
 
@@ -354,7 +374,7 @@ public class SolidOidcSession implements AuthorizedSession {
             Objects.requireNonNull(this.authorizationCode, "Cannot request tokens without authorization code");
             Objects.requireNonNull(this.redirect, "Must provide a redirect for the token request");
             Objects.requireNonNull(this.codeVerifier, "Must provide a code verifier for the token request");
-            this.proofFactory = getProofFactory();
+            this.proofFactory = getDPoPProofFactory(Curve.P_256);
             Tokens tokens = obtainTokens(this.oidcProviderMetadata, this.clientId, new AuthorizationCodeGrant(this.authorizationCode, urlToUri(this.redirect), this.codeVerifier), this.proofFactory);
             // The access token is not of type DPoP
             if (tokens.getDPoPAccessToken() == null) { throw new SaiException("Access token is not DPoP"); }
@@ -376,21 +396,6 @@ public class SolidOidcSession implements AuthorizedSession {
             Objects.requireNonNull(this.accessToken, "Cannot build a Solid OIDC session without an access token");
             Objects.requireNonNull(this.proofFactory, "Cannot build a Solid OIDC session without a proof factory");
             return new SolidOidcSession(this.socialAgentId, this.applicationId, this.oidcProviderId, this.oidcProviderMetadata, this.accessToken, this.refreshToken, this.proofFactory);
-        }
-
-        /**
-         * Gets a DPoP proof factory that can be used for generate DPoP proofs for requests
-         * made by the session.
-         * @return DPoPProofFactory
-         * @throws SaiException
-         */
-        private DPoPProofFactory getProofFactory() throws SaiException {
-            try {
-                ECKey ecJwk = new ECKeyGenerator(Curve.P_256).keyID("1").generate();
-                return new DefaultDPoPProofFactory(ecJwk, JWSAlgorithm.ES256);
-            } catch (JOSEException ex) {
-                throw new SaiException("Failed to initiate DPoP proof generation infrastructure: " + ex.getMessage());
-            }
         }
 
     }
