@@ -102,23 +102,7 @@ public class SolidOidcSession implements AuthorizedSession {
         com.nimbusds.oauth2.sdk.token.RefreshToken nimbusRefreshToken = new com.nimbusds.oauth2.sdk.token.RefreshToken(this.refreshToken.getValue());
         AuthorizationGrant refreshTokenGrant = new RefreshTokenGrant(nimbusRefreshToken);
         ClientID clientId = new ClientID(this.applicationId.toString());
-
-        // Make the token request
-        TokenRequest request = new TokenRequest(this.oidcProviderMetadata.getTokenEndpointURI(), clientId, refreshTokenGrant);
-        HTTPRequest httpRequest = request.toHTTPRequest();
-        httpRequest.setAccept("*/*");
-        SignedJWT proof = getProof(this.proofFactory, POST, httpRequest.getURL());
-        httpRequest.setDPoP(proof);
-
-        TokenResponse response;
-        try {
-            response = TokenResponse.parse(httpRequest.send());
-            if (!response.indicatesSuccess()) { throw new SaiException(response.toErrorResponse().toString()); }
-        } catch (IOException | ParseException ex) {
-            throw new SaiException("Refresh request failed to token endpoint " + this.oidcProviderMetadata.getTokenEndpointURI() + ": " + ex.getMessage());
-        }
-
-        Tokens tokens = response.toSuccessResponse().getTokens();
+        Tokens tokens = obtainTokens(this.oidcProviderMetadata, clientId, refreshTokenGrant, this.proofFactory);
         if (tokens.getDPoPAccessToken() == null) { throw new SaiException("Access token is not DPoP"); }
         this.accessToken = translateAccessToken(tokens.getDPoPAccessToken());
         if (tokens.getRefreshToken() != null) { this.refreshToken = translateRefreshToken(tokens.getRefreshToken()); }
@@ -142,6 +126,33 @@ public class SolidOidcSession implements AuthorizedSession {
         } catch (JOSEException ex) {
             throw new SaiException("Unable to create DPoP proof: " + ex.getMessage());
         }
+    }
+
+    /**
+     * Post a token request to the token endpoint provided in <code>oidcProviderMetadata</code>. Used in
+     * both the initial token request as well as in subsequent token refreshes.
+     * @param oidcProviderMetadata configuration of the target identity provider
+     * @param clientId client identifier
+     * @param grant authorization grant
+     * @param proofFactory DPoP proof factory
+     * @return Tokens object containing requested tokens
+     * @throws SaiException
+     */
+    protected static Tokens obtainTokens(OIDCProviderMetadata oidcProviderMetadata, ClientID clientId, AuthorizationGrant grant, DPoPProofFactory proofFactory) throws SaiException {
+        TokenRequest request;
+        request = new TokenRequest(oidcProviderMetadata.getTokenEndpointURI(), clientId, grant);
+        HTTPRequest httpRequest = request.toHTTPRequest();
+        httpRequest.setAccept("*/*");
+        SignedJWT proof = getProof(proofFactory, POST, httpRequest.getURL());
+        httpRequest.setDPoP(proof);
+        TokenResponse response;
+        try {
+            response = TokenResponse.parse(httpRequest.send());
+            if (!response.indicatesSuccess()) { throw new SaiException(response.toErrorResponse().toString()); }
+        } catch (IOException | ParseException ex) {
+            throw new SaiException("Request failed to token endpoint " + oidcProviderMetadata.getTokenEndpointURI() + ": " + ex.getMessage());
+        }
+        return response.toSuccessResponse().getTokens();
     }
 
     /**
@@ -344,22 +355,7 @@ public class SolidOidcSession implements AuthorizedSession {
             Objects.requireNonNull(this.redirect, "Must provide a redirect for the token request");
             Objects.requireNonNull(this.codeVerifier, "Must provide a code verifier for the token request");
             this.proofFactory = getProofFactory();
-            TokenRequest request;
-            request = new TokenRequest(this.oidcProviderMetadata.getTokenEndpointURI(),
-                                       this.clientId,
-                                       new AuthorizationCodeGrant(this.authorizationCode, urlToUri(this.redirect), this.codeVerifier));
-            HTTPRequest httpRequest = request.toHTTPRequest();
-            httpRequest.setAccept("*/*");
-            SignedJWT proof = getProof(this.proofFactory, POST, httpRequest.getURL());
-            httpRequest.setDPoP(proof);
-            TokenResponse response;
-            try {
-                response = TokenResponse.parse(httpRequest.send());
-                if (!response.indicatesSuccess()) { throw new SaiException(response.toErrorResponse().toString()); }
-            } catch (IOException | ParseException ex) {
-                throw new SaiException("Request failed to token endpoint " + this.oidcProviderMetadata.getTokenEndpointURI() + ": " + ex.getMessage());
-            }
-            Tokens tokens = response.toSuccessResponse().getTokens();
+            Tokens tokens = obtainTokens(this.oidcProviderMetadata, this.clientId, new AuthorizationCodeGrant(this.authorizationCode, urlToUri(this.redirect), this.codeVerifier), this.proofFactory);
             // The access token is not of type DPoP
             if (tokens.getDPoPAccessToken() == null) { throw new SaiException("Access token is not DPoP"); }
             this.accessToken = translateAccessToken(tokens.getDPoPAccessToken());

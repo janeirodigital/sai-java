@@ -2,6 +2,7 @@ package com.janeirodigital.sai.core.fixtures;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
+import okhttp3.mockwebserver.SocketPolicy;
 import org.apache.commons.text.StringSubstitutor;
 
 import java.io.BufferedReader;
@@ -27,6 +28,7 @@ public class Fixture {
     public String body;
     public List<String> headers;
     public int delay;
+    public String socketPolicy;
 
     /**
      * Parse the given filename and returns the Fixture object.
@@ -102,6 +104,9 @@ public class Fixture {
             for (String header : this.headers) {
                 mockResponse.addHeader(header);
             }
+        }
+        if (this.socketPolicy != null) {
+            mockResponse.setSocketPolicy(SocketPolicy.valueOf(this.socketPolicy));
         }
         return mockResponse;
     }
