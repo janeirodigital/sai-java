@@ -16,7 +16,6 @@ import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -47,13 +46,10 @@ class AccessTokenRefresherTests {
     private URL socialAgentId;
     private URL applicationId;
     private URL oidcProviderId;
-    private URL protectedUrl;
     private AccessToken originalToken;
     private AccessToken updatedToken;
     private final String TOKEN_STRING = "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3";
     private final String REFRESH_STRING = "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZjJi56";
-
-    AccessTokenRefresherTests() throws MalformedURLException { }
 
     @BeforeEach
     void beforeEach() throws SaiException {
@@ -73,7 +69,6 @@ class AccessTokenRefresherTests {
         oidcProviderId = toUrl(server, "/op/");
         socialAgentId = stringToUrl("https://alice.example/id#me");
         applicationId = stringToUrl("https://projectron.example/id");
-        protectedUrl = toUrl(server, "/protected");
 
         originalToken = new AccessToken(TOKEN_STRING);
         when(authorizedSession.getSocialAgentId()).thenReturn(socialAgentId);
@@ -204,119 +199,5 @@ class AccessTokenRefresherTests {
         Response response = getProtectedResource(authorizedSession, influencedClient, toUrl(server, "/protected"));
         assertEquals(401, response.code());
     }
-
-    /*
-
-    @Test
-    @DisplayName("Fail to lookup authorized session")
-    void failToGetOriginalToken() throws SaiException, JOSEException, MalformedURLException {
-        AccessTokenRefresher authenticator = new AccessTokenRefresher(sessionAccessor);
-        assertNull(authenticator.authenticate(null, createResponse(protectedUrl, true)));
-    }
-
-    // TODO - AUTH-REFACTOR
-    @Test
-    @DisplayName("Do not proceed when original token is unavailable")
-    void doNotProceedOriginalUnavailable() throws MalformedURLException {
-        URL url = new URL("http://cool.biz/protected");
-        AccessTokenRefresher mockAuthenticator = mock(AccessTokenRefresher.class, withSettings().useConstructor(sessionAccessor).defaultAnswer(CALLS_REAL_METHODS));
-        assertNull(mockAuthenticator.authenticate(null, createResponse(url, true)));
-    }
-
-    // TODO - AUTH-REFACTOR
-    @Test
-    @DisplayName("Do not proceed when recent token is unavailable")
-    void doNotProceedRecentUnavailable() throws MalformedURLException {
-        URL url = new URL("http://cool.biz/protected");
-        AccessTokenRefresher mockAuthenticator = mock(AccessTokenRefresher.class, withSettings().useConstructor(sessionAccessor).defaultAnswer(CALLS_REAL_METHODS));
-        AccessToken original = new AccessToken("original-token");
-        AccessToken recent = null;
-        AccessToken refreshed = new AccessToken("refreshed-token");
-//        when(mockAuthenticator.getAccessToken(tokenProvider)).thenReturn(original,recent);
-        assertNull(mockAuthenticator.authenticate(null, createResponse(url, true)));
-    }
-
-    // TODO - AUTH-REFACTOR
-    @Test
-    @DisplayName("Proceed when recent token has been updated")
-    void proceedWithUpdatedRecentToken() throws MalformedURLException {
-        URL url = new URL("http://cool.biz/protected");
-        AccessTokenRefresher mockAuthenticator = mock(AccessTokenRefresher.class, withSettings().useConstructor(sessionAccessor).defaultAnswer(CALLS_REAL_METHODS));
-        AccessToken original = new AccessToken("original-token");
-        AccessToken recent = new AccessToken("recent-token");
-        //when(mockAuthenticator.getAccessToken(tokenProvider)).thenReturn(original,recent);
-        assertNotNull(mockAuthenticator.authenticate(null, createResponse(url, true)));
-    }
-
-    // TODO - AUTH-REFACTOR
-    @Test
-    @DisplayName("Do not proceed if original request didn't include authorization header")
-    void doNotProceedWhenNoAuthorizationHeader() throws MalformedURLException {
-        URL url = new URL("http://cool.biz/protected");
-        AccessTokenRefresher mockAuthenticator = mock(AccessTokenRefresher.class, withSettings().useConstructor(sessionAccessor).defaultAnswer(CALLS_REAL_METHODS));
-        AccessToken original = new AccessToken("original-token");
-        AccessToken recent = new AccessToken("recent-token");
-//        when(mockAuthenticator.getAccessToken(tokenProvider)).thenReturn(original,recent);
-        assertNull(mockAuthenticator.authenticate(null, createResponse(url, false)));
-    }
-
-    // TODO - AUTH-REFACTOR
-    @Test
-    @DisplayName("Do not proceed when refresh token is unavailable")
-    void doNotProceedRefreshUnavailable() throws MalformedURLException {
-        URL url = new URL("http://cool.biz/protected");
-        AccessTokenRefresher mockAuthenticator = mock(AccessTokenRefresher.class, withSettings().useConstructor(sessionAccessor).defaultAnswer(CALLS_REAL_METHODS));
-        AccessToken original = new AccessToken("original-token");
-        AccessToken recent = original;
-//        when(mockAuthenticator.getAccessToken(tokenProvider)).thenReturn(original,recent);
-//        when(mockAuthenticator.refreshAccessToken(tokenProvider)).thenReturn(null);
-        assertNull(mockAuthenticator.authenticate(null, createResponse(url, true)));
-    }
-
-    /*
-    // TODO - AUTH-REFACTOR
-    @Test
-    @DisplayName("Do not proceed when refresh token fails")
-    void doNotProceedRefreshFails() throws IOException {
-        URL url = new URL("http://cool.biz/protected");
-        BasicAccessTokenProvider mockedProvider = mock(BasicAccessTokenProvider.class);
-        AccessTokenRefresher mockAuthenticator = mock(AccessTokenRefresher.class, withSettings().useConstructor(mockedProvider).defaultAnswer(CALLS_REAL_METHODS));
-        AccessToken original = new AccessToken("original-token");
-        AccessToken recent = original;
-//        when(mockAuthenticator.getAccessToken(mockedProvider)).thenReturn(original,recent);
-//        when(mockedProvider.refreshAccessToken()).thenThrow(IOException.class);
-        assertNull(mockAuthenticator.authenticate(null, createResponse(url, true)));
-    }
-
-     */
-
-    // TODO - AUTH-REFACTOR
-    /*
-    @Test
-    @DisplayName("Do not proceed when authorization headers cannot be replaced")
-    void doNotProceedHeadersFails() throws IOException, SaiException {
-        URL url = new URL("http://cool.biz/protected");
-        BasicAccessTokenProvider mockedProvider = mock(BasicAccessTokenProvider.class);
-        AccessTokenRefresher mockAuthenticator = mock(AccessTokenRefresher.class, withSettings().useConstructor(mockedProvider).defaultAnswer(CALLS_REAL_METHODS));
-        AccessToken original = new AccessToken("original-token");
-        AccessToken recent = original;
-        AccessToken refreshed = new AccessToken("refreshed-token");
-//        when(mockAuthenticator.getAccessToken(mockedProvider)).thenReturn(original,recent);
-        when(mockedProvider.refreshAccessToken()).thenReturn(refreshed);
-        when(mockedProvider.getAuthorizationHeaders(any(AccessToken.class), any(HttpMethod.class), any(URL.class))).thenThrow(SaiException.class);
-        assertNull(mockAuthenticator.authenticate(null, createResponse(url, true)));
-    }
-
-    private Response createResponse(URL url, boolean withHeaders) {
-        Request.Builder requestBuilder = new Request.Builder();
-        requestBuilder.url(url);
-        requestBuilder.method(GET.getValue(), null);
-        if (withHeaders) { requestBuilder.addHeader(HttpHeader.AUTHORIZATION.getValue(), "smoothjazz"); }
-        Request request = requestBuilder.build();
-        Response.Builder responseBuilder = new Response.Builder();
-        return responseBuilder.code(200).protocol(Protocol.HTTP_2).message("success").request(request).build();
-    }
-
-    */
 
 }

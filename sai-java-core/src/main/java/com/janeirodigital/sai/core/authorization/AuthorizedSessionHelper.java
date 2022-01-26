@@ -1,6 +1,5 @@
 package com.janeirodigital.sai.core.authorization;
 
-import com.janeirodigital.sai.core.enums.AccessTokenType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.exceptions.SaiException;
@@ -22,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpMethod.*;
@@ -36,6 +36,8 @@ import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLI
  * <a href="https://connect2id.com/products/nimbus-oauth-openid-connect-sdk">Nimbus SDK</a>.
  */
 public class AuthorizedSessionHelper {
+
+    private static final Set<String> AUTHORIZATION_HEADER_SCHEMES = Set.of("Bearer", "DPoP");
 
     private AuthorizedSessionHelper() { }
 
@@ -238,8 +240,8 @@ public class AuthorizedSessionHelper {
         Objects.requireNonNull(request, "Must provide an HTTP request to get token from");
         String value = request.header(AUTHORIZATION.getValue());
         if (value == null) { return null; }
-        if (!value.startsWith(AccessTokenType.DPOP.getValue()) && !value.startsWith(AccessTokenType.BEARER.getValue())) { return null; }
         String[] split = value.split("\\s");
+        if (!AUTHORIZATION_HEADER_SCHEMES.contains(split[0])) { return null; }
         return new AccessToken(split[1]);
     }
 
