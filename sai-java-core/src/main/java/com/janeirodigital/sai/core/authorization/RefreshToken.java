@@ -5,8 +5,7 @@ import lombok.Getter;
 import java.util.Objects;
 
 /**
- * General representation of a RefreshToken used when an access token expires and a
- * new one is needed from a given {@link AccessTokenProvider}.
+ * General representation of a RefreshToken.
  */
 @Getter
 public class RefreshToken {

@@ -181,7 +181,7 @@ public class SolidOidcSession implements AuthorizedSession {
      * <ol>
      *     <li>{@link #setHttpClient(OkHttpClient)}</li>
      *     <li>{@link #setSocialAgent(URL)}</li>
-     *     <li>{@link #setApplication(URL)}</lii>
+     *     <li>{@link #setApplication(URL)}</li>
      *     <li>{@link #setScope(List)}</li>
      *     <li>{@link #setPrompt(Prompt)}</li>
      *     <li>{@link #setRedirect(URL)}</li>
