@@ -5,8 +5,7 @@ import lombok.Getter;
 import java.util.Objects;
 
 /**
- * General representation of an AccessToken used to support various token types
- * returned from an {@link AccessTokenProvider}.
+ * General representation of an AccessToken.
  */
 @Getter
 public class AccessToken {

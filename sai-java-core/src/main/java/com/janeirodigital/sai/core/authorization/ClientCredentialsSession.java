@@ -23,8 +23,7 @@ import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 
 /**
- * Implements of the client credentials flow to establish and use
- * a traditional Bearer access token by a given Application.
+ * Implementation of {@link AuthorizedSession} for a Client Credentials authorization flow
  */
 @Getter
 public class ClientCredentialsSession implements AuthorizedSession {

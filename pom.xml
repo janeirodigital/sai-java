@@ -19,6 +19,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <jena.version>4.1.0</jena.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <lombok.version>1.18.22</lombok.version>
         <slf4j.version>1.7.32</slf4j.version>
         <okhttp.version>4.9.3</okhttp.version>
@@ -29,10 +30,10 @@
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc.version>3.3.1</maven-javadoc.version>
-        <snakeyaml.version>1.29</snakeyaml.version>
+        <snakeyaml.version>1.30</snakeyaml.version>
         <mockito.version>4.2.0</mockito.version>
-        <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
-        <maven-release-plugin.version>3.0.0-M4</maven-release-plugin.version>
+        <maven-site-plugin.version>3.10.0</maven-site-plugin.version>
+        <maven-release-plugin.version>3.0.0-M5</maven-release-plugin.version>
         <maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
         <project.scm.id>github</project.scm.id>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
