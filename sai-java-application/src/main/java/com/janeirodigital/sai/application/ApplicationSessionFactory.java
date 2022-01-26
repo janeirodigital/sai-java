@@ -9,6 +9,8 @@ import java.util.Objects;
  */
 public class ApplicationSessionFactory {
 
+    private ApplicationSessionFactory() { }
+
     /**
      * Gets an {@link ApplicationSession} instance for the provided {@link Application} scoped to the
      * provided {@link AuthorizedSession}. Will also initialize a similarly scoped {@link ApplicationDataFactory}.
