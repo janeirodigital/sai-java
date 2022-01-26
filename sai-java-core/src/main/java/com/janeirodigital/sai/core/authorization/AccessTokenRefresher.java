@@ -55,11 +55,10 @@ public class AccessTokenRefresher implements Authenticator {
 
             // Get the original access token from the request
             AccessToken accessToken = getAccessTokenFromRequest(response.request());
-            if (accessToken == null) {
-                return null;
-            }
+            if (accessToken == null) { return null; }
 
             AuthorizedSession original = this.sessionAccessor.get(accessToken);
+            if (original == null) { return null; }
             // Only one thread at a time will go through this to avoid refresh chaos
             synchronized (this) {
 

@@ -115,15 +115,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
-                <configuration>
-                    <excludes>
-                        <exclude>**/AccessTokenRefresherTests.class</exclude>
-                        <exclude>**/AccessTokenProviderTests.class</exclude>
-                        <exclude>**/BasicAccessTokenProviderTests.class</exclude>
-                        <exclude>**/DPoPAccessTokenProviderTests.class</exclude>
-                        <exclude>**/ProtectedResourceTests.class</exclude>
-                    </excludes>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.projectlombok</groupId>
