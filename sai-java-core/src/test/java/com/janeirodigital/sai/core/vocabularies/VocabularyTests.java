@@ -1,11 +1,9 @@
 package com.janeirodigital.sai.core.vocabularies;
 
-import com.janeirodigital.sai.core.vocabularies.InteropVocabulary;
-import com.janeirodigital.sai.core.vocabularies.LdpVocabulary;
-import com.janeirodigital.sai.core.vocabularies.RdfVocabulary;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_REDIRECT_URIS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class VocabularyTests {
@@ -44,6 +42,14 @@ class VocabularyTests {
         assertEquals(ns + "BasicContainer", LdpVocabulary.BASIC_CONTAINER.getURI());
         assertEquals(ns + "contains", LdpVocabulary.CONTAINS.getURI());
 
+    }
+
+    @Test
+    @DisplayName("Evaluate vocabulary for Solid-OIDC")
+    void evaluateSolidOidcVocab() {
+        final String ns = "http://www.w3.org/ns/solid/oidc#";
+        assertEquals(ns, SolidOidcVocabulary.NAMESPACE.getURI());
+        assertEquals(ns + "redirect_uris", SOLID_OIDC_REDIRECT_URIS.getURI());
     }
 
 }

@@ -11,6 +11,8 @@ import org.apache.jena.rdf.model.Resource;
  */
 public class SolidOidcVocabulary {
 
+    private SolidOidcVocabulary() { }
+
     private static Model model = ModelFactory.createDefaultModel();
 
     // Namespace

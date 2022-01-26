@@ -33,6 +33,10 @@ public class TestableCRUDResource extends CRUDResource {
         super(resourceUrl, dataFactory, resource, unprotected);
     }
 
+    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory, Resource resource) throws SaiException {
+        super(resourceUrl, dataFactory, resource);
+    }
+
     private void bootstrap() throws SaiException, SaiNotFoundException {
         this.fetchData();
         // populate the application profile fields

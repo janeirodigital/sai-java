@@ -90,7 +90,7 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/crud/crud-resource");
         Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", ContentType.TEXT_TURTLE);
         Resource resource = getResourceFromModel(model, url);
-        TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory, resource, true);
+        TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory, resource);
         assertNotNull(testable);
         assertEquals(url, testable.getUrl());
         assertEquals(dataFactory, testable.getDataFactory());

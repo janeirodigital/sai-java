@@ -46,6 +46,12 @@ class HttpClientFactoryTests {
     }
 
     @Test
+    @DisplayName("Fail to initialize HTTP factory - refresh tokens but no session accessor")
+    void failToInitHttpFactoryNoAccessor() throws SaiException {
+        assertThrows(SaiException.class, () -> new HttpClientFactory(true, true, true, null));
+    }
+
+    @Test
     @DisplayName("Get an HTTP client with SSL enabled : validation enabled")
     void getHttpClientSslOnValidationOn() throws SaiException {
         HttpClientFactory factory = new HttpClientFactory(true, true, false);
@@ -117,4 +123,20 @@ class HttpClientFactoryTests {
         when(mockFactory.getClientForConfiguration(anyBoolean(), anyBoolean(), anyBoolean())).thenThrow(new NoSuchAlgorithmException("Invalid algorithm!"));
         assertThrows(SaiException.class, () -> { mockFactory.get(false, false, false); });
     }
+
+    @Test
+    @DisplayName("Compare http client configurations")
+    void compareHttpClientConfiguration() {
+        HttpClientFactory.HttpClientConfiguration configSsl = new HttpClientFactory.HttpClientConfiguration(true, false, false);
+        HttpClientFactory.HttpClientConfiguration configShapeTrees = new HttpClientFactory.HttpClientConfiguration(false, true, false);
+        HttpClientFactory.HttpClientConfiguration configTokens = new HttpClientFactory.HttpClientConfiguration(false, false, true);
+        HttpClientFactory.HttpClientConfiguration allOff = new HttpClientFactory.HttpClientConfiguration(false, false, false);
+        Object someObject = new Object();
+        assertEquals(configSsl, configSsl);
+        assertNotEquals(configSsl, someObject);
+        assertNotEquals(configSsl, configShapeTrees);
+        assertNotEquals(configShapeTrees, configTokens);
+        assertNotEquals(allOff, configTokens);
+    }
+
 }

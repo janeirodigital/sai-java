@@ -348,10 +348,50 @@ class HttpHelperTests {
     }
 
     @Test
-    @DisplayName("Fail to convert URL to URI")
+    @DisplayName("Fail to convert URL to URI - malformed URL")
     void failToConvertUrlToUri() throws MalformedURLException {
         URL url = new URL("http://www.solidproject.org?q=something&something=<something+else>");
         assertThrows(IllegalStateException.class, () -> { urlToUri(url); });
+    }
+
+    @Test
+    @DisplayName("Get the base of a URL")
+    void convertUrlToBase() throws MalformedURLException, SaiException {
+        URL onlyQuery = new URL("http://www.solidproject.org/folder/resource?something=value&other=othervalue");
+        URL onlyFragment = new URL("http://www.solidproject.org/folder/resource#somefragment");
+        URL both = new URL("http://www.solidproject.org/folder/resource#somefragment?something=value");
+        URL expected = new URL("http://www.solidproject.org/folder/resource");
+        assertEquals(expected, urlToBase(onlyQuery));
+        assertEquals(expected, urlToBase(onlyFragment));
+        assertEquals(expected, urlToBase(both));
+        assertEquals(expected, urlToBase(expected));
+    }
+
+    @Test
+    @DisplayName("Fail to get the base of a URL - malformed URL")
+    void failToConvertUrlToBase() throws MalformedURLException {
+        URL malformed = new URL("http://www.solidproject.org?q=something&something=<something+else>");
+        assertThrows(SaiException.class, () -> urlToBase(malformed));
+    }
+
+
+    @Test
+    @DisplayName("Convert string to URL")
+    void convertStringToUrl() throws SaiException, MalformedURLException {
+        URL expected = new URL("http://www.solidproject.org");
+        assertEquals(expected, stringToUrl("http://www.solidproject.org"));
+    }
+
+    @Test
+    @DisplayName("Fail to convert string to URL - malformed URL")
+    void failToConvertStringToUrl() {
+        assertThrows(SaiException.class, () -> stringToUrl("ddd:\\--solidproject_orgZq=something&something=<something+else>"));
+    }
+
+    @Test
+    @DisplayName("Fail to convert URI to URL - malformed URL")
+    void failToConvertUriToUrl() {
+        assertThrows(SaiException.class, () -> uriToUrl(URI.create("somescheme://what/path")));
     }
 
     private String getHtmlBody() {

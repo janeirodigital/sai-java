@@ -440,12 +440,12 @@ public class HttpHelper {
      */
     public static URL urlToBase(URL url) throws SaiException {
         Objects.requireNonNull(url, "Must provide a URL to convert");
-        URI uri = urlToUri(url);
-        if (uri.getFragment() == null && uri.getQuery() == null) { return url; }
         try {
-            URI trimmed = new URI(uri.getScheme(), uri.getSchemeSpecificPart(), null);
+            URI uri = urlToUri(url);
+            if (uri.getFragment() == null && uri.getQuery() == null) { return url; }
+            URI trimmed = new URI(uri.getScheme(), uri.getHost(), uri.getPath(), null);;
             return trimmed.toURL();
-        } catch(MalformedURLException|URISyntaxException ex) {
+        } catch(MalformedURLException|URISyntaxException|IllegalStateException ex) {
             throw new SaiException("Unable to convert URL to Base URL: " + ex.getMessage());
         }
     }
@@ -465,6 +465,12 @@ public class HttpHelper {
         }
     }
 
+    /**
+     * Coverts a URI to a URL
+     * @param uri URI to convert
+     * @return Converted URL
+     * @throws SaiException
+     */
     public static URL uriToUrl(URI uri) throws SaiException {
         Objects.requireNonNull(uri, "Must provide a URI to convert");
         try {
