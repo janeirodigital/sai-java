@@ -595,7 +595,7 @@ public class RdfHelper {
         }
         switch (contentType) {
             case LD_JSON:
-                return Lang.JSONLD;
+                return Lang.JSONLD11;
             case RDF_XML:
                 return Lang.RDFXML;
             case N_TRIPLES:

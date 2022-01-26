@@ -1,28 +1,48 @@
 package com.janeirodigital.sai.application;
 
-import com.janeirodigital.sai.core.DataFactory;
+import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.authorization.AuthorizedSessionAccessor;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class ApplicationTests {
 
-    private final String PROJECTRON_NAME = "Projectron";
-    private final String PROJECTRON_DESCRIPTION = "Manage applications with ease";
-    private final URL PROJECTRON_URL = new URL("https://projectron.example/id");
+    private final String PROJECTRON_ID = "https://projectron.example/id";
+    private final String SOCIAL_AGENT_ID = "https://alice.example/id#me";
+    private static AuthorizedSessionAccessor sessionAccessor;
 
-    ApplicationTests() throws MalformedURLException { }
+    @BeforeAll
+    static void beforeAll() {
+        sessionAccessor = mock(AuthorizedSessionAccessor.class);
+    }
 
     @Test
     @DisplayName("Initialize an Application")
-    void initializeApplication() throws MalformedURLException, SaiException {
-        Application app = new Application(PROJECTRON_URL, false, true);
-        DataFactory factory = app.getDataFactory();
-        Assertions.assertEquals(PROJECTRON_URL, app.getId());
+    void initializeApplication() throws SaiException {
+        Application app = new Application(stringToUrl(PROJECTRON_ID), false, true, false, sessionAccessor);
+        assertEquals(stringToUrl(PROJECTRON_ID), app.getId());
+        assertNotNull(app.getClientFactory());
+        assertFalse(app.isValidateSsl());
+        assertTrue((app.isValidateShapeTrees()));
+    }
+
+    @Test
+    @DisplayName("Initialize an Application Session")
+    void initializeApplicationSession() throws SaiException {
+        Application app = new Application(stringToUrl(PROJECTRON_ID), false, true, false, sessionAccessor);
+        AuthorizedSession mockSession = mock(AuthorizedSession.class);
+        ApplicationSession applicationSession = ApplicationSessionFactory.get(app, mockSession);
+        assertNotNull(applicationSession);
+        assertNotNull(applicationSession.getDataFactory());
+        assertEquals(app, applicationSession.getApplication());
+        assertEquals(mockSession, applicationSession.getAuthorizedSession());
+        assertEquals(app.getClientFactory(), applicationSession.getClientFactory());
     }
 
 }
