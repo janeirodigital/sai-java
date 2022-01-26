@@ -309,7 +309,8 @@ public class SolidOidcSessionTests {
             when(mockErrorResponse.getErrorObject()).thenReturn(new ErrorObject("Problems!"));
             when(mockResponse.toErrorResponse()).thenReturn(mockErrorResponse);
             when(TokenResponse.parse(any(HTTPResponse.class))).thenReturn(mockResponse);
-            assertThrows(SaiException.class, () -> builder.processCodeResponse(responseUrl).requestTokens());
+            builder.processCodeResponse(responseUrl);
+            assertThrows(SaiException.class, () -> builder.requestTokens());
         }
 
     }
@@ -325,7 +326,8 @@ public class SolidOidcSessionTests {
         try (MockedStatic<TokenResponse> mockStaticResponse = Mockito.mockStatic(TokenResponse.class)) {
             URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
             when(TokenResponse.parse(any(HTTPResponse.class))).thenThrow(ParseException.class);
-            assertThrows(SaiException.class, () -> builder.processCodeResponse(responseUrl).requestTokens());
+            builder.processCodeResponse(responseUrl);
+            assertThrows(SaiException.class, () -> builder.requestTokens());
         }
 
     }
