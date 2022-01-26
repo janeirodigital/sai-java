@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class BasicAuthorizedSessionAccessor implements AuthorizedSessionAccessor {
 
-    private final String DIGEST_ALGORITHM = "SHA-512";
+    private static final String DIGEST_ALGORITHM = "SHA-512";
     private final ConcurrentHashMap<String, AuthorizedSession> sessions;
 
     /**

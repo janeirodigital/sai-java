@@ -106,7 +106,7 @@ public class RdfHelper {
      * @param resourceUrl URL of the resource to search for
      * @return Jena Resource at resourceUrl
      */
-    public static Resource getResourceFromModel(Model model, URL resourceUrl) throws SaiException {
+    public static Resource getResourceFromModel(Model model, URL resourceUrl) {
         Objects.requireNonNull(model, "Must provide a model to get a resource from it");
         Objects.requireNonNull(resourceUrl, "Must provide resource to get from model");
         return model.getResource(resourceUrl.toString());

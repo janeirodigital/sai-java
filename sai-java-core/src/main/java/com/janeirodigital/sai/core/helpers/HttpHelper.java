@@ -443,7 +443,7 @@ public class HttpHelper {
         try {
             URI uri = urlToUri(url);
             if (uri.getFragment() == null && uri.getQuery() == null) { return url; }
-            URI trimmed = new URI(uri.getScheme(), uri.getHost(), uri.getPath(), null);;
+            URI trimmed = new URI(uri.getScheme(), uri.getHost(), uri.getPath(), null);
             return trimmed.toURL();
         } catch(MalformedURLException|URISyntaxException|IllegalStateException ex) {
             throw new SaiException("Unable to convert URL to Base URL: " + ex.getMessage());

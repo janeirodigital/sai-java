@@ -36,7 +36,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SolidOidcSessionTests {
+class SolidOidcSessionTests {
 
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;

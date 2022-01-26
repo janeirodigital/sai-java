@@ -91,8 +91,7 @@ public class AuthorizedSessionHelper {
         Objects.requireNonNull(clientId, "Must provide a client identity to lookup client id document");
         try (Response response = getRequiredRdfResource(httpClient, clientId)) {
             Model dataset = getRdfModelFromResponse(response);
-            Resource resource = getResourceFromModel(dataset, clientId);
-            return resource;
+            return getResourceFromModel(dataset, clientId);
         } catch (SaiException | SaiNotFoundException ex) {
             throw new SaiException("Unable to client identifier document for " + clientId + ": " + ex.getMessage());
         }

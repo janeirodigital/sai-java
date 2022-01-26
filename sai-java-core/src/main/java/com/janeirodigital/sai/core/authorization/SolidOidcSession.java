@@ -254,14 +254,14 @@ public class SolidOidcSession implements AuthorizedSession {
          * @param applicationId URL of the Client Application Identity
          * @return SolidOidcSession.Builder
          */
-        public Builder setApplication(URL applicationId) throws SaiException {
+        public Builder setApplication(URL applicationId) {
             Objects.requireNonNull(applicationId, "Must provide an application identifier to build a Solid OIDC session");
             Objects.requireNonNull(httpClient, "Must provide an http client to build a Solid OIDC session");
             // TODO - Need to disable this due to JSON-LD11 dependency issues - have to get Jena running latest version across deps
+            // when done we should be getting redirect_uris directly from the client id document and not taking as input
             // getClientIdDocument(this.httpClient, applicationId);
             this.applicationId = applicationId;
             this.clientId = new ClientID(this.applicationId.toString());
-            // TODO - should be getting redirect_uris directly from the client id document and not taking as input
             return this;
         }
 
