@@ -101,7 +101,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
     public OkHttpClient
     getClientForConfiguration(boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens) throws NoSuchAlgorithmException, KeyManagementException, SaiException {
 
-        okhttp3.OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
 
         // Invoke the shapetrees-java-client-okhttp library to give us an OkHttpClient that
         // has been configured to intercept requests and perform client-side shape tree

@@ -21,6 +21,7 @@ public class SolidOidcVocabulary {
 
     // Solid-OIDC Properties
     public static final Property SOLID_OIDC_APPLICATION_TYPE = model.createProperty(NS + "application_type");
+    public static final Property SOLID_OIDC_CLIENT_ID = model.createProperty(NS + "client_id");
     public static final Property SOLID_OIDC_CLIENT_NAME = model.createProperty(NS + "client_name");
     public static final Property SOLID_OIDC_CLIENT_URI = model.createProperty(NS + "client_uri");
     public static final Property SOLID_OIDC_CONTACTS = model.createProperty(NS + "contacts");

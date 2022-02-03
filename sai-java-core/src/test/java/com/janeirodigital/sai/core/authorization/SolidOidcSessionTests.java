@@ -22,7 +22,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getDPoPProofFactory;
+import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getEllipticCurveKey;
 import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getProof;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
@@ -139,8 +139,9 @@ class SolidOidcSessionTests {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentId);
         assertEquals(socialAgentId, builder.getSocialAgentId());
-        assertNotNull(builder.getOidcProviderMetadata());
-        assertEquals(oidcProviderId.toString(), builder.getOidcProviderMetadata().getIssuer().getValue());
+        assertNotNull(builder.getOidcAuthorizationEndpoint());
+        assertNotNull(builder.getOidcTokenEndpoint());
+        assertNotNull(builder.getOidcProviderId());
     }
 
     @Test
@@ -384,7 +385,8 @@ class SolidOidcSessionTests {
         assertNotNull(session);
         assertEquals(socialAgentId, session.getSocialAgentId());
         assertEquals(applicationId, session.getApplicationId());
-        assertEquals(oidcProviderId.toString(), session.getOidcProviderMetadata().getIssuer().toString());
+        assertNotNull(session.getOidcAuthorizationEndpoint());
+        assertNotNull(session.getOidcTokenEndpoint());
         assertNotNull(session.getAccessToken());
         assertNotNull(session.getRefreshToken());
         assertNotNull(session.getProofFactory());
@@ -448,9 +450,9 @@ class SolidOidcSessionTests {
     }
 
     @Test
-    @DisplayName("Fail to get dpop proof factory - invalid curve")
-    void failToGetDpopProofFactory() {
-        assertThrows(SaiException.class, () -> getDPoPProofFactory(new Curve("NOTREAL")));
+    @DisplayName("Fail to get elliptic curve key - invalid curve")
+    void failToGetEcKey() throws SaiException {
+        assertThrows(SaiException.class, () -> getEllipticCurveKey(new Curve("NOTREAL")));
     }
 
     @Test

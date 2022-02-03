@@ -24,9 +24,10 @@
         <slf4j.version>1.7.32</slf4j.version>
         <okhttp.version>4.9.3</okhttp.version>
         <jena.version>4.3.2</jena.version>
+        <titanium.version>1.2.0</titanium.version>
         <nimbus.version>9.20.1</nimbus.version>
         <junit.version>5.8.2</junit.version>
-        <shapetrees.version>0.9.4</shapetrees.version>
+        <shapetrees.version>0.9.5</shapetrees.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc.version>3.3.1</maven-javadoc.version>

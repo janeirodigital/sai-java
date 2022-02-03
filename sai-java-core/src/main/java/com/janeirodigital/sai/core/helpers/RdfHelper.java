@@ -1,8 +1,15 @@
 package com.janeirodigital.sai.core.helpers;
 
+import com.apicatalog.jsonld.JsonLd;
+import com.apicatalog.jsonld.JsonLdError;
+import com.apicatalog.jsonld.document.Document;
+import com.apicatalog.jsonld.document.JsonDocument;
+import com.apicatalog.jsonld.document.RdfDocument;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -10,11 +17,9 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RiotException;
+import org.apache.jena.vocabulary.RDF;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -101,6 +106,33 @@ public class RdfHelper {
     }
 
     /**
+     * Get a String of the provided <code>model</code> serialized in JSON-LD
+     * @param model Jena Model to serialize
+     * @return Serialized JSON-LD string of the provided model
+     */
+    public static String getJsonLdStringFromModel(Model model, String jsonLdContext) throws SaiException {
+        Objects.requireNonNull(model, "Cannot serialize a null model");
+        String quads = getStringFromRdfModel(model, Lang.NQUADS);
+        InputStream inputQuads = new ByteArrayInputStream(quads.getBytes());
+        String jsonLdString;
+        try {
+            Document docQuads = RdfDocument.of(inputQuads);
+            JsonArray roughJsonLd = JsonLd.fromRdf(docQuads).get();
+            Document roughJsonLdDocument = JsonDocument.of(roughJsonLd);
+            jsonLdString = roughJsonLd.toString();
+            if (jsonLdContext != null) {
+                InputStream inputContext = new ByteArrayInputStream(jsonLdContext.getBytes());
+                Document docContext = JsonDocument.of(inputContext);
+                JsonObject compacted = JsonLd.compact(roughJsonLdDocument, docContext).compactToRelative(false).get();
+                jsonLdString = compacted.toString();
+            }
+        } catch (JsonLdError ex) {
+            throw new SaiException("Failed to serialize resource to JSON-LD: " + ex.getMessage());
+        }
+        return jsonLdString;
+    }
+
+    /**
      * Returns a jena Resource at the specified <code>resourceUrl</code> from the provided jena Model
      * @param model Model to search
      * @param resourceUrl URL of the resource to search for
@@ -110,6 +142,28 @@ public class RdfHelper {
         Objects.requireNonNull(model, "Must provide a model to get a resource from it");
         Objects.requireNonNull(resourceUrl, "Must provide resource to get from model");
         return model.getResource(resourceUrl.toString());
+    }
+
+    /**
+     * Gets a new Jena Resource (and associated Model) for the provided <code>resourceUrl</code>
+     * and adds a statement identifying the resource as the provided RDF <code>type</code>.
+     * @param resourceUrl URL of the resource
+     * @return Resource
+     */
+    public static Resource getNewResourceForType(URL resourceUrl, String type) {
+        Resource resource = getNewResource(resourceUrl);
+        resource.addProperty(RDF.type, type);
+        return resource;
+    }
+
+    /**
+     * Gets a new Jena Resource (and associated Model) for the provided <code>resourceUrl</code>
+     * @param resourceUrl URL of the resource
+     * @return Resource
+     */
+    public static Resource getNewResource(URL resourceUrl) {
+        Model model = ModelFactory.createDefaultModel();
+        return model.createResource(resourceUrl.toString());
     }
 
     /**

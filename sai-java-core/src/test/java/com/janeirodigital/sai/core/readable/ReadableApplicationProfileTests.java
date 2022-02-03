@@ -4,7 +4,6 @@ import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.factories.DataFactory;
-import com.janeirodigital.sai.core.fixtures.DispatcherEntry;
 import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -18,6 +17,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -25,28 +25,26 @@ class ReadableApplicationProfileTests {
 
     private static DataFactory dataFactory;
     private static MockWebServer server;
+    private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
     static void beforeAll() throws SaiException {
+        // Initialize request fixtures for the MockWebServer
+        dispatcher = new RequestMatchingFixtureDispatcher();
+        // In a given test, the first request to this endpoint will return provider-response, the second will return provider-refresh (a different token)
+        mockOnGet(dispatcher, "/projectron/ttl/id", "readable/application-profile-ttl");
+        mockOnGet(dispatcher, "/projectron/jsonld/id", "readable/application-profile-jsonld");
+        server = new MockWebServer();
+        server.setDispatcher(dispatcher);
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
-
-        // Initialize request fixtures for the MockWebServer
-        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(
-                new DispatcherEntry(List.of("readable/application-profile-ttl"), "GET", "/projectron/id", null),
-                new DispatcherEntry(List.of("readable/application-profile-fragment-ttl"), "GET", "/projectron/idf", null)
-        ));
-
-        // Initialize the Mock Web Server and assign the initialized dispatcher
-        server = new MockWebServer();
-        server.setDispatcher(dispatcher);
     }
 
     @Test
-    @DisplayName("Get a Readable Application Profile Document")
+    @DisplayName("Get readable application profile document as turtle")
     void getReadableApplicationProfile() throws SaiException, SaiNotFoundException {
-        ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/projectron/id"));
+        ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/projectron/ttl/id"));
         assertNotNull(applicationProfile);
         assertEquals("Projectron", applicationProfile.getName());
         assertEquals("Manage projects with ease", applicationProfile.getDescription());
@@ -57,16 +55,18 @@ class ReadableApplicationProfileTests {
     }
 
     @Test
-    @DisplayName("Get a Readable Application Profile Document as Fragment")
-    void getReadableApplicationProfileAsFragment() throws SaiException, SaiNotFoundException {
-        ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/projectron/idf#profile"));
+    @DisplayName("Get readable application profile document as json-ld")
+    void getReadableApplicationProfileAsJsonLd() throws SaiException, SaiNotFoundException {
+        ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/projectron/jsonld/id"));
         assertNotNull(applicationProfile);
+        assertEquals("Projectron", applicationProfile.getName());
+        assertEquals("Manage projects with ease", applicationProfile.getDescription());
+        assertEquals("https://acme.example/#id", applicationProfile.getAuthorUrl().toString());
+        assertEquals("https://acme.example/thumb.svg", applicationProfile.getThumbnailUrl().toString());
+        List<URL> needGroups = Arrays.asList(MockWebServerHelper.toUrl(server, "/projectron/needs#need-group-pm"));
+        assertTrue(CollectionUtils.isEqualCollection(needGroups, applicationProfile.getAccessNeedGroupUrls()));
     }
 
-    // Get a readable resource
-    // Fail to get a readable resource that doesn't exist
-    // Get a single node from a readable resource
-    // Get many nodes from a readable resource
-    // Get a graph from a readable resource (GraphReadOnly)
+    // TODO - Include solid-oidc fields as well
 
 }

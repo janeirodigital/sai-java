@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.authorization;
 
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.exceptions.SaiException;
@@ -93,7 +94,7 @@ public class AuthorizedSessionHelper {
             Model dataset = getRdfModelFromResponse(response);
             return getResourceFromModel(dataset, clientId);
         } catch (SaiException | SaiNotFoundException ex) {
-            throw new SaiException("Unable to client identifier document for " + clientId + ": " + ex.getMessage());
+            throw new SaiException("Unable to load client identifier document for " + clientId + ": " + ex.getMessage());
         }
     }
 
@@ -159,28 +160,63 @@ public class AuthorizedSessionHelper {
      * @param httpClient OkHttpClient to perform the PUT with
      * @param url URL of the resource to PUT
      * @param resource Jena resource to PUT with
+     * @param contentType ContentType of the request
+     * @param jsonLdContext Optional JSON-LD context string to include
      * @param headers Optional OkHttp Headers
      * @return OkHttp Response
      * @throws SaiException
      */
-    public static Response putProtectedRdfResource(AuthorizedSession authorizedSession, OkHttpClient httpClient, URL url, Resource resource, Headers headers) throws SaiException {
+    public static Response putProtectedRdfResource(AuthorizedSession authorizedSession, OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, String jsonLdContext, Headers headers) throws SaiException {
         Objects.requireNonNull(authorizedSession, "Must provide an authorized session to access protected resource");
         headers = setAuthorizationHeaders(authorizedSession, PUT, url, headers);
-        return putRdfResource(httpClient, url, resource, headers);
+        return putRdfResource(httpClient, url, resource, contentType, jsonLdContext, headers);
     }
 
     /**
-     * Calls {@link #putProtectedRdfResource(AuthorizedSession, OkHttpClient, URL, Resource, Headers)} with no additional
+     * Calls {@link #putProtectedRdfResource(AuthorizedSession, OkHttpClient, URL, Resource, ContentType, String, Headers)} with no additional
      * headers provided.
      * @param authorizedSession {@link AuthorizedSession} for access to protected resources
      * @param httpClient OkHttpClient to perform the PUT with
      * @param url URL of the resource to PUT
      * @param resource Jena resource to PUT with
-     * @return
+     * @param contentType ContentType of the request
+     * @return OkHttp Response
      * @throws SaiException
      */
-    public static Response putProtectedRdfResource(AuthorizedSession authorizedSession, OkHttpClient httpClient, URL url, Resource resource) throws SaiException {
-        return putProtectedRdfResource(authorizedSession, httpClient, url, resource, null);
+    public static Response putProtectedRdfResource(AuthorizedSession authorizedSession, OkHttpClient httpClient, URL url, Resource resource, ContentType contentType) throws SaiException {
+        return putProtectedRdfResource(authorizedSession, httpClient, url, resource, contentType, null, null);
+    }
+
+    /**
+     * Calls {@link #putProtectedRdfResource(AuthorizedSession, OkHttpClient, URL, Resource, ContentType, String, Headers)} with
+     * additional headers provided
+     * @param authorizedSession {@link AuthorizedSession} for access to protected resources
+     * @param httpClient OkHttpClient to perform the PUT with
+     * @param url URL of the resource to PUT
+     * @param resource Jena resource to PUT with
+     * @param contentType ContentType of the request
+     * @param headers Optional OkHttp Headers
+     * @return OkHttp Response
+     * @throws SaiException
+     */
+    public static Response putProtectedRdfResource(AuthorizedSession authorizedSession, OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, Headers headers) throws SaiException {
+        return putProtectedRdfResource(authorizedSession, httpClient, url, resource, contentType, null, headers);
+    }
+
+    /**
+     * Calls {@link #putProtectedRdfResource(AuthorizedSession, OkHttpClient, URL, Resource, ContentType, String, Headers)} with
+     * additional headers provided
+     * @param authorizedSession {@link AuthorizedSession} for access to protected resources
+     * @param httpClient OkHttpClient to perform the PUT with
+     * @param url URL of the resource to PUT
+     * @param resource Jena resource to PUT with
+     * @param contentType ContentType of the request
+     * @param jsonLdContext Optional JSON-LD context string to include
+     * @return OkHttp Response
+     * @throws SaiException
+     */
+    public static Response putProtectedRdfResource(AuthorizedSession authorizedSession, OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, String jsonLdContext) throws SaiException {
+        return putProtectedRdfResource(authorizedSession, httpClient, url, resource, contentType, jsonLdContext, null);
     }
 
     /**

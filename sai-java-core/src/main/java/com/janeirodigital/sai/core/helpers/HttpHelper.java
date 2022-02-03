@@ -23,8 +23,7 @@ import static com.janeirodigital.sai.core.enums.ContentType.*;
 import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.enums.HttpHeader.LINK;
 import static com.janeirodigital.sai.core.enums.HttpMethod.*;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getStringFromRdfModel;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 
 /**
  * Assorted helper methods related to working with HTTP requests and responses
@@ -36,7 +35,7 @@ import static com.janeirodigital.sai.core.helpers.RdfHelper.getStringFromRdfMode
  */
 public class HttpHelper {
 
-    private static final Set<ContentType> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
+    public static final Set<ContentType> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
 
     private HttpHelper() { }
 
@@ -235,11 +234,27 @@ public class HttpHelper {
      * @param httpClient OkHttpClient to perform the PUT with
      * @param url URL of the resource to PUT
      * @param resource Jena Resource for the request body
+     * @param contentType ContentType of the request
      * @return OkHttp Response
      * @throws SaiException
      */
-    public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource) throws SaiException {
-        return putRdfResource(httpClient, url, resource, null);
+    public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType) throws SaiException {
+        return putRdfResource(httpClient, url, resource, contentType, null, null);
+    }
+
+    /**
+     * Perform an HTTP PUT on the resource at <code>url</code> using a serialized Jena
+     * Resource as the request body with a jsonLdContext
+     * @param httpClient OkHttpClient to perform the PUT with
+     * @param url URL of the resource to PUT
+     * @param resource Jena Resource for the request body
+     * @param contentType ContentType of the request
+     * @param jsonLdContext JSON-LD context string to include
+     * @return OkHttp Response
+     * @throws SaiException
+     */
+    public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, String jsonLdContext) throws SaiException {
+        return putRdfResource(httpClient, url, resource, contentType, jsonLdContext, null);
     }
 
     /**
@@ -248,16 +263,40 @@ public class HttpHelper {
      * @param httpClient OkHttpClient to perform the PUT with
      * @param url URL of the resource to PUT
      * @param resource Jena Resource for the request body
+     * @param contentType ContentType of the request
      * @param headers Optional OkHttp Headers
      * @return OkHttp Response
      * @throws SaiException
      */
-    public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, Headers headers) throws SaiException {
+    public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, Headers headers) throws SaiException {
+        return putRdfResource(httpClient, url, resource, contentType, null, headers);
+    }
+
+    /**
+     * Perform an HTTP PUT with optional headers on the resource at <code>url</code> using a serialized Jena
+     * Resource as the request body.
+     * @param httpClient OkHttpClient to perform the PUT with
+     * @param url URL of the resource to PUT
+     * @param resource Jena Resource for the request body
+     * @param contentType ContentType of the request
+     * @param jsonLdContext Optional JSON-LD context string to include
+     * @param headers Optional OkHttp Headers
+     * @return OkHttp Response
+     * @throws SaiException
+     */
+    public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, String jsonLdContext, Headers headers) throws SaiException {
+        Objects.requireNonNull(contentType, "Must provide a content-type for the PUT request on an RDF document");
+        if (jsonLdContext != null && !contentType.equals(LD_JSON)) { throw new SaiException("Cannot supply a JSON-LD context for content-type of " + contentType.getValue()); }
         String body = "";
-        // Treat a null resource as an empty body
-        // REVISIT - May not want to hard-code a content type of turtle here
-        if (resource != null) { body = getStringFromRdfModel(resource.getModel(), Lang.TURTLE); }
-        return checkResponse(putResource(httpClient, url, headers, body, TEXT_TURTLE));
+        Lang lang = getLangForContentType(contentType);
+        if (resource != null) {
+            if (lang.equals(Lang.JSONLD11)) {
+                body = getJsonLdStringFromModel(resource.getModel(), jsonLdContext);
+            } else {
+                body = getStringFromRdfModel(resource.getModel(), lang);
+            }
+        }
+        return checkResponse(putResource(httpClient, url, headers, body, contentType));
     }
 
     /**
@@ -269,9 +308,13 @@ public class HttpHelper {
      * @return OkHttp Response
      * @throws SaiException
      */
-    public static Response putRdfContainer(OkHttpClient httpClient, URL url, Resource resource) throws SaiException {
+    public static Response putRdfContainer(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, String jsonLdContext) throws SaiException {
         Headers headers = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.BASIC_CONTAINER.getURI());
-        return putRdfResource(httpClient, url, resource, headers);
+        return putRdfResource(httpClient, url, resource, contentType, jsonLdContext, headers);
+    }
+
+    public static Response putRdfContainer(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType) throws SaiException {
+        return putRdfContainer(httpClient, url, resource, contentType, null);
     }
 
     /**
@@ -383,6 +426,9 @@ public class HttpHelper {
      */
     protected static Response checkRdfResponse(Response response) throws SaiException {
         checkResponse(response);
+        // if it isn't a successful response there's nothing to check, but leave it to higher
+        // levels of the stack to determine whether that is an exceptional condition
+        if (!response.isSuccessful()) { return response; }
         ContentType contentType = getContentType(response);
         if (!RDF_CONTENT_TYPES.contains(contentType)) {
             throw new SaiException("Invalid Content-Type for RDF resource: " + contentType);

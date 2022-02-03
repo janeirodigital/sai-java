@@ -1,9 +1,6 @@
 package com.janeirodigital.sai.core.vocabularies;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 
 /**
  * Properties and classes of the
@@ -20,6 +17,7 @@ public class InteropVocabulary {
     public static final Resource NAMESPACE = model.createResource(NS);
 
     // Application
+    public static final String APPLICATION = NS + "Application";
     public static final Property APPLICATION_NAME = model.createProperty(NS + "applicationName");
     public static final Property APPLICATION_DESCRIPTION = model.createProperty(NS + "applicationDescription");
     public static final Property APPLICATION_AUTHOR = model.createProperty(NS + "applicationAuthor");

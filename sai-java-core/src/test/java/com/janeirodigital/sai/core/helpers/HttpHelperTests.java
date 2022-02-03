@@ -216,11 +216,11 @@ class HttpHelperTests {
         Model model = getModelFromString(urlToUri(url), getRdfBody(), TEXT_TURTLE);
         Resource resource = model.getResource(url + "#project");
         // Update with resource content
-        Response response = putRdfResource(httpClient, url, resource);
+        Response response = putRdfResource(httpClient, url, resource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
         response.close();
         // Update with no resource content (treated as empty body)
-        response = putRdfResource(httpClient, url, null);
+        response = putRdfResource(httpClient, url, null, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
         response.close();
     }
@@ -231,7 +231,7 @@ class HttpHelperTests {
         URL url = toUrl(server, "/http/put-create-resource");
         Model model = getModelFromString(urlToUri(url), getRdfContainerBody(), TEXT_TURTLE);
         Resource resource = model.getResource(url + "#project");
-        Response response = putRdfContainer(httpClient, url, resource);
+        Response response = putRdfContainer(httpClient, url, resource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
         response.close();
     }

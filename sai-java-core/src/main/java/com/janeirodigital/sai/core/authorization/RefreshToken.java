@@ -2,13 +2,14 @@ package com.janeirodigital.sai.core.authorization;
 
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * General representation of a RefreshToken.
  */
 @Getter
-public class RefreshToken {
+public class RefreshToken implements Serializable {
 
     protected final String value;
 

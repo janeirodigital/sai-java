@@ -1,6 +1,7 @@
 package com.janeirodigital.sai.core.factories;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.crud.CRUDApplicationProfile;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -55,6 +56,10 @@ public class DataFactory {
      */
     public ReadableApplicationProfile getReadableApplicationProfile(URL url) throws SaiException, SaiNotFoundException {
         return ReadableApplicationProfile.build(url, this);
+    }
+
+    public CRUDApplicationProfile getCRUDApplicationProfile(URL url) throws SaiException {
+        return CRUDApplicationProfile.build(url, this);
     }
 
 }
