@@ -1,0 +1,39 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:application/ld+json'
+body: >
+
+  {
+    "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "socialAgentId": {
+             "@id": "@id",
+             "@type": "@id"
+        },
+        "authorizationAgent": {
+          "@id": "http://www.w3.org/ns/solid/interop#hasAuthorizationAgent",
+          "@type": "@id"
+        },
+        "accessInbox": {
+          "@id": "http://www.w3.org/ns/solid/interop#hasAccessInbox",
+          "@type": "@id"
+        },
+        "registrySet": {
+          "@id": "http://www.w3.org/ns/solid/interop#hasRegistrySet",
+          "@type": "@id"
+        },
+        "oidcIssuer": {
+          "@id": "http://www.w3.org/ns/solid/terms#oidcIssuer",
+          "@type": "@id",
+          "@container": [
+          	"@id",
+          	"@set"
+          ]
+        }
+      },
+      "socialAgentId" : "${SERVER_BASE}/jsonld/id",
+      "accessInbox" : "${SERVER_BASE}/access/inbox/",
+      "registrySet" : "${SERVER_BASE}/registry_set"
+  }

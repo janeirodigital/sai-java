@@ -286,7 +286,6 @@ public class HttpHelper {
      */
     public static Response putRdfResource(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, String jsonLdContext, Headers headers) throws SaiException {
         Objects.requireNonNull(contentType, "Must provide a content-type for the PUT request on an RDF document");
-        if (jsonLdContext != null && !contentType.equals(LD_JSON)) { throw new SaiException("Cannot supply a JSON-LD context for content-type of " + contentType.getValue()); }
         String body = "";
         Lang lang = getLangForContentType(contentType);
         if (resource != null) {
@@ -524,6 +523,14 @@ public class HttpHelper {
         } catch (MalformedURLException ex) {
             throw new SaiException("Unable to convert URI to URL: " + ex.getMessage());
         }
+    }
+
+    public static String getResponseFailureMessage(Response response) {
+        String message = "";
+        message += "HTTP " + response.code() + " ";
+        message += response.message() + " - ";
+        try { message += response.peekBody(Long.MAX_VALUE).string(); } catch (IOException ex) { message += "Message body content unavailable"; }
+        return message;
     }
 
 }

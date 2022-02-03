@@ -55,6 +55,7 @@ public class CRUDApplicationProfile extends CRUDResource {
         this.scopes = new ArrayList<>();
         this.grantTypes = new ArrayList<>();
         this.responseTypes = new ArrayList<>();
+        // By default the application profile document is JSON-LD
         this.setContentType(LD_JSON);
         this.setJsonLdContext(getJsonLdContextAsString());
     }

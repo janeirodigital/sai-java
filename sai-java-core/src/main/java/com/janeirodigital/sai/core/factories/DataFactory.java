@@ -6,6 +6,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.readable.ReadableApplicationProfile;
+import com.janeirodigital.sai.core.readable.ReadableSocialAgentProfile;
 import lombok.Getter;
 import okhttp3.OkHttpClient;
 
@@ -56,6 +57,10 @@ public class DataFactory {
      */
     public ReadableApplicationProfile getReadableApplicationProfile(URL url) throws SaiException, SaiNotFoundException {
         return ReadableApplicationProfile.build(url, this);
+    }
+
+    public ReadableSocialAgentProfile getReadableSocialAgentProfile(URL url) throws SaiNotFoundException, SaiException {
+        return ReadableSocialAgentProfile.build(url, this);
     }
 
     public CRUDApplicationProfile getCRUDApplicationProfile(URL url) throws SaiException {

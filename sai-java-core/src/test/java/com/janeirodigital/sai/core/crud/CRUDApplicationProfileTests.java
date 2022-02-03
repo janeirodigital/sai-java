@@ -1,25 +1,20 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
-import org.apache.jena.rdf.model.Model;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.net.URL;
 
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromFile;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -88,6 +83,7 @@ public class CRUDApplicationProfileTests {
         CRUDApplicationProfile existingProfile = CRUDApplicationProfile.build(url, dataFactory);
 
         CRUDApplicationProfile resourceProfile = CRUDApplicationProfile.build(url, dataFactory, existingProfile.getResource());
+        resourceProfile.update();
         assertEquals("Projectron", resourceProfile.getName());
     }
 
@@ -140,14 +136,6 @@ public class CRUDApplicationProfileTests {
         CRUDApplicationProfile profile = CRUDApplicationProfile.build(url, dataFactory);
         profile.delete();
         assertFalse(profile.isExists());
-    }
-
-    private Model loadModel(URL url, String filePath, ContentType contentType) throws SaiException {
-        try {
-            return getModelFromFile(urlToUri(url), filePath, contentType);
-        } catch (SaiException | IOException ex) {
-            throw new SaiException("Failed too load test model from file " + filePath + ": " + ex.getMessage());
-        }
     }
 
 }

@@ -22,8 +22,11 @@ public class InteropVocabulary {
     public static final Property APPLICATION_DESCRIPTION = model.createProperty(NS + "applicationDescription");
     public static final Property APPLICATION_AUTHOR = model.createProperty(NS + "applicationAuthor");
     public static final Property APPLICATION_THUMBNAIL = model.createProperty(NS + "applicationThumbnail");
-
-    // Access Needs
     public static final Property HAS_ACCESS_NEED_GROUP = model.createProperty(NS + "hasAccessNeedGroup");
 
+    // Social Agent
+    public static final String SOCIAL_AGENT = NS + "SocialAgent";
+    public static final Property HAS_AUTHORIZATION_AGENT = model.createProperty(NS + "hasAuthorizationAgent");
+    public static final Property HAS_REGISTRY_SET = model.createProperty(NS + "hasRegistrySet");
+    public static final Property HAS_ACCESS_INBOX = model.createProperty(NS + "hasAccessInbox");
 }

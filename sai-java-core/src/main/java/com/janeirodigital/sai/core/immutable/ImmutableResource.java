@@ -7,6 +7,7 @@ import com.janeirodigital.sai.core.factories.DataFactory;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
@@ -65,7 +66,8 @@ public class ImmutableResource {
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
         if (this.isUnprotected()) { this.createUnprotected(headers); } else {
-            putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
+            Response response = putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
+            if (!response.isSuccessful()) { throw new SaiException("Failed to create " + this.url + ": " + getResponseFailureMessage(response)); }
         }
     }
 

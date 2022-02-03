@@ -4,6 +4,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.readable.ReadableResource;
 import lombok.Getter;
+import okhttp3.Response;
 import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
@@ -12,8 +13,7 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.deleteProtectedResource;
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.putProtectedRdfResource;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.deleteResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.putRdfResource;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 
 /**
  * Represents a corresponding RDF Resource and provides create, read, update,
@@ -81,7 +81,8 @@ public class CRUDResource extends ReadableResource {
      */
     public void update() throws SaiException {
         if (this.isUnprotected()) { this.updateUnprotected(); } else {
-            putProtectedRdfResource(this.getDataFactory().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext);
+            Response response = putProtectedRdfResource(this.getDataFactory().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext);
+            if (!response.isSuccessful()) { throw new SaiException("Failed to update " + this.url + ": " + getResponseFailureMessage(response)); }
         }
         this.exists = true;
     }
@@ -92,7 +93,8 @@ public class CRUDResource extends ReadableResource {
      */
     public void delete() throws SaiException {
         if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-            deleteProtectedResource(this.getDataFactory().getAuthorizedSession(), this.httpClient, this.url);
+            Response response = deleteProtectedResource(this.getDataFactory().getAuthorizedSession(), this.httpClient, this.url);
+            if (!response.isSuccessful()) { throw new SaiException("Failed to delete " + this.url + ": " + getResponseFailureMessage(response)); }
         }
         this.exists = false;
     }

@@ -1,4 +1,4 @@
-statusCode : 401
+statusCode : 204
 delay: 0
 headers:
 body: >
