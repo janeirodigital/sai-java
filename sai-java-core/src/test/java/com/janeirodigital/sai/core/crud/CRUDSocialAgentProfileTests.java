@@ -72,7 +72,7 @@ public class CRUDSocialAgentProfileTests {
         profile.setAccessInbox(aliceAccessInbox);
         profile.setRegistrySet(aliceRegistrySet);
         profile.addOidcIssuerUrl(aliceOidcIssuer);
-        profile.update();
+        assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
 
@@ -84,7 +84,7 @@ public class CRUDSocialAgentProfileTests {
 
         URL newUrl = toUrl(server, "/new/ttl/id");
         CRUDSocialAgentProfile resourceProfile = CRUDSocialAgentProfile.build(newUrl, dataFactory, TEXT_TURTLE, existingProfile.getResource());
-        resourceProfile.update();
+        assertDoesNotThrow(() -> resourceProfile.update());
         assertNotNull(resourceProfile);
     }
 
@@ -113,7 +113,7 @@ public class CRUDSocialAgentProfileTests {
         URL url = toUrl(server, "/ttl/id");
         CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory);
         profile.setAuthorizationAgent(stringToUrl("https://other.example/alice/"));
-        profile.update();
+        assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
 
@@ -138,7 +138,7 @@ public class CRUDSocialAgentProfileTests {
         profile.setAccessInbox(aliceAccessInbox);
         profile.setRegistrySet(aliceRegistrySet);
         profile.addOidcIssuerUrl(aliceOidcIssuer);
-        profile.update();
+        assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
 
@@ -147,7 +147,7 @@ public class CRUDSocialAgentProfileTests {
     void deleteSocialAgentProfile() throws SaiException {
         URL url = toUrl(server, "/ttl/id");
         CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory);
-        profile.delete();
+        assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
     }
 

@@ -43,7 +43,7 @@ public class CRUDApplicationProfile extends CRUDResource {
     private List<String> scopes;
     private List<String> grantTypes;
     private List<String> responseTypes;
-    private int defaultMaxAge;
+    private Integer defaultMaxAge;
     private boolean requireAuthTime;
 
     /**

@@ -73,7 +73,7 @@ public class CRUDRegistrySetTests {
         registrySet.setAgentRegistry(aliceAgentRegistry);
         registrySet.setAccessConsentRegistry(aliceAccessConsentRegistry);
         aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistryUrl(dataRegistry); });
-        registrySet.update();
+        assertDoesNotThrow(() -> registrySet.update());
         assertNotNull(registrySet);
     }
 
@@ -85,7 +85,7 @@ public class CRUDRegistrySetTests {
 
         URL newUrl = toUrl(server, "/new/ttl/registries");
         CRUDRegistrySet resourceRegistrySet = CRUDRegistrySet.build(newUrl, dataFactory, TEXT_TURTLE, existingRegistrySet.getResource());
-        resourceRegistrySet.update();
+        assertDoesNotThrow(() -> resourceRegistrySet.update());
         assertNotNull(resourceRegistrySet);
     }
 
@@ -111,10 +111,10 @@ public class CRUDRegistrySetTests {
     @DisplayName("Update existing crud registry set in turtle")
     void updateRegistrySet() throws SaiException {
         URL url = toUrl(server, "/ttl/registries");
-        CRUDRegistrySet profile = CRUDRegistrySet.build(url, dataFactory);
-        profile.setAgentRegistry(stringToUrl("https://alice.example/otheragents/"));
-        profile.update();
-        assertNotNull(profile);
+        CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory);
+        registrySet.setAgentRegistry(stringToUrl("https://alice.example/otheragents/"));
+        assertDoesNotThrow(() -> registrySet.update());
+        assertNotNull(registrySet);
     }
 
     @Test
@@ -136,7 +136,7 @@ public class CRUDRegistrySetTests {
         registrySet.setAgentRegistry(aliceAgentRegistryJsonLd);
         registrySet.setAccessConsentRegistry(aliceAccessConsentRegistryJsonLd);
         aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistryUrl(dataRegistry); });
-        registrySet.update();
+        assertDoesNotThrow(() -> registrySet.update());
         assertNotNull(registrySet);
     }
 
@@ -145,7 +145,7 @@ public class CRUDRegistrySetTests {
     void deleteRegistrySet() throws SaiException {
         URL url = toUrl(server, "/ttl/registries");
         CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory);
-        registrySet.delete();
+        assertDoesNotThrow(() -> registrySet.delete());
         assertFalse(registrySet.isExists());
     }
 

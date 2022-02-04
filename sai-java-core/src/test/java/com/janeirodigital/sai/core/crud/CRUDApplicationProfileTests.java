@@ -72,7 +72,7 @@ public class CRUDApplicationProfileTests {
         profile.addResponseType("code");
         profile.setDefaultMaxAge(3600);
         profile.setRequireAuthTime(true);
-        profile.update();
+        assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
 
@@ -83,7 +83,7 @@ public class CRUDApplicationProfileTests {
         CRUDApplicationProfile existingProfile = CRUDApplicationProfile.build(url, dataFactory);
 
         CRUDApplicationProfile resourceProfile = CRUDApplicationProfile.build(url, dataFactory, existingProfile.getResource());
-        resourceProfile.update();
+        assertDoesNotThrow(() -> resourceProfile.update());
         assertEquals("Projectron", resourceProfile.getName());
     }
 
@@ -125,7 +125,7 @@ public class CRUDApplicationProfileTests {
         CRUDApplicationProfile profile = CRUDApplicationProfile.build(url, dataFactory);
         assertEquals("Projectron", profile.getName());
         profile.setName("Projectimus Prime");
-        profile.update();
+        assertDoesNotThrow(() -> profile.update());
         assertEquals("Projectimus Prime", profile.getName());
     }
 
@@ -134,7 +134,7 @@ public class CRUDApplicationProfileTests {
     void deleteCrudApplicationProfile() throws SaiException {
         URL url = toUrl(server, "/crud/application");
         CRUDApplicationProfile profile = CRUDApplicationProfile.build(url, dataFactory);
-        profile.delete();
+        assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
     }
 
