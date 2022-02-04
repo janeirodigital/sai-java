@@ -18,7 +18,7 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-public class CRUDApplicationProfileTests {
+class CRUDApplicationProfileTests {
 
     private static DataFactory dataFactory;
     private static MockWebServer server;

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.janeirodigital.sai.core.contexts.InteropContexts.SOCIAL_AGENT_PROFILE_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -39,7 +40,7 @@ public class CRUDSocialAgentProfile extends CRUDResource {
     public CRUDSocialAgentProfile(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory);
         this.oidcIssuerUrls = new ArrayList<>();
-        this.jsonLdContext = getJsonLdContextAsString();
+        this.jsonLdContext = buildRemoteJsonLdContext(SOCIAL_AGENT_PROFILE_CONTEXT);
     }
 
     /**
@@ -168,39 +169,6 @@ public class CRUDSocialAgentProfile extends CRUDResource {
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load social agent profile " + this.url + ": " + ex.getMessage());
         }
-    }
-
-    private String getJsonLdContextAsString() {
-        return "  {\n" +
-                "    \"@context\": {\n" +
-                "        \"@version\": 1.1,\n" +
-                "        \"@protected\": true,\n" +
-                "        \"socialAgentId\": {\n" +
-                "             \"@id\": \"@id\",\n" +
-                "             \"@type\": \"@id\"\n" +
-                "        },\n" +
-                "        \"authorizationAgent\": {\n" +
-                "          \"@id\": \"http://www.w3.org/ns/solid/interop#hasAuthorizationAgent\",\n" +
-                "          \"@type\": \"@id\"\n" +
-                "        },\n" +
-                "        \"accessInbox\": {\n" +
-                "          \"@id\": \"http://www.w3.org/ns/solid/interop#hasAccessInbox\",\n" +
-                "          \"@type\": \"@id\"\n" +
-                "        },\n" +
-                "        \"registrySet\": {\n" +
-                "          \"@id\": \"http://www.w3.org/ns/solid/interop#hasRegistrySet\",\n" +
-                "          \"@type\": \"@id\"\n" +
-                "        },\n" +
-                "        \"oidcIssuer\": {\n" +
-                "          \"@id\": \"http://www.w3.org/ns/solid/terms#oidcIssuer\",\n" +
-                "          \"@type\": \"@id\",\n" +
-                "          \"@container\": [\n" +
-                "          \t\"@id\",\n" +
-                "          \t\"@set\"\n" +
-                "          ]\n" +
-                "        }\n" +
-                "      }\n" +
-                "  }";
     }
 
 }

@@ -20,7 +20,7 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-public class CRUDSocialAgentProfileTests {
+class CRUDSocialAgentProfileTests {
 
     private static DataFactory dataFactory;
     private static MockWebServer server;
