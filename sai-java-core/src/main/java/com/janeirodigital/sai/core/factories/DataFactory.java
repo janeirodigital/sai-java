@@ -1,7 +1,6 @@
 package com.janeirodigital.sai.core.factories;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
-import com.janeirodigital.sai.core.crud.CRUDApplicationProfile;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -59,12 +58,16 @@ public class DataFactory {
         return ReadableApplicationProfile.build(url, this);
     }
 
+    /**
+     * Get a read-only version of a Social Agent Profile
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agents">Solid - Social Agent</a>
+     * @param url URL of the {@link ReadableApplicationProfile} to read
+     * @return {@link ReadableApplicationProfile}
+     * @throws SaiException
+     * @throws SaiNotFoundException
+     */
     public ReadableSocialAgentProfile getReadableSocialAgentProfile(URL url) throws SaiNotFoundException, SaiException {
         return ReadableSocialAgentProfile.build(url, this);
-    }
-
-    public CRUDApplicationProfile getCRUDApplicationProfile(URL url) throws SaiException {
-        return CRUDApplicationProfile.build(url, this);
     }
 
 }
