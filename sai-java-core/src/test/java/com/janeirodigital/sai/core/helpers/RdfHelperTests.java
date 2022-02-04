@@ -28,9 +28,12 @@ import java.net.URI;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,6 +45,8 @@ class RdfHelperTests {
 
     private static URL resourceUrl;
     private static URI resourceUri;
+    private static URL jsonLdResourceUrl;
+    private static URI jsonLdResourceUri;
     private static String resourcePath;
     private static String invalidResourcePath;
     private static Model readableModel;
@@ -61,11 +66,12 @@ class RdfHelperTests {
     static void beforeAll() throws MalformedURLException, SaiException {
         resourceUrl = new URL("https://data.example/resource#project");
         resourceUri = urlToUri(resourceUrl);
+        jsonLdResourceUrl = stringToUrl("https://alice.example/id");
+        jsonLdResourceUri = urlToUri(jsonLdResourceUrl);
         resourcePath = "fixtures/rdf/rdf-resource.ttl";
         invalidResourcePath = "fixtures/rdf/invalid-rdf-resource.ttl";
         readableModel = getModelFromString(resourceUri, getRdfResourceBody(), ContentType.TEXT_TURTLE);
         readableResource = getResourceFromModel(readableModel, resourceUrl);
-
         READABLE_TAGS = Arrays.asList(new URL("https://data.example/tags/tag-1"),
                                       new URL("https://data.example/tags/tag-2"),
                                       new URL("https://data.example/tags/tag-3"));
@@ -166,6 +172,33 @@ class RdfHelperTests {
         Model comparableModel = getModelFromString(resourceUri, serialized, ContentType.TEXT_TURTLE);
         Model difference = comparableModel.difference(readableModel);
         assertTrue(difference.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Serialize RDF model to JSON-LD string with context")
+    void checkGetJsonLdStringFromRdfModel() throws SaiException {
+        String serialized = getJsonLdStringFromModel(readableModel, getJsonLdContextAsString());
+        assertNotNull(serialized);
+    }
+
+    @Test
+    @DisplayName("Serialize RDF model to JSON-LD string without context")
+    void checkGetJsonLdStringFromRdfModelNoContext() throws SaiException {
+        String serialized = getJsonLdStringFromModel(readableModel, null);
+        assertNotNull(serialized);
+    }
+
+    @Test
+    @DisplayName("Fail to serialize RDF model to JSON-LD string - invalid JSON-LD")
+    void failToGetJsonLdStringFromRdfModelInvalid() throws SaiException {
+        assertThrows(SaiException.class, () -> getJsonLdStringFromModel(readableModel, getInvalidJsonLdContext()));
+    }
+
+    @Test
+    @DisplayName("Fail to build remote JSON-LD contexts - empty arguments")
+    void failToBuildRemoteContexts() throws SaiException {
+        List<String> contexts = new ArrayList<>();
+        assertThrows(SaiException.class, () -> buildRemoteJsonLdContexts(contexts));
     }
 
     @Test
@@ -535,7 +568,7 @@ class RdfHelperTests {
     void checkLangForContentType() {
         assertEquals(Lang.TURTLE, getLangForContentType(null));
         assertEquals(Lang.TURTLE, getLangForContentType(ContentType.TEXT_TURTLE));
-        assertEquals(Lang.JSONLD11, getLangForContentType(ContentType.LD_JSON));
+        assertEquals(Lang.JSONLD11, getLangForContentType(LD_JSON));
         assertEquals(Lang.RDFXML, getLangForContentType(ContentType.RDF_XML));
         assertEquals(Lang.NTRIPLES, getLangForContentType(ContentType.N_TRIPLES));
     }
@@ -588,6 +621,28 @@ class RdfHelperTests {
                 "    \"First original comment\" ,\n" +
                 "    \"Second original comment\" ,\n" +
                 "    \"Third original comment\" .";
+    }
+
+    private static String getJsonLdResourceAsString() {
+        return "  {\n" +
+                "    \"socialAgentId\" : \"https://alice.example/id\",\n" +
+                "    \"authorizationAgent\" : \"https://trusted.example/alice/\",\n" +
+                "    \"accessInbox\" : \"https://alice.example/access/inbox/\",\n" +
+                "    \"registrySet\" : \"https://alice.example/registry_set\",\n" +
+                "    \"oidcIssuer\" : [\"https://idp.alice.example\"]\n" +
+                "  }";
+    }
+
+    private static String getJsonLdContextAsString() {
+        return "  {\n" +
+                "      \"@context\": \"https://solid.github.io/data-interoperability-panel/specification/contexts/social-agent-profile.jsonld\"\n" +
+                "  }";
+    }
+
+    private static String getInvalidJsonLdContext() {
+        return "  {\n" +
+                "      \"@context\" \"https://solid.github.io/data-interoperability-panel/specification/contexts/social-agent-profile.jsonld\",\n" +
+                "  }";
     }
 
 }
