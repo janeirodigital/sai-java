@@ -7,7 +7,7 @@ body: >
   {
     "@context": [
         "https://www.w3.org/ns/solid/oidc-context.jsonld",
-        "https://solid.github.io/data-interoperability-panel/specification/interop-application.jsonld"
+        "https://solid.github.io/data-interoperability-panel/specification/contexts/application-profile.jsonld"
     ],
     "client_id": "${SERVER_BASE}/crud/application",
     "client_name": "Projectron",

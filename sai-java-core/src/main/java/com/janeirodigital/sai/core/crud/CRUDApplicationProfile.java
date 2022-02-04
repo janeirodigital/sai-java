@@ -287,7 +287,7 @@ public class CRUDApplicationProfile extends CRUDResource {
         return "{\n" +
                 "  \"@context\": [\n" +
                 "    \"https://www.w3.org/ns/solid/oidc-context.jsonld\",\n" +
-                "    \"https://solid.github.io/data-interoperability-panel/specification/interop-application.jsonld\"\n" +
+                "    \"https://solid.github.io/data-interoperability-panel/specification/contexts/application-profile.jsonld\"\n" +
                 "  ]\n" +
                 "}\n";
     }
