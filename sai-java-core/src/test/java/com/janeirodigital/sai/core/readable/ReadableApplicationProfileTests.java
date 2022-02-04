@@ -8,17 +8,15 @@ import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
-import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
-
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
-import static org.junit.jupiter.api.Assertions.*;
+import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class ReadableApplicationProfileTests {
@@ -32,8 +30,7 @@ class ReadableApplicationProfileTests {
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
         // In a given test, the first request to this endpoint will return provider-response, the second will return provider-refresh (a different token)
-        mockOnGet(dispatcher, "/projectron/ttl/id", "readable/application-profile-ttl");
-        mockOnGet(dispatcher, "/projectron/jsonld/id", "readable/application-profile-jsonld");
+        mockOnGet(dispatcher, "/jsonld/projectron/id", "readable/application-profile-jsonld");
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
         // Initialize the Data Factory
@@ -42,31 +39,26 @@ class ReadableApplicationProfileTests {
     }
 
     @Test
-    @DisplayName("Get readable application profile document as turtle")
-    void getReadableApplicationProfile() throws SaiException, SaiNotFoundException {
-        ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/projectron/ttl/id"));
-        assertNotNull(applicationProfile);
-        assertEquals("Projectron", applicationProfile.getName());
-        assertEquals("Manage projects with ease", applicationProfile.getDescription());
-        assertEquals("https://acme.example/#id", applicationProfile.getAuthorUrl().toString());
-        assertEquals("https://acme.example/thumb.svg", applicationProfile.getThumbnailUrl().toString());
-        List<URL> needGroups = Arrays.asList(MockWebServerHelper.toUrl(server, "/projectron/needs#need-group-pm"));
-        assertTrue(CollectionUtils.isEqualCollection(needGroups, applicationProfile.getAccessNeedGroupUrls()));
-    }
-
-    @Test
     @DisplayName("Get readable application profile document as json-ld")
     void getReadableApplicationProfileAsJsonLd() throws SaiException, SaiNotFoundException {
-        ReadableApplicationProfile applicationProfile = dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/projectron/jsonld/id"));
-        assertNotNull(applicationProfile);
-        assertEquals("Projectron", applicationProfile.getName());
-        assertEquals("Manage projects with ease", applicationProfile.getDescription());
-        assertEquals("https://acme.example/#id", applicationProfile.getAuthorUrl().toString());
-        assertEquals("https://acme.example/thumb.svg", applicationProfile.getThumbnailUrl().toString());
-        List<URL> needGroups = Arrays.asList(MockWebServerHelper.toUrl(server, "/projectron/needs#need-group-pm"));
-        assertTrue(CollectionUtils.isEqualCollection(needGroups, applicationProfile.getAccessNeedGroupUrls()));
+        ReadableApplicationProfile profile = dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/jsonld/projectron/id"));
+        assertEquals("Projectron", profile.getName());
+        assertEquals(stringToUrl("http://projectron.example/logo.png"), profile.getLogoUrl());
+        assertEquals("Best project management ever", profile.getDescription());
+        assertEquals(stringToUrl("http://acme.example/id"), profile.getAuthorUrl());
+        assertTrue(profile.getAccessNeedGroupUrls().contains(stringToUrl("http://localhost/projectron/access#group1")));
+        assertTrue(profile.getAccessNeedGroupUrls().contains(stringToUrl("http://localhost/projectron/access#group2")));
+        assertEquals(stringToUrl("http://projectron.example/"), profile.getClientUrl());
+        assertTrue((profile.getRedirectUrls().contains(toUrl(server, "/redirect"))));
+        assertEquals(stringToUrl("http://projectron.example/tos.html"), profile.getTosUrl());
+        assertTrue(profile.getScopes().contains("openid"));
+        assertTrue(profile.getScopes().contains("offline_access"));
+        assertTrue(profile.getScopes().contains("profile"));
+        assertTrue(profile.getGrantTypes().contains("refresh_token"));
+        assertTrue(profile.getGrantTypes().contains("authorization_code"));
+        assertTrue(profile.getResponseTypes().contains("code"));
+        assertEquals(3600, profile.getDefaultMaxAge());
+        assertEquals(true, profile.isRequireAuthTime());
     }
-
-    // TODO - Include solid-oidc fields as well
 
 }

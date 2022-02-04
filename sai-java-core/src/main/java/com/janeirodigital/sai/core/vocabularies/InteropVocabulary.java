@@ -29,4 +29,11 @@ public class InteropVocabulary {
     public static final Property HAS_AUTHORIZATION_AGENT = model.createProperty(NS + "hasAuthorizationAgent");
     public static final Property HAS_REGISTRY_SET = model.createProperty(NS + "hasRegistrySet");
     public static final Property HAS_ACCESS_INBOX = model.createProperty(NS + "hasAccessInbox");
+
+    // Registry Set
+    public static final String REGISTRY_SET = NS + "RegistrySet";
+    public static final Property HAS_AGENT_REGISTRY = model.createProperty(NS + "hasAgentRegistry");
+    public static final Property HAS_ACCESS_CONSENT_REGISTRY = model.createProperty(NS + "hasAccessConsentRegistry");
+    public static final Property HAS_DATA_REGISTRY = model.createProperty(NS + "hasDataRegistry");
+
 }

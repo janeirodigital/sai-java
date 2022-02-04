@@ -526,6 +526,10 @@ public class HttpHelper {
     }
 
     public static String getResponseFailureMessage(Response response) {
+        return "HTTP " + response.code() + " " + response.message() ;
+    }
+
+    public static String getResponseFailureWithBody(Response response) {
         String message = "";
         message += "HTTP " + response.code() + " ";
         message += response.message() + " - ";

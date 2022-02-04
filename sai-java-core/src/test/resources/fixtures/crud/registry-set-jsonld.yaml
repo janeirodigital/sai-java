@@ -1,0 +1,36 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:application/ld+json'
+body: >
+
+  {
+    "@context": {
+        "@version": 1.1,
+        "@protected": true,
+        "registrySetId": {
+             "@id": "@id",
+             "@type": "@id"
+        },
+        "agentRegistry": {
+          "@id": "http://www.w3.org/ns/solid/interop#hasAgentRegistry",
+          "@type": "@id"
+        },
+        "accessConsentRegistry": {
+          "@id": "http://www.w3.org/ns/solid/interop#hasAccessConsentRegistry",
+          "@type": "@id"
+        },
+        "dataRegistry": {
+          "@id": "http://www.w3.org/ns/solid/interop#hasDataRegistry",
+          "@type": "@id",
+          "@container": [
+            "@id",
+            "@set"
+          ]
+        }
+      },
+      "registrySetId" : "${SERVER_BASE}/jsonld/registries",
+      "agentRegistry" : "${SERVER_BASE}/jsonld/agents/",
+      "accessConsentRegistry" : "${SERVER_BASE}/jsonld/consents/",
+      "dataRegistry" : ["https://work.alice.example/data/", "https://personal.alice.example/data/"]
+  }

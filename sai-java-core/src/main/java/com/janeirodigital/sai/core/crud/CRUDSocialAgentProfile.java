@@ -149,15 +149,14 @@ public class CRUDSocialAgentProfile extends CRUDResource {
                 populate();
             } catch (SaiNotFoundException ex) {
                 // Remote resource didn't exist, initialize one
-                this.resource = getNewResourceForType(this.url, APPLICATION);
+                this.resource = getNewResourceForType(this.url, SOCIAL_AGENT);
                 this.dataset = resource.getModel();
             }
         }
     }
 
     /**
-     * Populates the {@link CRUDSocialAgentProfile} instance with required and optional
-     * fields for the application profile.
+     * Populates the {@link CRUDSocialAgentProfile} instance with required and optional fields
      * @throws SaiException If any required fields cannot be populated, or other exceptional conditions
      */
     private void populate() throws SaiException {
@@ -167,7 +166,7 @@ public class CRUDSocialAgentProfile extends CRUDResource {
             this.accessInboxUrl = getRequiredUrlObject(this.resource, HAS_ACCESS_INBOX);
             this.oidcIssuerUrls = getRequiredUrlObjects(this.resource, SOLID_OIDC_ISSUER);
         } catch (SaiNotFoundException ex) {
-            throw new SaiException("Failed to load application profile " + this.url + ": " + ex.getMessage());
+            throw new SaiException("Failed to load social agent profile " + this.url + ": " + ex.getMessage());
         }
     }
 
