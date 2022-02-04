@@ -190,6 +190,17 @@ class HttpHelperTests {
     }
 
     @Test
+    @DisplayName("Fail to get a resource and log details")
+    void FailToGetResourceAndLog() throws SaiException {
+        queuingServer.enqueue(new MockResponse().setResponseCode(404).setBody(""));
+        try(Response response = getResource(httpClient, toUrl(queuingServer, "/http/no-resource"));) {
+            assertNotNull(getResponseFailureMessage(response));
+        }
+        queuingServer.enqueue(new MockResponse().setResponseCode(404).setBody(""));
+        Response response = deleteResource(httpClient, toUrl(queuingServer, "/path/no-resource"));
+    }
+
+    @Test
     @DisplayName("Fail to get a resource due to IO issue")
     void FailToGetHttpResourceIO() {
         queuingServer.enqueue(new MockResponse()
@@ -220,7 +231,8 @@ class HttpHelperTests {
         assertTrue(response.isSuccessful());
         response.close();
         // Update with no resource content (treated as empty body)
-        response = putRdfResource(httpClient, url, null, TEXT_TURTLE);
+        Headers headers = null;
+        response = putRdfResource(httpClient, url, null, TEXT_TURTLE, headers);
         assertTrue(response.isSuccessful());
         response.close();
     }

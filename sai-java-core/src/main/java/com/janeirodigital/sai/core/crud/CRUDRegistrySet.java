@@ -157,33 +157,4 @@ public class CRUDRegistrySet extends CRUDResource {
         }
     }
 
-    private String getJsonLdContextAsString() {
-        return "  {\n" +
-                "    \"@context\": {\n" +
-                "        \"@version\": 1.1,\n" +
-                "        \"@protected\": true,\n" +
-                "        \"registrySetId\": {\n" +
-                "             \"@id\": \"@id\",\n" +
-                "             \"@type\": \"@id\"\n" +
-                "        },\n" +
-                "        \"agentRegistry\": {\n" +
-                "          \"@id\": \"http://www.w3.org/ns/solid/interop#hasAgentRegistry\",\n" +
-                "          \"@type\": \"@id\"\n" +
-                "        },\n" +
-                "        \"accessConsentRegistry\": {\n" +
-                "          \"@id\": \"http://www.w3.org/ns/solid/interop#hasAccessConsentRegistry\",\n" +
-                "          \"@type\": \"@id\"\n" +
-                "        },\n" +
-                "        \"dataRegistry\": {\n" +
-                "          \"@id\": \"http://www.w3.org/ns/solid/interop#hasDataRegistry\",\n" +
-                "          \"@type\": \"@id\",\n" +
-                "          \"@container\": [\n" +
-                "          \t\"@id\",\n" +
-                "          \t\"@set\"\n" +
-                "          ]\n" +
-                "        }\n" +
-                "      }\n" +
-                "  }";
-    }
-
 }

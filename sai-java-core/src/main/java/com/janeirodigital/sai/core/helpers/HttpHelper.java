@@ -529,12 +529,4 @@ public class HttpHelper {
         return "HTTP " + response.code() + " " + response.message() ;
     }
 
-    public static String getResponseFailureWithBody(Response response) {
-        String message = "";
-        message += "HTTP " + response.code() + " ";
-        message += response.message() + " - ";
-        try { message += response.peekBody(Long.MAX_VALUE).string(); } catch (IOException ex) { message += "Message body content unavailable"; }
-        return message;
-    }
-
 }

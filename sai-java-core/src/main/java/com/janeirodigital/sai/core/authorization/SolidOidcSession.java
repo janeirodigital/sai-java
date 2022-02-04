@@ -230,6 +230,7 @@ public class SolidOidcSession implements AuthorizedSession {
         private State requestState;
         private List<URL> redirects;
         private URL redirect;
+        private Random random;
         private CodeVerifier codeVerifier;
         private AuthorizationRequest authorizationRequest;
         private AuthorizationCode authorizationCode;
@@ -371,8 +372,8 @@ public class SolidOidcSession implements AuthorizedSession {
             this.codeVerifier = new CodeVerifier();  // Generate a new random 256 bit code verifier for PKCE
             if (this.redirects.size() == 1) { this.redirect = this.redirects.get(0); } else {
                 // Pick a redirect to use at random
-                Random rand = new Random();
-                this.redirect = this.redirects.get(rand.nextInt(this.redirects.size()));
+                this.random = new Random();
+                this.redirect = this.redirects.get(this.random.nextInt(this.redirects.size()));
             }
             AuthorizationRequest.Builder requestBuilder = new AuthorizationRequest.Builder(new ResponseType(ResponseType.Value.CODE), this.clientId);
             requestBuilder.scope(scope)
