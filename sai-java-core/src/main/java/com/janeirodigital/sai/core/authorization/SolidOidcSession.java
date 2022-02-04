@@ -2,6 +2,8 @@ package com.janeirodigital.sai.core.authorization;
 
 import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.helpers.RdfHelper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.Curve;
@@ -22,13 +24,12 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import okhttp3.OkHttpClient;
+import org.apache.jena.rdf.model.Resource;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.*;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
@@ -36,6 +37,9 @@ import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
 import static com.janeirodigital.sai.core.enums.HttpMethod.POST;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.uriToUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.getRequiredStringObject;
+import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_REDIRECT_URIS;
+import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_SCOPE;
 
 /**
  * Implementation of {@link AuthorizedSession} for
@@ -203,7 +207,7 @@ public class SolidOidcSession implements AuthorizedSession {
      *     <li>{@link #setApplication(URL)}</li>
      *     <li>{@link #setScope(List)}</li>
      *     <li>{@link #setPrompt(Prompt)}</li>
-     *     <li>{@link #setRedirect(URL)}</li>
+     *     <li>{@link #addRedirect(URL)}</li>
      *     <li>{@link #prepareCodeRequest()}</li>
      *     <li>{@link #getCodeRequestUrl()}</li>
      *     <li>{@link #processCodeResponse(URL)}</li>
@@ -224,6 +228,7 @@ public class SolidOidcSession implements AuthorizedSession {
         private Scope scope;
         private Prompt prompt;
         private State requestState;
+        private List<URL> redirects;
         private URL redirect;
         private CodeVerifier codeVerifier;
         private AuthorizationRequest authorizationRequest;
@@ -278,12 +283,30 @@ public class SolidOidcSession implements AuthorizedSession {
          * @return SolidOidcSession.Builder
          */
         public Builder setApplication(URL applicationId) throws SaiException {
+            return setApplication(applicationId, false);
+        }
+
+        /**
+         * Sets the client application identifier for the Solid-OIDC session, with the ability
+         * to lookup the client document and extract additional criteria (redirect uris and scope) for
+         * the session automatically (which can be disabled by setting <code>manual</code> to false).
+         * @param applicationId URL of the Client Application Identity
+         * @param manual When true, do not populate and session criteria automatically from client id document
+         * @return SolidOidcSession.Builder
+         * @throws SaiException
+         */
+        public Builder setApplication(URL applicationId, boolean manual) throws SaiException {
             Objects.requireNonNull(applicationId, "Must provide an application identifier to build a Solid OIDC session");
             Objects.requireNonNull(httpClient, "Must provide an http client to build a Solid OIDC session");
-            // TODO - Need to disable this due to JSON-LD11 dependency issues - have to get Jena running latest version across deps
-            // when done we should be getting redirect_uris, scopes, etc directly from the client id document
-            // Resource clientDocument = getClientIdDocument(this.httpClient, applicationId);
-            // this.redirect = RdfHelper.getUrlObject(clientDocument, SOLID_OIDC_REDIRECT_URIS);
+            if (!manual) {
+                Resource clientDocument = getClientIdDocument(this.httpClient, applicationId);
+                try {
+                    this.setRedirects(RdfHelper.getUrlObjects(clientDocument, SOLID_OIDC_REDIRECT_URIS));
+                    this.setScope(Arrays.asList(getRequiredStringObject(clientDocument, SOLID_OIDC_SCOPE).split(" ")));
+                } catch (SaiNotFoundException ex) {
+                    throw new SaiException("Unable to set application. Required attributes missing from client id document: " + ex.getMessage());
+                }
+            }
             this.applicationId = applicationId;
             this.clientId = new ClientID(this.applicationId.toString());
             return this;
@@ -313,13 +336,25 @@ public class SolidOidcSession implements AuthorizedSession {
         }
 
         /**
-         * Sets the redirect URI to use in the authorization request
+         * Adds a redirect URI to use in the authorization request
          * @param redirect redirection URI to use in the authorization request
          * @return SolidOidcSession.Builder
          */
-        public Builder setRedirect(URL redirect) {
+        public Builder addRedirect(URL redirect) {
             Objects.requireNonNull(redirect, "Must provide redirection endpoint for authorization request");
-            this.redirect = redirect;
+            if (this.redirects == null) { this.redirects = new ArrayList<>(); }
+            this.redirects.add(redirect);
+            return this;
+        }
+
+        /**
+         * Sets the list of redirect URIs to use in the authorization request
+         * @param redirects redirection URIs to use in the authorization request
+         * @return SolidOidcSession.Builder
+         */
+        public Builder setRedirects(List<URL> redirects) {
+            Objects.requireNonNull(redirects, "Must provide redirection endpoints for authorization request");
+            this.redirects = redirects;
             return this;
         }
 
@@ -329,11 +364,16 @@ public class SolidOidcSession implements AuthorizedSession {
          */
         public Builder prepareCodeRequest() {
             Objects.requireNonNull(this.clientId, "Must provide a client application for the authorization request");
-            Objects.requireNonNull(this.redirect, "Must provide a redirect for the authorization request");
+            Objects.requireNonNull(this.redirects, "Must provide one or more redirects for the authorization request");
             Objects.requireNonNull(this.scope, "Must provide a scope for the authorization request");
             Objects.requireNonNull(this.oidcAuthorizationEndpoint, "Cannot prepare authorization request without OIDC authorization endpoint");
             this.requestState = new State();
             this.codeVerifier = new CodeVerifier();  // Generate a new random 256 bit code verifier for PKCE
+            if (this.redirects.size() == 1) { this.redirect = this.redirects.get(0); } else {
+                // Pick a redirect to use at random
+                Random rand = new Random();
+                this.redirect = this.redirects.get(rand.nextInt(this.redirects.size()));
+            }
             AuthorizationRequest.Builder requestBuilder = new AuthorizationRequest.Builder(new ResponseType(ResponseType.Value.CODE), this.clientId);
             requestBuilder.scope(scope)
                           .state(this.requestState)
@@ -396,7 +436,7 @@ public class SolidOidcSession implements AuthorizedSession {
             Objects.requireNonNull(this.clientId, "Must provide a client application for the token request");
             Objects.requireNonNull(this.oidcTokenEndpoint, "Cannot request tokens without OIDC token endpoint");
             Objects.requireNonNull(this.authorizationCode, "Cannot request tokens without authorization code");
-            Objects.requireNonNull(this.redirect, "Must provide a redirect for the token request");
+            Objects.requireNonNull(this.redirects, "Must provide a redirect for the token request");
             Objects.requireNonNull(this.codeVerifier, "Must provide a code verifier for the token request");
             this.ecJwk = getEllipticCurveKey(Curve.P_256);
             this.proofFactory = getDPoPProofFactory(ecJwk);
