@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static com.janeirodigital.sai.core.contexts.InteropContexts.APPLICATION_PROFILE_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.SolidOidcContexts.SOLID_OIDC_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -26,6 +28,8 @@ import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.*;
  */
 @Getter
 public class CRUDApplicationProfile extends CRUDResource {
+
+    private static final List<String> contexts = Arrays.asList(SOLID_OIDC_CONTEXT, APPLICATION_PROFILE_CONTEXT);
 
     private String name;
     private String description;
@@ -57,7 +61,7 @@ public class CRUDApplicationProfile extends CRUDResource {
         this.responseTypes = new ArrayList<>();
         // By default the application profile document is JSON-LD
         this.setContentType(LD_JSON);
-        this.setJsonLdContext(getJsonLdContextAsString());
+        this.setJsonLdContext(buildRemoteJsonLdContexts(contexts));
     }
 
     /**
@@ -283,12 +287,4 @@ public class CRUDApplicationProfile extends CRUDResource {
         }
     }
 
-    private String getJsonLdContextAsString() {
-        return "{\n" +
-                "  \"@context\": [\n" +
-                "    \"https://www.w3.org/ns/solid/oidc-context.jsonld\",\n" +
-                "    \"https://solid.github.io/data-interoperability-panel/specification/contexts/application-profile.jsonld\"\n" +
-                "  ]\n" +
-                "}\n";
-    }
 }

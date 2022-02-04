@@ -659,6 +659,25 @@ public class RdfHelper {
         }
     }
 
+    public static String buildRemoteJsonLdContext(String remote) {
+        Objects.requireNonNull(remote, "Must provide remote JSON-LD context to build");
+        return "{\n  \"@context\": \"" + remote + "\"\n}";
+    }
+
+    public static String buildRemoteJsonLdContexts(List<String> contexts) throws SaiException {
+        Objects.requireNonNull(contexts, "Must provide JSON-LD contexts to build");
+        if (contexts.isEmpty()) { throw new SaiException("Cannot build JSON-LD context with no input"); }
+        StringBuilder combined = new StringBuilder();
+        combined.append("{\n \"@context\": [\n");
+        for (int i=0; i<contexts.size(); i++) {
+            combined.append("    \"" + contexts.get(i) + "\"");
+            String commandEnd = (i == (contexts.size() - 1)) ? "\n" : ",\n";
+            combined.append(commandEnd);
+        }
+        combined.append("  ]\n }");
+        return combined.toString();
+    }
+
     /**
      * Convenience function for common condition when the expected data type isn't found
      */
