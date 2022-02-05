@@ -1,9 +1,9 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.TestableVocabulary;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.factories.DataFactory;
 import com.janeirodigital.sai.core.readable.TestableReadableResource;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Resource;
@@ -12,6 +12,7 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 
 @Getter
@@ -25,8 +26,12 @@ public class TestableImmutableResource extends ImmutableResource {
     private final List<URL> tags;
     private final List<String> comments;
 
+    public TestableImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource) throws SaiNotFoundException, SaiException {
+        this(resourceUrl, dataFactory, resource, false);
+    }
+
     public TestableImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, boolean unprotected) throws SaiNotFoundException, SaiException {
-        super(resourceUrl, dataFactory, resource, unprotected);
+        super(resourceUrl, dataFactory, resource, TEXT_TURTLE, unprotected);
         this.id = getRequiredIntegerObject(this.resource, TestableVocabulary.TESTABLE_ID);
         this.name = getRequiredStringObject(this.resource, TestableVocabulary.TESTABLE_NAME);
         this.createdAt = getRequiredDateTimeObject(this.resource, TestableVocabulary.TESTABLE_CREATED_AT);

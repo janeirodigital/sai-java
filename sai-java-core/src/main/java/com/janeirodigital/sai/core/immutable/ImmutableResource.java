@@ -15,7 +15,6 @@ import java.net.URL;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.putProtectedRdfResource;
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 
 /**
@@ -40,21 +39,22 @@ public class ImmutableResource {
      * @param resourceUrl URL of the immutable resource
      * @param dataFactory Data factory to assign
      * @param resource Jena resource to populate with
+     * @param contentType {@link ContentType} to use
      * @param unprotected When true no authorization credentials will be sent in requests to this resource
      */
-    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, boolean unprotected) throws SaiException {
+    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, ContentType contentType, boolean unprotected) throws SaiException {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
         Objects.requireNonNull(dataFactory, "Must provide a data factory");
         Objects.requireNonNull(dataFactory.getHttpClient(), "Must provide a valid HTTP client");
         Objects.requireNonNull(resource, "Must provide a resource and model to populate an immutable resource");
+        Objects.requireNonNull(contentType, "Must provide a contentType to write an immutable resource");
         this.url = resourceUrl;
         this.dataFactory = dataFactory;
         this.httpClient = dataFactory.getHttpClient();
         this.dataset = resource.getModel();
         this.resource = resource;
         this.unprotected = unprotected;
-        // Turtle is the default content type for read and writes
-        this.contentType = ContentType.TEXT_TURTLE;
+        this.contentType = contentType;
     }
 
     /**
@@ -69,27 +69,6 @@ public class ImmutableResource {
             Response response = putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
             if (!response.isSuccessful()) { throw new SaiException("Failed to create " + this.url + ": " + getResponseFailureMessage(response)); }
         }
-    }
-
-    /**
-     * Set the preferred RDF content type for writes. Will be supplied in HTTP
-     * Content-Type headers.
-     * @param contentType RDF content type
-     * @throws SaiException on invalid content type
-     */
-    public void setContentType(ContentType contentType) throws SaiException {
-        if (!RDF_CONTENT_TYPES.contains(contentType)) { throw new SaiException("Must provide a supported RDF content-type"); }
-        this.contentType = contentType;
-    }
-
-    /**
-     * Set the JSON-LD context to use on writes when the content-type is JSON-LD.
-     * @param jsonLdContext JSON-LD context as string
-     * @throws SaiException on invalid content type
-     */
-    public void setJsonLdContext(String jsonLdContext) throws SaiException {
-        if (!this.contentType.equals(LD_JSON)) { throw new SaiException("JSON-LD contexts only apply to the " + LD_JSON.getValue() + " content-type"); }
-        this.jsonLdContext = jsonLdContext;
     }
 
     /**

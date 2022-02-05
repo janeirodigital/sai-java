@@ -4,21 +4,24 @@ import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.factories.DataFactory;
-import com.janeirodigital.sai.core.fixtures.DispatcherEntry;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 import org.apache.commons.collections4.CollectionUtils;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
+import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -27,6 +30,8 @@ class ReadableResourceTests {
 
     private static DataFactory dataFactory;
     private static MockWebServer server;
+    private static MockWebServer queuingServer;
+    private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
     static void beforeAll() throws SaiException {
@@ -35,20 +40,32 @@ class ReadableResourceTests {
         dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
-        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(
-                new DispatcherEntry(List.of("readable/readable-resource-ttl"), "GET", "/readable/readable-resource", null)
-        ));
+        dispatcher = new RequestMatchingFixtureDispatcher();
+        mockOnGet(dispatcher, "/readable/readable-resource", "readable/readable-resource-ttl");
+        mockOnGet(dispatcher, "/missing-fields/readable/readable-resource", "readable/readable-resource-missing-fields-ttl");
+        mockOnGet(dispatcher, "/malformed/readable/readable-resource", "readable/readable-resource-malformed-ttl");
 
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
     }
 
+    @BeforeEach
+    void beforeEach() throws IOException {
+        queuingServer = new MockWebServer();
+        queuingServer.start();
+    }
+
+    @AfterEach
+    void afterEach() throws IOException {
+        queuingServer.shutdown();
+    }
+
     @Test
-    @DisplayName("Initialize a Readable resource")
+    @DisplayName("Initialize a readable resource")
     void initializeReadableResource() throws SaiException {
         URL url = toUrl(server, "/readable/readable-resource");
-        ReadableResource readable = new ReadableResource(url, dataFactory);
+        ReadableResource readable = new ReadableResource(url, dataFactory, false);
         assertNotNull(readable);
         assertEquals(url, readable.getUrl());
         assertEquals(dataFactory, readable.getDataFactory());
@@ -56,7 +73,7 @@ class ReadableResourceTests {
     }
 
     @Test
-    @DisplayName("Bootstrap a Readable resource")
+    @DisplayName("Build a readable resource")
     void bootstrapReadableResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/readable/readable-resource#project");
         TestableReadableResource testable = TestableReadableResource.build(url, dataFactory, true);
@@ -76,7 +93,7 @@ class ReadableResourceTests {
     }
 
     @Test
-    @DisplayName("Bootstrap a protected Readable resource")
+    @DisplayName("Build a protected readable resource")
     void bootstrapProtectedReadableResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/readable/readable-resource#project");
         TestableReadableResource testable = TestableReadableResource.build(url, dataFactory, false);
@@ -85,4 +102,53 @@ class ReadableResourceTests {
         assertEquals("Great Validations", testable.getName());
     }
 
+    @Test
+    @DisplayName("Fail to build a protected readable resource - missing fields")
+    void failToGetReadableResourceMissingFields() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/missing-fields/readable/readable-resource#project");
+        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.build(url, dataFactory, false));
+    }
+
+    @Test
+    @DisplayName("Fail to build a protected readable resource - io failure")
+    void failToGetReadableResourceMalformedDocuments() throws SaiException {
+        URL url = toUrl(queuingServer, "/io/readable/protected-readable");
+        queuingServer.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
+                .setBody("body")
+                .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY));
+        assertThrows(SaiException.class, () -> TestableReadableResource.build(url, dataFactory, false));
+    }
+
+    @Test
+    @DisplayName("Fail to build unprotected readable resource - io failure")
+    void failToGetReadableResourceIO() throws SaiException {
+        URL url = toUrl(queuingServer, "/io/readable/unprotected-readable");
+        queuingServer.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
+                .setBody("body")
+                .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY));
+        assertThrows(SaiException.class, () -> TestableReadableResource.build(url, dataFactory, true));
+    }
+
+    @Test
+    @DisplayName("Test readable response check - unsuccessful - resource not found")
+    void testReadableResponseCheckNotFound() throws SaiException {
+        URL missingUrl = toUrl(server, "/missing/readable/resource");
+        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.build(missingUrl, dataFactory, false));
+    }
+
+    @Test
+    @DisplayName("Test readable response check - unsuccessful - server error")
+    void testReadableResponseCheckError() throws SaiException {
+        URL errorUrl = toUrl(queuingServer, "/io/readable/server-error-resource");
+        queuingServer.enqueue(new MockResponse()
+                .setResponseCode(500)
+                .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
+                .setBody("BAD"));
+        assertThrows(SaiException.class, () -> TestableReadableResource.build(errorUrl, dataFactory, true));
+    }
 }
+

@@ -61,27 +61,6 @@ public class ReadableResource {
     }
 
     /**
-     * Calls {@link #ReadableResource(URL, DataFactory, boolean)} for a protected resource that
-     * requires authorization.
-     * @param resourceUrl URL of the Readable resource
-     * @param dataFactory Data factory to assign
-     */
-    public ReadableResource(URL resourceUrl, DataFactory dataFactory) throws SaiException {
-        this(resourceUrl, dataFactory, false);
-    }
-
-    /**
-     * Set the preferred RDF content type for reads and writes. Will be supplied in HTTP
-     * Accept and Content-Type headers.
-     * @param contentType RDF content type
-     * @throws SaiException on invalid content type
-     */
-    public void setContentType(ContentType contentType) throws SaiException {
-        if (!RDF_CONTENT_TYPES.contains(contentType)) { throw new SaiException("Must provide a supported RDF content-type"); }
-        this.contentType = contentType;
-    }
-
-    /**
      * Populates the <code>dataset</code> based on the contents of the corresponding
      * resource requested and returned over HTTP.
      * @throws SaiException
@@ -126,9 +105,7 @@ public class ReadableResource {
      * @throws SaiException when the response code is unsuccessful for any other reason
      */
     private Response checkReadableResponse(Response response) throws SaiNotFoundException, SaiException {
-        if (!response.isSuccessful() && response.code() == HTTP_NOT_FOUND) {
-            throw new SaiNotFoundException("Resource " + this.url + " doesn't exist");
-        }
+        if (response.code() == HTTP_NOT_FOUND) { throw new SaiNotFoundException("Resource " + this.url + " doesn't exist"); }
         if (!response.isSuccessful()) {
             throw new SaiException("Unable to fetch data for " + this.url + ": " + response.code() + " " + response.message());
         }

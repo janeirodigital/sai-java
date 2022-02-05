@@ -38,7 +38,7 @@ public class CRUDSocialAgentProfile extends CRUDResource {
      * @throws SaiException
      */
     public CRUDSocialAgentProfile(URL url, DataFactory dataFactory) throws SaiException {
-        super(url, dataFactory);
+        super(url, dataFactory, false);
         this.oidcIssuerUrls = new ArrayList<>();
         this.jsonLdContext = buildRemoteJsonLdContext(SOCIAL_AGENT_PROFILE_CONTEXT);
     }

@@ -60,7 +60,7 @@ class CRUDResourceTests {
     @DisplayName("Initialize a CRUD resource")
     void initializeCRUDResource() throws SaiException {
         URL url = toUrl(server, "/crud/crud-resource");
-        CRUDResource crud = new CRUDResource(url, dataFactory);
+        CRUDResource crud = new CRUDResource(url, dataFactory, false);
         assertNotNull(crud);
         assertEquals(url, crud.getUrl());
         assertEquals(dataFactory, crud.getDataFactory());
@@ -167,11 +167,30 @@ class CRUDResourceTests {
     }
 
     @Test
+    @DisplayName("Fail to update a CRUD resource - missing")
+    void failToUpdateCRUDResource() throws SaiException {
+
+        URL url = toUrl(server, "/crud/missing");
+        TestableCRUDResource testable = TestableCRUDResource.build(url, dataFactory, false);
+        testable.setId(42);
+        testable.setName("Missing");
+        assertThrows(SaiException.class, () -> testable.update());
+    }
+
+    @Test
     @DisplayName("Delete a CRUD resource")
     void deleteCRUDResource() throws SaiException {
         URL url = toUrl(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.build(url, dataFactory, true);
         assertDoesNotThrow(() -> testable.delete());
+    }
+
+    @Test
+    @DisplayName("Fail to delete a CRUD resource - missing")
+    void failToDeleteCRUDResource() throws SaiException {
+        URL url = toUrl(server, "/crud/missing");
+        TestableCRUDResource testable = TestableCRUDResource.build(url, dataFactory, false);
+        assertThrows(SaiException.class, () -> testable.delete());
     }
 
     @Test

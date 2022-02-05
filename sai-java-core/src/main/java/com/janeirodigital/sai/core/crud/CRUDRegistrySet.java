@@ -35,7 +35,7 @@ public class CRUDRegistrySet extends CRUDResource {
      * @throws SaiException
      */
     public CRUDRegistrySet(URL url, DataFactory dataFactory) throws SaiException {
-        super(url, dataFactory);
+        super(url, dataFactory, false);
         this.dataRegistryUrls = new ArrayList<>();
         this.jsonLdContext = buildRemoteJsonLdContext(REGISTRY_SET_CONTEXT);
     }

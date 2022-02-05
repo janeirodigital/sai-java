@@ -15,8 +15,7 @@ import org.junit.jupiter.api.Test;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 class ReadableApplicationProfileTests {
@@ -31,6 +30,7 @@ class ReadableApplicationProfileTests {
         dispatcher = new RequestMatchingFixtureDispatcher();
         // In a given test, the first request to this endpoint will return provider-response, the second will return provider-refresh (a different token)
         mockOnGet(dispatcher, "/jsonld/projectron/id", "readable/application-profile-jsonld");
+        mockOnGet(dispatcher, "/missing-fields/jsonld/projectron/id", "readable/application-profile-missing-fields-jsonld");
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
         // Initialize the Data Factory
@@ -60,5 +60,12 @@ class ReadableApplicationProfileTests {
         assertEquals(3600, profile.getDefaultMaxAge());
         assertEquals(true, profile.isRequireAuthTime());
     }
+
+    @Test
+    @DisplayName("Fail to get readable application profile document - missing fields")
+    void failToGetReadableApplicationProfileMissingFields() {
+        assertThrows(SaiException.class, () -> dataFactory.getReadableApplicationProfile(MockWebServerHelper.toUrl(server, "/missing-fields/jsonld/projectron/id")));
+    }
+
 
 }
