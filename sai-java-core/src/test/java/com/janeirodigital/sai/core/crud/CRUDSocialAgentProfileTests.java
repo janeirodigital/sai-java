@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.factories.TrustedDataFactory;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 
 class CRUDSocialAgentProfileTests {
 
-    private static DataFactory dataFactory;
+    private static TrustedDataFactory trustedDataFactory;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
@@ -36,7 +36,7 @@ class CRUDSocialAgentProfileTests {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
+        trustedDataFactory = new TrustedDataFactory(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
@@ -67,7 +67,7 @@ class CRUDSocialAgentProfileTests {
     @DisplayName("Create new crud social agent profile in turtle")
     void createNewCrudSocialAgentProfile() throws SaiException {
         URL url = toUrl(server, "/new/ttl/id");
-        CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory);
+        CRUDSocialAgentProfile profile = trustedDataFactory.getCRUDSocialAgentProfile(url);
         profile.setAuthorizationAgent(aliceAuthzAgent);
         profile.setAccessInbox(aliceAccessInbox);
         profile.setRegistrySet(aliceRegistrySet);
@@ -80,10 +80,10 @@ class CRUDSocialAgentProfileTests {
     @DisplayName("Create new crud social agent profile in turtle with jena resource")
     void createCrudSocialAgentProfileWithJenaResource() throws SaiException {
         URL existingUrl = toUrl(server, "/ttl/id");
-        CRUDSocialAgentProfile existingProfile = CRUDSocialAgentProfile.build(existingUrl, dataFactory);
+        CRUDSocialAgentProfile existingProfile = trustedDataFactory.getCRUDSocialAgentProfile(existingUrl);
 
         URL newUrl = toUrl(server, "/new/ttl/id");
-        CRUDSocialAgentProfile resourceProfile = CRUDSocialAgentProfile.build(newUrl, dataFactory, TEXT_TURTLE, existingProfile.getResource());
+        CRUDSocialAgentProfile resourceProfile = trustedDataFactory.getCRUDSocialAgentProfile(newUrl, TEXT_TURTLE, existingProfile.getResource());
         assertDoesNotThrow(() -> resourceProfile.update());
         assertNotNull(resourceProfile);
     }
@@ -92,7 +92,7 @@ class CRUDSocialAgentProfileTests {
     @DisplayName("Read existing crud social agent profile in turtle")
     void readSocialAgentProfile() throws SaiException {
         URL url = toUrl(server, "/ttl/id");
-        CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory);
+        CRUDSocialAgentProfile profile = trustedDataFactory.getCRUDSocialAgentProfile(url);
         assertNotNull(profile);
         assertEquals(aliceAuthzAgent, profile.getAuthorizationAgentUrl());
         assertEquals(aliceRegistrySet, profile.getRegistrySetUrl());
@@ -104,14 +104,14 @@ class CRUDSocialAgentProfileTests {
     @DisplayName("Fail to read existing crud social agent profile in turtle - missing required fields")
     void failToReadSocialAgentProfile() throws SaiException {
         URL url = toUrl(server, "/missing-fields/ttl/id");
-        assertThrows(SaiException.class, () -> CRUDSocialAgentProfile.build(url, dataFactory));
+        assertThrows(SaiException.class, () -> trustedDataFactory.getCRUDSocialAgentProfile(url));
     }
 
     @Test
     @DisplayName("Update existing crud social agent profile in turtle")
     void updateSocialAgentProfile() throws SaiException {
         URL url = toUrl(server, "/ttl/id");
-        CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory);
+        CRUDSocialAgentProfile profile = trustedDataFactory.getCRUDSocialAgentProfile(url);;
         profile.setAuthorizationAgent(stringToUrl("https://other.example/alice/"));
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
@@ -121,7 +121,7 @@ class CRUDSocialAgentProfileTests {
     @DisplayName("Read existing social agent profile in JSON-LD")
     void readSocialAgentProfileJsonLd() throws SaiException {
         URL url = toUrl(server, "/jsonld/id");
-        CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory, LD_JSON);
+        CRUDSocialAgentProfile profile = trustedDataFactory.getCRUDSocialAgentProfile(url, LD_JSON);
         assertNotNull(profile);
         assertEquals(aliceAuthzAgent, profile.getAuthorizationAgentUrl());
         assertEquals(aliceRegistrySet, profile.getRegistrySetUrl());
@@ -133,7 +133,7 @@ class CRUDSocialAgentProfileTests {
     @DisplayName("Create new crud social agent profile in JSON-LD")
     void createNewCrudSocialAgentProfileJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/id");
-        CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory, LD_JSON);
+        CRUDSocialAgentProfile profile = trustedDataFactory.getCRUDSocialAgentProfile(url, LD_JSON);
         profile.setAuthorizationAgent(aliceAuthzAgent);
         profile.setAccessInbox(aliceAccessInbox);
         profile.setRegistrySet(aliceRegistrySet);
@@ -146,7 +146,7 @@ class CRUDSocialAgentProfileTests {
     @DisplayName("Delete crud social agent profile")
     void deleteSocialAgentProfile() throws SaiException {
         URL url = toUrl(server, "/ttl/id");
-        CRUDSocialAgentProfile profile = CRUDSocialAgentProfile.build(url, dataFactory);
+        CRUDSocialAgentProfile profile = trustedDataFactory.getCRUDSocialAgentProfile(url);
         assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
     }

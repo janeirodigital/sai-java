@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.factories.TrustedDataFactory;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 
 class CRUDRegistrySetTests {
 
-    private static DataFactory dataFactory;
+    private static TrustedDataFactory trustedDataFactory;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
@@ -39,7 +39,7 @@ class CRUDRegistrySetTests {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
+        trustedDataFactory = new TrustedDataFactory(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
@@ -69,7 +69,7 @@ class CRUDRegistrySetTests {
     @DisplayName("Create new crud registry set in turtle")
     void createNewCrudRegistrySet() throws SaiException {
         URL url = toUrl(server, "/new/ttl/registries");
-        CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory);
+        CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url);
         registrySet.setAgentRegistry(aliceAgentRegistry);
         registrySet.setAccessConsentRegistry(aliceAccessConsentRegistry);
         aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistryUrl(dataRegistry); });
@@ -81,10 +81,10 @@ class CRUDRegistrySetTests {
     @DisplayName("Create new crud registry set in turtle with jena resource")
     void createCrudRegistrySetWithJenaResource() throws SaiException {
         URL existingUrl = toUrl(server, "/ttl/registries");
-        CRUDRegistrySet existingRegistrySet = CRUDRegistrySet.build(existingUrl, dataFactory);
+        CRUDRegistrySet existingRegistrySet = trustedDataFactory.getCRUDRegistrySet(existingUrl);
 
         URL newUrl = toUrl(server, "/new/ttl/registries");
-        CRUDRegistrySet resourceRegistrySet = CRUDRegistrySet.build(newUrl, dataFactory, TEXT_TURTLE, existingRegistrySet.getResource());
+        CRUDRegistrySet resourceRegistrySet = trustedDataFactory.getCRUDRegistrySet(newUrl, TEXT_TURTLE, existingRegistrySet.getResource());
         assertDoesNotThrow(() -> resourceRegistrySet.update());
         assertNotNull(resourceRegistrySet);
     }
@@ -93,7 +93,7 @@ class CRUDRegistrySetTests {
     @DisplayName("Read existing crud registry set in turtle")
     void readRegistrySet() throws SaiException {
         URL url = toUrl(server, "/ttl/registries");
-        CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory);
+        CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url);
         assertNotNull(registrySet);
         assertEquals(aliceAgentRegistry, registrySet.getAgentRegistryUrl());
         assertEquals(aliceAccessConsentRegistry, registrySet.getAccessConsentRegistryUrl());
@@ -104,14 +104,14 @@ class CRUDRegistrySetTests {
     @DisplayName("Fail to read existing crud registry set in turtle - missing required fields")
     void failToReadRegistrySet() throws SaiException {
         URL url = toUrl(server, "/missing-fields/ttl/registries");
-        assertThrows(SaiException.class, () -> CRUDRegistrySet.build(url, dataFactory));
+        assertThrows(SaiException.class, () -> CRUDRegistrySet.build(url, trustedDataFactory));
     }
 
     @Test
     @DisplayName("Update existing crud registry set in turtle")
     void updateRegistrySet() throws SaiException {
         URL url = toUrl(server, "/ttl/registries");
-        CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory);
+        CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url);
         registrySet.setAgentRegistry(stringToUrl("https://alice.example/otheragents/"));
         assertDoesNotThrow(() -> registrySet.update());
         assertNotNull(registrySet);
@@ -121,7 +121,7 @@ class CRUDRegistrySetTests {
     @DisplayName("Read existing registry set in JSON-LD")
     void readRegistrySetJsonLd() throws SaiException {
         URL url = toUrl(server, "/jsonld/registries");
-        CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory, LD_JSON);
+        CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url, LD_JSON);
         assertNotNull(registrySet);
         assertEquals(aliceAgentRegistryJsonLd, registrySet.getAgentRegistryUrl());
         assertEquals(aliceAccessConsentRegistryJsonLd, registrySet.getAccessConsentRegistryUrl());
@@ -132,7 +132,7 @@ class CRUDRegistrySetTests {
     @DisplayName("Create new crud registry set in JSON-LD")
     void createNewCrudRegistrySetJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/registries");
-        CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory, LD_JSON);
+        CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url, LD_JSON);
         registrySet.setAgentRegistry(aliceAgentRegistryJsonLd);
         registrySet.setAccessConsentRegistry(aliceAccessConsentRegistryJsonLd);
         aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistryUrl(dataRegistry); });
@@ -144,7 +144,7 @@ class CRUDRegistrySetTests {
     @DisplayName("Delete crud registry set")
     void deleteRegistrySet() throws SaiException {
         URL url = toUrl(server, "/ttl/registries");
-        CRUDRegistrySet registrySet = CRUDRegistrySet.build(url, dataFactory);
+        CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url);
         assertDoesNotThrow(() -> registrySet.delete());
         assertFalse(registrySet.isExists());
     }

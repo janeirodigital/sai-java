@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.factories.TrustedDataFactory;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 
 class CRUDApplicationProfileTests {
 
-    private static DataFactory dataFactory;
+    private static TrustedDataFactory trustedDataFactory;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
@@ -29,7 +29,7 @@ class CRUDApplicationProfileTests {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
+        trustedDataFactory = new TrustedDataFactory(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
@@ -53,7 +53,7 @@ class CRUDApplicationProfileTests {
     @DisplayName("Create new crud application profile")
     void createNewCrudApplicationProfile() throws SaiException {
         URL url = toUrl(server, "/new/crud/application");
-        CRUDApplicationProfile profile = CRUDApplicationProfile.build(url, dataFactory);
+        CRUDApplicationProfile profile = trustedDataFactory.getCRUDApplicationProfile(url);
         profile.setName("Projectron");
         profile.setLogoUrl(stringToUrl("https://logo.example/logo.png"));
         profile.setDescription("What a great application");
@@ -80,9 +80,9 @@ class CRUDApplicationProfileTests {
     @DisplayName("Create new crud application profile with jena resource")
     void createCrudApplicationProfileWithResource() throws SaiException {
         URL url = toUrl(server, "/crud/application");
-        CRUDApplicationProfile existingProfile = CRUDApplicationProfile.build(url, dataFactory);
+        CRUDApplicationProfile existingProfile = trustedDataFactory.getCRUDApplicationProfile(url);
 
-        CRUDApplicationProfile resourceProfile = CRUDApplicationProfile.build(url, dataFactory, existingProfile.getResource());
+        CRUDApplicationProfile resourceProfile = trustedDataFactory.getCRUDApplicationProfile(url, existingProfile.getResource());
         assertDoesNotThrow(() -> resourceProfile.update());
         assertEquals("Projectron", resourceProfile.getName());
     }
@@ -91,7 +91,7 @@ class CRUDApplicationProfileTests {
     @DisplayName("Read existing crud application profile")
     void readCrudApplicationProfile() throws SaiException {
         URL url = toUrl(server, "/crud/application");
-        CRUDApplicationProfile profile = CRUDApplicationProfile.build(url, dataFactory);
+        CRUDApplicationProfile profile = trustedDataFactory.getCRUDApplicationProfile(url);
         assertEquals("Projectron", profile.getName());
         assertEquals(stringToUrl("http://projectron.example/logo.png"), profile.getLogoUrl());
         assertEquals("Best project management ever", profile.getDescription());
@@ -115,14 +115,14 @@ class CRUDApplicationProfileTests {
     @DisplayName("Fail to read existing crud application profile - missing required fields")
     void failToReadCrudApplicationProfileMissingFields() {
         URL url = toUrl(server, "/missing-fields/crud/application");
-        assertThrows(SaiException.class, () -> CRUDApplicationProfile.build(url, dataFactory));
+        assertThrows(SaiException.class, () -> trustedDataFactory.getCRUDApplicationProfile(url));
     }
 
     @Test
     @DisplayName("Update existing crud application profile")
     void updateCrudApplicationProfile() throws SaiException {
         URL url = toUrl(server, "/crud/application");
-        CRUDApplicationProfile profile = CRUDApplicationProfile.build(url, dataFactory);
+        CRUDApplicationProfile profile = trustedDataFactory.getCRUDApplicationProfile(url);;
         assertEquals("Projectron", profile.getName());
         profile.setName("Projectimus Prime");
         assertDoesNotThrow(() -> profile.update());
@@ -133,7 +133,7 @@ class CRUDApplicationProfileTests {
     @DisplayName("Delete existing crud application profile")
     void deleteCrudApplicationProfile() throws SaiException {
         URL url = toUrl(server, "/crud/application");
-        CRUDApplicationProfile profile = CRUDApplicationProfile.build(url, dataFactory);
+        CRUDApplicationProfile profile = trustedDataFactory.getCRUDApplicationProfile(url);
         assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
     }

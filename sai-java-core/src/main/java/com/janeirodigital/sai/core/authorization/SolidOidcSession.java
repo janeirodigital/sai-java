@@ -159,7 +159,7 @@ public class SolidOidcSession implements AuthorizedSession {
     protected static DPoPProofFactory getDPoPProofFactory(ECKey ecJwk) throws SaiException {
         try {
             return new DefaultDPoPProofFactory(ecJwk, JWSAlgorithm.ES256);
-        } catch (JOSEException ex) {
+        } catch (Exception ex) {
             throw new SaiException("Failed to initiate DPoP proof generation infrastructure: " + ex.getMessage());
         }
     }
@@ -302,7 +302,7 @@ public class SolidOidcSession implements AuthorizedSession {
             if (!manual) {
                 Resource clientDocument = getClientIdDocument(this.httpClient, applicationId);
                 try {
-                    this.setRedirects(RdfHelper.getUrlObjects(clientDocument, SOLID_OIDC_REDIRECT_URIS));
+                    this.setRedirects(RdfHelper.getRequiredUrlObjects(clientDocument, SOLID_OIDC_REDIRECT_URIS));
                     this.setScope(Arrays.asList(getRequiredStringObject(clientDocument, SOLID_OIDC_SCOPE).split(" ")));
                 } catch (SaiNotFoundException ex) {
                     throw new SaiException("Unable to set application. Required attributes missing from client id document: " + ex.getMessage());

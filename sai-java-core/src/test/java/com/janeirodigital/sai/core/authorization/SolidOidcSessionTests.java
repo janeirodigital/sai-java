@@ -5,12 +5,15 @@ import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.dpop.DefaultDPoPProofFactory;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.openid.connect.sdk.Prompt;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.commons.lang3.SerializationException;
+import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,8 +25,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getEllipticCurveKey;
-import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getProof;
+import static com.janeirodigital.sai.core.authorization.SolidOidcSession.*;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
 import static com.janeirodigital.sai.core.enums.HttpMethod.GET;
@@ -33,8 +35,7 @@ import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class SolidOidcSessionTests {
 
@@ -43,6 +44,7 @@ class SolidOidcSessionTests {
     private static HttpClientFactory clientFactory;
     private static OkHttpClient httpClient;
     private static URL applicationId;
+    private static URL applicationMissingFieldsId;
     private static URL socialAgentId;
     private static URL socialAgentNoDpopId;
     private static URL socialAgentNoWebId;
@@ -70,6 +72,8 @@ class SolidOidcSessionTests {
         mockOnGet(dispatcher, "/projectron/id", "authorization/projectron-application-profile-jsonld");
         mockOnGet(dispatcher, "/op/.well-known/openid-configuration", "authorization/op-configuration-json");
         mockOnPost(dispatcher, "/op/token", "authorization/op-token-response-json");
+        // Application client id document missing required fields
+        mockOnGet(dispatcher, "/missing-fields/projectron/id", "authorization/projectron-application-profile-missing-fields-jsonld");
         // Webid points to provider that doesn't have DPoP support
         mockOnGet(dispatcher, "/nodpop/alice/id", "authorization/alice-webid-nodpop-ttl");
         mockOnGet(dispatcher, "/nodpop/op/.well-known/openid-configuration", "authorization/op-configuration-nodpop-json");
@@ -121,6 +125,7 @@ class SolidOidcSessionTests {
         socialAgentRefreshNoRefreshId = toUrl(server, "/refresh-norefresh/alice/id#me");
 
         applicationId = toUrl(server, "/projectron/id");
+        applicationMissingFieldsId = toUrl(server, "/missing-fields/projectron/id");
         oidcProviderId = toUrl(server, "/op/");
 
         redirect = toUrl(server, redirectPath);
@@ -183,6 +188,14 @@ class SolidOidcSessionTests {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId);
         assertEquals(applicationId, builder.getApplicationId());
+    }
+
+    @Test
+    @DisplayName("Fail to initialize solid-oidc builder - application - id document missing fields")
+    void failToInitBuilderApplicationMissingFields() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient);
+        assertThrows(SaiException.class, () -> builder.setApplication(applicationMissingFieldsId));
     }
 
     @Test
@@ -406,6 +419,32 @@ class SolidOidcSessionTests {
     }
 
     @Test
+    @DisplayName("Serialize and deserialize solid-oidc session")
+    void serializeAndDeserializeSession() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
+        URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
+        SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
+        byte[] serializedSession = SerializationUtils.serialize(session);
+        SolidOidcSession deserialized = SerializationUtils.deserialize(serializedSession);
+        assertEquals(deserialized.getSocialAgentId(), session.getSocialAgentId());
+        assertEquals(deserialized.getApplicationId(), session.getApplicationId());
+        assertEquals(deserialized.getAccessToken().getValue(), session.getAccessToken().getValue());
+    }
+
+    @Test
+    @DisplayName("Fail to deserialize solid-oidc session - dpop failure")
+    void failToDeserializeDPoP() throws SaiException {
+        SolidOidcSession mockSession = mock(SolidOidcSession.class, withSettings().serializable());
+        ECKey mockEcKey = mock(ECKey.class);
+        when(mockEcKey.isPrivate()).thenReturn(false);
+        when(mockSession.getEcJwk()).thenReturn(mockEcKey);
+        byte[] serializedSession = SerializationUtils.serialize(mockSession);
+        assertThrows(SerializationException.class, () -> SerializationUtils.deserialize(serializedSession));
+    }
+
+    @Test
     @DisplayName("Refresh solid-oidc session")
     void initBuilderRefreshSession() throws SaiException {
 
@@ -460,8 +499,16 @@ class SolidOidcSessionTests {
 
     @Test
     @DisplayName("Fail to get elliptic curve key - invalid curve")
-    void failToGetEcKey() throws SaiException {
+    void failToGetEcKey() {
         assertThrows(SaiException.class, () -> getEllipticCurveKey(new Curve("NOTREAL")));
+    }
+
+    @Test
+    @DisplayName("Fail to get dpop factory - invalid key")
+    void failToGetProofFactory() {
+        ECKey mockEcKey = mock(ECKey.class);
+        when(mockEcKey.isPrivate()).thenReturn(false);
+        assertThrows(SaiException.class, () -> getDPoPProofFactory(mockEcKey));
     }
 
     @Test
@@ -471,5 +518,7 @@ class SolidOidcSessionTests {
         when(mockProofFactory.createDPoPJWT(anyString(), any(URI.class))).thenThrow(JOSEException.class);
         assertThrows(SaiException.class, () -> getProof(mockProofFactory, GET, redirect));
     }
+
+
 
 }
