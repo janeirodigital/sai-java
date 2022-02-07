@@ -247,9 +247,9 @@ class AuthorizedSessionHelperTests {
     void testPutProtectedJsonLdResourceHeaders() throws SaiException {
         AuthorizedSession mockSession = getMockSession(TOKEN_VALUE);
         URL resourceUrl = toUrl(server, "/jsonld/protected");
-        Model model = getModelFromString(urlToUri(resourceUrl), getJsonLdBody(), LD_JSON);
+        Model model = getModelFromString(urlToUri(resourceUrl), getJsonLdBody(resourceUrl.toString()), LD_JSON);
         Resource resource = model.getResource(resourceUrl.toString());
-        Response response = putProtectedRdfResource(mockSession, httpClient, resourceUrl, resource, LD_JSON, buildRemoteJsonLdContext("http://schema.org/"));
+        Response response = putProtectedRdfResource(mockSession, httpClient, resourceUrl, resource, LD_JSON, (String) null);
         assertEquals(204, response.code());
     }
 
@@ -282,13 +282,18 @@ class AuthorizedSessionHelperTests {
                 "    ex:hasMilestone </data/projects/project-1/milestone-3/#milestone> .";
     }
 
-    private String getJsonLdBody() {
+    private String getJsonLdBody(String resource) {
         return "{\n" +
-                "  \"@type\": \"Person\",\n" +
-                "  \"name\": \"Jane Doe\",\n" +
-                "  \"jobTitle\": \"Professor\",\n" +
-                "  \"telephone\": \"(425) 123-4567\",\n" +
-                "  \"url\": \"http://www.janedoe.com\"\n" +
+                "  \"@context\": {\n" +
+                "    \"ical\": \"http://www.w3.org/2002/12/cal/ical#\",\n" +
+                "    \"xsd\": \"http://www.w3.org/2001/XMLSchema#\",\n" +
+                "    \"ical:dtstart\": {\n" +
+                "      \"@type\": \"xsd:dateTime\"\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"ical:summary\": \"Lady Gaga Concert\",\n" +
+                "  \"ical:location\": \"New Orleans Arena, New Orleans, Louisiana, USA\",\n" +
+                "  \"ical:dtstart\": \"2011-04-09T20:00:00Z\"\n" +
                 "}";
     }
 
