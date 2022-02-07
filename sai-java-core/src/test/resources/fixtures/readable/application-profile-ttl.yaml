@@ -6,11 +6,12 @@ body: >
   PREFIX interop: <http://www.w3.org/ns/solid/interop#>
   PREFIX acl: <http://www.w3.org/ns/auth/acl#>
   PREFIX solidtrees: <https://shapetrees.example/solid/>
-  PREFIX projectron: <${SERVER_BASE}/projectron/>
-  PREFIX needs: <${SERVER_BASE}/projectron/needs#>
+  PREFIX projectron: <${SERVER_BASE}/ttl/projectron/>
+  PREFIX needs: <${SERVER_BASE}/ttl/projectron/needs#>
   PREFIX acme: <https://acme.example/>
   PREFIX pm: <https://vocab.example/pm/>
   PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
+  PREFIX
 
   projectron:id
     a interop:Application ;

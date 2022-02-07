@@ -57,7 +57,7 @@ class HttpClientValidationTests {
     void clientValidatesValidData() throws SaiException {
         factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
-        Response response = putRdfResource(validatingClient, validatingUrl, validResource);
+        Response response = putRdfResource(validatingClient, validatingUrl, validResource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
     }
 
@@ -66,7 +66,7 @@ class HttpClientValidationTests {
     void clientFailsInvalidData() throws SaiException {
         factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
-        Response response = putRdfResource(validatingClient, validatingUrl, invalidResource);
+        Response response = putRdfResource(validatingClient, validatingUrl, invalidResource, TEXT_TURTLE);
         assertFalse(response.isSuccessful());
     }
 
@@ -75,7 +75,7 @@ class HttpClientValidationTests {
     void disabledClientAllowInvalidData() throws SaiException {
         factory = new HttpClientFactory(false, false, false);
         OkHttpClient validatingClient = factory.get();
-        Response response = putRdfResource(validatingClient, validatingUrl, invalidResource);
+        Response response = putRdfResource(validatingClient, validatingUrl, invalidResource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
     }
 

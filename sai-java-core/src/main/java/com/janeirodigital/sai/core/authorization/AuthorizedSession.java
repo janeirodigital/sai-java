@@ -3,12 +3,14 @@ package com.janeirodigital.sai.core.authorization;
 import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Interface implemented by different types of authorized sessions, typically
@@ -17,7 +19,7 @@ import java.util.Map;
  * of how those credentials are acquired and maintained. See {@link SolidOidcSession} and
  * {@link ClientCredentialsSession} for implementation examples.
  */
-public interface AuthorizedSession {
+public interface AuthorizedSession extends Serializable {
 
     /**
      * Gets the URL of the SocialAgent identity associated with the {@link AuthorizedSession}
@@ -71,8 +73,11 @@ public interface AuthorizedSession {
      * @param algorithm Message digest algorithm to use
      * @return String identifier of an authorized session
      */
-    default String getId(String algorithm) throws SaiException {
-        String combined = getSocialAgentId().toString() + getApplicationId().toString() + getOidcProviderId().toString();
+    static String generateId(String algorithm, URL socialAgentId, URL applicationId, URL oidcProviderId) throws SaiException {
+        Objects.requireNonNull(socialAgentId, "Must provide a social agent identifier for session id generation");
+        Objects.requireNonNull(applicationId, "Must provide an application identifier for session id generation");
+        Objects.requireNonNull(oidcProviderId, "Must provide an oidc provider identifier for session id generation");
+        String combined = socialAgentId.toString() + applicationId.toString() + oidcProviderId.toString();
         try {
             MessageDigest md = MessageDigest.getInstance(algorithm);
             byte[] messageDigest = md.digest(combined.getBytes(StandardCharsets.UTF_8));
@@ -81,6 +86,10 @@ public interface AuthorizedSession {
         } catch (NoSuchAlgorithmException ex) {
             throw new SaiException("Failed to generate identifier for authorized session: " + ex.getMessage());
         }
+    }
+
+    default String getId(String algorithm) throws SaiException {
+        return generateId(algorithm, getSocialAgentId(), getApplicationId(), getOidcProviderId());
     }
 
 }

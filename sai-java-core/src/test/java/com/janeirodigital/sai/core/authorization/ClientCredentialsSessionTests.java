@@ -77,8 +77,7 @@ class ClientCredentialsSessionTests {
         ClientCredentialsSession.Builder builder = new ClientCredentialsSession.Builder();
         builder.setOidcProvider(oidcProviderId);
         assertEquals(oidcProviderId, builder.getOidcProviderId());
-        assertNotNull(builder.getOidcProviderMetadata());
-        assertEquals(oidcProviderId.toString(), builder.getOidcProviderMetadata().getIssuer().toString());
+        assertNotNull(builder.getOidcTokenEndpoint());
     }
 
     @Test
@@ -144,7 +143,7 @@ class ClientCredentialsSessionTests {
                                                   .build();
         assertNotNull(session);
         assertEquals(oidcProviderId, session.getOidcProviderId());
-        assertEquals(oidcProviderId.toString(), session.getOidcProviderMetadata().getIssuer().toString());
+        assertNotNull(session.getOidcTokenEndpoint());
         assertEquals(clientIdentifier, session.getClientIdentifier());
         assertEquals(clientSecret, session.getClientSecret());
         assertEquals(session.getAccessToken(), builder.getAccessToken());

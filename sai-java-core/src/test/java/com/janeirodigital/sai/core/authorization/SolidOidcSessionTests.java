@@ -5,12 +5,15 @@ import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.dpop.DefaultDPoPProofFactory;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.openid.connect.sdk.Prompt;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.commons.lang3.SerializationException;
+import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,8 +25,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getDPoPProofFactory;
-import static com.janeirodigital.sai.core.authorization.SolidOidcSession.getProof;
+import static com.janeirodigital.sai.core.authorization.SolidOidcSession.*;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
 import static com.janeirodigital.sai.core.enums.HttpMethod.GET;
@@ -33,8 +35,7 @@ import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class SolidOidcSessionTests {
 
@@ -43,6 +44,7 @@ class SolidOidcSessionTests {
     private static HttpClientFactory clientFactory;
     private static OkHttpClient httpClient;
     private static URL applicationId;
+    private static URL applicationMissingFieldsId;
     private static URL socialAgentId;
     private static URL socialAgentNoDpopId;
     private static URL socialAgentNoWebId;
@@ -67,8 +69,11 @@ class SolidOidcSessionTests {
         dispatcher = new RequestMatchingFixtureDispatcher();
         // Good webid and provider configuration
         mockOnGet(dispatcher, "/alice/id", "authorization/alice-webid-ttl");
+        mockOnGet(dispatcher, "/projectron/id", "authorization/projectron-application-profile-jsonld");
         mockOnGet(dispatcher, "/op/.well-known/openid-configuration", "authorization/op-configuration-json");
         mockOnPost(dispatcher, "/op/token", "authorization/op-token-response-json");
+        // Application client id document missing required fields
+        mockOnGet(dispatcher, "/missing-fields/projectron/id", "authorization/projectron-application-profile-missing-fields-jsonld");
         // Webid points to provider that doesn't have DPoP support
         mockOnGet(dispatcher, "/nodpop/alice/id", "authorization/alice-webid-nodpop-ttl");
         mockOnGet(dispatcher, "/nodpop/op/.well-known/openid-configuration", "authorization/op-configuration-nodpop-json");
@@ -120,6 +125,7 @@ class SolidOidcSessionTests {
         socialAgentRefreshNoRefreshId = toUrl(server, "/refresh-norefresh/alice/id#me");
 
         applicationId = toUrl(server, "/projectron/id");
+        applicationMissingFieldsId = toUrl(server, "/missing-fields/projectron/id");
         oidcProviderId = toUrl(server, "/op/");
 
         redirect = toUrl(server, redirectPath);
@@ -139,8 +145,9 @@ class SolidOidcSessionTests {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentId);
         assertEquals(socialAgentId, builder.getSocialAgentId());
-        assertNotNull(builder.getOidcProviderMetadata());
-        assertEquals(oidcProviderId.toString(), builder.getOidcProviderMetadata().getIssuer().getValue());
+        assertNotNull(builder.getOidcAuthorizationEndpoint());
+        assertNotNull(builder.getOidcTokenEndpoint());
+        assertNotNull(builder.getOidcProviderId());
     }
 
     @Test
@@ -168,18 +175,34 @@ class SolidOidcSessionTests {
     }
 
     @Test
-    @DisplayName("Initialize solid-oidc builder - application")
+    @DisplayName("Initialize solid-oidc builder - application - manual")
     void initBuilderApplication() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true);
+        assertEquals(applicationId, builder.getApplicationId());
+    }
+
+    @Test
+    @DisplayName("Initialize solid-oidc builder - application - lookup and populate")
+    void initBuilderApplicationLookup() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId);
         assertEquals(applicationId, builder.getApplicationId());
     }
 
     @Test
+    @DisplayName("Fail to initialize solid-oidc builder - application - id document missing fields")
+    void failToInitBuilderApplicationMissingFields() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient);
+        assertThrows(SaiException.class, () -> builder.setApplication(applicationMissingFieldsId));
+    }
+
+    @Test
     @DisplayName("Initialize solid-oidc builder - scope")
     void initBuilderScope() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes);
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes);
         for (String scope : scopes) { assertTrue(builder.getScope().contains(scope)); }
     }
 
@@ -187,7 +210,7 @@ class SolidOidcSessionTests {
     @DisplayName("Initialize solid-oidc builder - prompt")
     void initBuilderPrompt() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes).setPrompt(prompt);
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes).setPrompt(prompt);
         assertEquals(prompt, builder.getPrompt());
     }
 
@@ -195,17 +218,17 @@ class SolidOidcSessionTests {
     @DisplayName("Initialize solid-oidc builder - redirect")
     void initBuilderRedirect() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect);
-        assertEquals(redirect, builder.getRedirect());
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect);
+        assertTrue(builder.getRedirects().contains(redirect));
     }
 
     @Test
     @DisplayName("Initialize solid-oidc builder - prepare code request")
     void initBuilderPrepareCode() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         assertNotNull(builder.getAuthorizationRequest());
     }
 
@@ -213,8 +236,8 @@ class SolidOidcSessionTests {
     @DisplayName("Initialize solid-oidc builder - prepare code request no prompt")
     void initBuilderPrepareCodeNoPrompt() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setRedirect(redirect).prepareCodeRequest();;
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .addRedirect(redirect).prepareCodeRequest();;
         assertNotNull(builder.getAuthorizationRequest());
         assertNotNull(builder.getCodeRequestUrl());
     }
@@ -223,8 +246,8 @@ class SolidOidcSessionTests {
     @DisplayName("Initialize solid-oidc builder - process code response")
     void initBuilderProcessResponse() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
 
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         builder.processCodeResponse(responseUrl);
@@ -236,8 +259,8 @@ class SolidOidcSessionTests {
     @DisplayName("Fail to initialize solid-oidc builder - state mismatch in response")
     void failToInitBuilderStateMismatch() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=ThisIsNotTheRequestState");
         assertThrows(SaiException.class, () -> builder.processCodeResponse(responseUrl) );
     }
@@ -247,8 +270,8 @@ class SolidOidcSessionTests {
     void failToInitBuilderParseFailure() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
 
         try (MockedStatic<AuthorizationResponse> mockResponse = Mockito.mockStatic(AuthorizationResponse.class)) {
             URL responseUrl = toUrl(server, redirectPath + "?codeeeeeoooooo=" + code + "&staaaattteeee=cantparsethisbro");
@@ -263,8 +286,8 @@ class SolidOidcSessionTests {
     void failToInitBuilderResponseFailure() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
 
         try (MockedStatic<AuthorizationResponse> mockStaticResponse = Mockito.mockStatic(AuthorizationResponse.class)) {
             AuthorizationResponse mockResponse = mock(AuthorizationResponse.class);
@@ -285,8 +308,8 @@ class SolidOidcSessionTests {
     void initBuilderRequestTokens() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         builder.processCodeResponse(responseUrl).requestTokens();
         assertNotNull(builder.getAccessToken());
@@ -298,8 +321,8 @@ class SolidOidcSessionTests {
     void failToInitBuilderMiscTokenFailure() throws SaiException, ParseException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
 
         try (MockedStatic<TokenResponse> mockStaticResponse = Mockito.mockStatic(TokenResponse.class)) {
             URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
@@ -320,8 +343,8 @@ class SolidOidcSessionTests {
     void failToInitBuilderTokenParseFailure() throws SaiException, ParseException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
 
         try (MockedStatic<TokenResponse> mockStaticResponse = Mockito.mockStatic(TokenResponse.class)) {
             URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
@@ -337,8 +360,8 @@ class SolidOidcSessionTests {
     void failToInitBuilderTokenIOFailure() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentBadIoId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentBadIoId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         builder.processCodeResponse(responseUrl);
         assertThrows(SaiException.class, () -> builder.requestTokens());
@@ -350,8 +373,8 @@ class SolidOidcSessionTests {
     void failToInitBuilderTokenUnknown() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentUnknownId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentUnknownId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         builder.processCodeResponse(responseUrl);
         assertThrows(SaiException.class, () -> builder.requestTokens());
@@ -364,8 +387,8 @@ class SolidOidcSessionTests {
 
         List<String> noRefreshScopes = Arrays.asList("openid", "profile");
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentNoRefreshId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentNoRefreshId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         builder.processCodeResponse(responseUrl).requestTokens();
         assertNotNull(builder.getAccessToken());
@@ -377,14 +400,15 @@ class SolidOidcSessionTests {
     void initBuilderBuildSession() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
-        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
         assertNotNull(session);
         assertEquals(socialAgentId, session.getSocialAgentId());
         assertEquals(applicationId, session.getApplicationId());
-        assertEquals(oidcProviderId.toString(), session.getOidcProviderMetadata().getIssuer().toString());
+        assertNotNull(session.getOidcAuthorizationEndpoint());
+        assertNotNull(session.getOidcTokenEndpoint());
         assertNotNull(session.getAccessToken());
         assertNotNull(session.getRefreshToken());
         assertNotNull(session.getProofFactory());
@@ -395,12 +419,38 @@ class SolidOidcSessionTests {
     }
 
     @Test
+    @DisplayName("Serialize and deserialize solid-oidc session")
+    void serializeAndDeserializeSession() throws SaiException {
+        SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
+        builder.setHttpClient(httpClient).setSocialAgent(socialAgentId).setApplication(applicationId, true).setScope(scopes)
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
+        URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
+        SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
+        byte[] serializedSession = SerializationUtils.serialize(session);
+        SolidOidcSession deserialized = SerializationUtils.deserialize(serializedSession);
+        assertEquals(deserialized.getSocialAgentId(), session.getSocialAgentId());
+        assertEquals(deserialized.getApplicationId(), session.getApplicationId());
+        assertEquals(deserialized.getAccessToken().getValue(), session.getAccessToken().getValue());
+    }
+
+    @Test
+    @DisplayName("Fail to deserialize solid-oidc session - dpop failure")
+    void failToDeserializeDPoP() throws SaiException {
+        SolidOidcSession mockSession = mock(SolidOidcSession.class, withSettings().serializable());
+        ECKey mockEcKey = mock(ECKey.class);
+        when(mockEcKey.isPrivate()).thenReturn(false);
+        when(mockSession.getEcJwk()).thenReturn(mockEcKey);
+        byte[] serializedSession = SerializationUtils.serialize(mockSession);
+        assertThrows(SerializationException.class, () -> SerializationUtils.deserialize(serializedSession));
+    }
+
+    @Test
     @DisplayName("Refresh solid-oidc session")
     void initBuilderRefreshSession() throws SaiException {
 
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentRefreshId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
         assertNotNull(session);
@@ -416,7 +466,7 @@ class SolidOidcSessionTests {
     void failToRefreshSessionNullRefresh() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentNoRefreshId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
         assertThrows(SaiException.class, () -> session.refresh());
@@ -427,7 +477,7 @@ class SolidOidcSessionTests {
     void failToRefreshSessionUnknownToken() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentRefreshUnknownId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
         assertThrows(SaiException.class, () -> session.refresh());
@@ -438,7 +488,7 @@ class SolidOidcSessionTests {
     void failToRefreshSessionNoRefresh() throws SaiException {
         SolidOidcSession.Builder builder = new SolidOidcSession.Builder();
         builder.setHttpClient(httpClient).setSocialAgent(socialAgentRefreshNoRefreshId).setApplication(applicationId).setScope(scopes)
-                .setPrompt(prompt).setRedirect(redirect).prepareCodeRequest();
+                .setPrompt(prompt).addRedirect(redirect).prepareCodeRequest();
         URL responseUrl = toUrl(server, redirectPath + "?code=" + code + "&state=" + builder.getAuthorizationRequest().getState());
         SolidOidcSession session = builder.processCodeResponse(responseUrl).requestTokens().build();
         assertNotNull(session);
@@ -448,9 +498,17 @@ class SolidOidcSessionTests {
     }
 
     @Test
-    @DisplayName("Fail to get dpop proof factory - invalid curve")
-    void failToGetDpopProofFactory() {
-        assertThrows(SaiException.class, () -> getDPoPProofFactory(new Curve("NOTREAL")));
+    @DisplayName("Fail to get elliptic curve key - invalid curve")
+    void failToGetEcKey() {
+        assertThrows(SaiException.class, () -> getEllipticCurveKey(new Curve("NOTREAL")));
+    }
+
+    @Test
+    @DisplayName("Fail to get dpop factory - invalid key")
+    void failToGetProofFactory() {
+        ECKey mockEcKey = mock(ECKey.class);
+        when(mockEcKey.isPrivate()).thenReturn(false);
+        assertThrows(SaiException.class, () -> getDPoPProofFactory(mockEcKey));
     }
 
     @Test
@@ -460,5 +518,7 @@ class SolidOidcSessionTests {
         when(mockProofFactory.createDPoPJWT(anyString(), any(URI.class))).thenThrow(JOSEException.class);
         assertThrows(SaiException.class, () -> getProof(mockProofFactory, GET, redirect));
     }
+
+
 
 }

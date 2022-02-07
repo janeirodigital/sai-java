@@ -7,7 +7,7 @@ import org.apache.jena.rdf.model.Resource;
 
 /**
  * Properties and classes of the
- * <a href="https://www.w3.org/ns/solid/terms#">Solid Terms vocabulary</a>
+ * <a href="http://www.w3.org/ns/solid/terms#">Solid Terms vocabulary</a>
  */
 public class SolidTermsVocabulary {
 

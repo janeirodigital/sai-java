@@ -49,6 +49,18 @@ class BasicAuthorizedSessionAccessorTests {
     }
 
     @Test
+    @DisplayName("Get a session by social agent, application, and oidc provider")
+    void getSessionByAgentsAndProvider() throws SaiException {
+        AuthorizedSession mockSession = mock(AuthorizedSession.class, CALLS_REAL_METHODS);
+        when(mockSession.getSocialAgentId()).thenReturn(socialAgentId);
+        when(mockSession.getApplicationId()).thenReturn(applicationId);
+        when(mockSession.getOidcProviderId()).thenReturn(oidcProviderId);
+        BasicAuthorizedSessionAccessor accessor = new BasicAuthorizedSessionAccessor();
+        accessor.store(mockSession);
+        assertEquals(mockSession, accessor.get(socialAgentId, applicationId, oidcProviderId));
+    }
+
+    @Test
     @DisplayName("Lookup a session that doesn't exist")
     void getSessionDoesNotExist() throws SaiException {
         AuthorizedSession mockSession = mock(AuthorizedSession.class, CALLS_REAL_METHODS);

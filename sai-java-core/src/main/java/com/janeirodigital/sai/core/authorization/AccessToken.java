@@ -2,13 +2,14 @@ package com.janeirodigital.sai.core.authorization;
 
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * General representation of an AccessToken.
  */
 @Getter
-public class AccessToken {
+public class AccessToken implements Serializable {
 
     protected final String value;
 

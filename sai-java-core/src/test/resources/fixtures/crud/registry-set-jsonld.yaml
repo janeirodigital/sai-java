@@ -1,0 +1,13 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:application/ld+json'
+body: >
+
+  {
+    "@context": "https://solid.github.io/data-interoperability-panel/specification/contexts/registry-set.jsonld",
+      "registrySetId" : "${SERVER_BASE}/jsonld/registries",
+      "agentRegistry" : "${SERVER_BASE}/jsonld/agents/",
+      "accessConsentRegistry" : "${SERVER_BASE}/jsonld/consents/",
+      "dataRegistry" : ["https://work.alice.example/data/", "https://personal.alice.example/data/"]
+  }

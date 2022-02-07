@@ -3,6 +3,7 @@ package com.janeirodigital.sai.core.authorization;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -42,6 +43,12 @@ public class BasicAuthorizedSessionAccessor implements AuthorizedSessionAccessor
         return this.sessions.searchValues(1, value -> {
             if (accessToken.getValue().equals(value.getAccessToken().getValue())) { return value; } else { return null; }
         });
+    }
+
+    @Override
+    public AuthorizedSession get(URL socialAgentId, URL applicationId, URL oidcProviderId) throws SaiException {
+        String identifier = AuthorizedSession.generateId(DIGEST_ALGORITHM, socialAgentId, applicationId, oidcProviderId);
+        return this.sessions.get(identifier);
     }
 
     /**

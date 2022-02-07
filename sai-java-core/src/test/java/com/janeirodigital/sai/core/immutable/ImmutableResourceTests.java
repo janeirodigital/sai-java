@@ -71,6 +71,15 @@ class ImmutableResourceTests {
     }
 
     @Test
+    @DisplayName("Fail to store an immutable resource - endpoint missing")
+    void failToStoreImmutableResource() throws SaiException, SaiNotFoundException {
+        URL url = MockWebServerHelper.toUrl(server, "/missing/immutable/immutable-resource#project");
+        Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", ContentType.TEXT_TURTLE);
+        TestableImmutableResource testable = new TestableImmutableResource(url, dataFactory, model.getResource(url.toString()), false);
+        assertThrows(SaiException.class, () -> testable.store());
+    }
+
+    @Test
     @DisplayName("Store a protected Immutable resource")
     void storeProtectedImmutableResource() throws SaiNotFoundException, SaiException {
         URL url = MockWebServerHelper.toUrl(server, "/immutable/immutable-resource#project");

@@ -190,6 +190,17 @@ class HttpHelperTests {
     }
 
     @Test
+    @DisplayName("Fail to get a resource and log details")
+    void FailToGetResourceAndLog() throws SaiException {
+        queuingServer.enqueue(new MockResponse().setResponseCode(404).setBody(""));
+        try(Response response = getResource(httpClient, toUrl(queuingServer, "/http/no-resource"));) {
+            assertNotNull(getResponseFailureMessage(response));
+        }
+        queuingServer.enqueue(new MockResponse().setResponseCode(404).setBody(""));
+        Response response = deleteResource(httpClient, toUrl(queuingServer, "/path/no-resource"));
+    }
+
+    @Test
     @DisplayName("Fail to get a resource due to IO issue")
     void FailToGetHttpResourceIO() {
         queuingServer.enqueue(new MockResponse()
@@ -216,11 +227,12 @@ class HttpHelperTests {
         Model model = getModelFromString(urlToUri(url), getRdfBody(), TEXT_TURTLE);
         Resource resource = model.getResource(url + "#project");
         // Update with resource content
-        Response response = putRdfResource(httpClient, url, resource);
+        Response response = putRdfResource(httpClient, url, resource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
         response.close();
         // Update with no resource content (treated as empty body)
-        response = putRdfResource(httpClient, url, null);
+        Headers headers = null;
+        response = putRdfResource(httpClient, url, null, TEXT_TURTLE, headers);
         assertTrue(response.isSuccessful());
         response.close();
     }
@@ -231,7 +243,7 @@ class HttpHelperTests {
         URL url = toUrl(server, "/http/put-create-resource");
         Model model = getModelFromString(urlToUri(url), getRdfContainerBody(), TEXT_TURTLE);
         Resource resource = model.getResource(url + "#project");
-        Response response = putRdfContainer(httpClient, url, resource);
+        Response response = putRdfContainer(httpClient, url, resource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
         response.close();
     }

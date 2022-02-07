@@ -1,0 +1,17 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:application/ld+json'
+body: >
+
+  {
+    "@context": {
+      "application_description": {
+        "@id": "http://www.w3.org/ns/solid/interop#applicationDescription"
+      },
+      "application_author": {
+        "@id": "http://www.w3.org/ns/solid/interop#applicationAuthor",
+        "@type": "@id"
+      }
+    }
+  }

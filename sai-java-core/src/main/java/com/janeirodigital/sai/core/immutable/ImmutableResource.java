@@ -1,11 +1,13 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.factories.DataFactory;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
@@ -27,6 +29,8 @@ public class ImmutableResource {
     protected final OkHttpClient httpClient;
     protected Model dataset;
     protected Resource resource;
+    protected ContentType contentType;
+    protected String jsonLdContext;
     protected boolean unprotected;
 
     /**
@@ -35,19 +39,22 @@ public class ImmutableResource {
      * @param resourceUrl URL of the immutable resource
      * @param dataFactory Data factory to assign
      * @param resource Jena resource to populate with
+     * @param contentType {@link ContentType} to use
      * @param unprotected When true no authorization credentials will be sent in requests to this resource
      */
-    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, boolean unprotected) throws SaiException {
+    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, ContentType contentType, boolean unprotected) throws SaiException {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
         Objects.requireNonNull(dataFactory, "Must provide a data factory");
         Objects.requireNonNull(dataFactory.getHttpClient(), "Must provide a valid HTTP client");
         Objects.requireNonNull(resource, "Must provide a resource and model to populate an immutable resource");
+        Objects.requireNonNull(contentType, "Must provide a contentType to write an immutable resource");
         this.url = resourceUrl;
         this.dataFactory = dataFactory;
         this.httpClient = dataFactory.getHttpClient();
         this.dataset = resource.getModel();
         this.resource = resource;
         this.unprotected = unprotected;
+        this.contentType = contentType;
     }
 
     /**
@@ -59,7 +66,8 @@ public class ImmutableResource {
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
         if (this.isUnprotected()) { this.createUnprotected(headers); } else {
-            putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, headers);
+            Response response = putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
+            if (!response.isSuccessful()) { throw new SaiException("Failed to create " + this.url + ": " + getResponseFailureMessage(response)); }
         }
     }
 
@@ -67,7 +75,7 @@ public class ImmutableResource {
      * Create the corresponding resource without sending any authorization headers
      */
     private void createUnprotected(Headers headers) throws SaiException {
-        putRdfResource(this.httpClient, this.url, this.resource, headers);
+        putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
     }
 
 }

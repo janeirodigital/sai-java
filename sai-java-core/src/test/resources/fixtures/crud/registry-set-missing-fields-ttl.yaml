@@ -1,0 +1,18 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX alice: <${SERVER_BASE}/ttl/>
+  PREFIX alice-work: <https://work.alice.example/>
+  PREFIX alice-personal: <https://personal.alice.example/>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+
+  alice:registries
+    a interop:RegistrySet ;
+    interop:hasAccessConsentRegistry alice:consents\/ ;
+    interop:hasDataRegistry
+      alice-work:data\/ ,
+      alice-personal:data\/ .
