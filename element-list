@@ -1,6 +1,7 @@
 com.janeirodigital.sai.application
 com.janeirodigital.sai.core.annotations
 com.janeirodigital.sai.core.authorization
+com.janeirodigital.sai.core.contexts
 com.janeirodigital.sai.core.crud
 com.janeirodigital.sai.core.enums
 com.janeirodigital.sai.core.exceptions
