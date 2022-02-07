@@ -254,9 +254,12 @@ class AuthorizedSessionHelperTests {
     }
 
     @Test
-    @DisplayName("Delete a protected resource - with headers")
+    @DisplayName("Delete a protected resource")
     void testDeleteProtectedResourceHeaders() throws SaiException {
-
+        AuthorizedSession mockSession = getMockSession(TOKEN_VALUE);
+        URL resourceUrl = toUrl(server, "/protected");
+        Response response = deleteProtectedResource(mockSession, httpClient, resourceUrl);
+        assertEquals(204, response.code());
     }
 
     private AuthorizedSession getMockSession(String tokenValue) throws SaiException {
