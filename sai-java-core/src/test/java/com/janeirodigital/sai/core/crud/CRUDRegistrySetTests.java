@@ -72,7 +72,7 @@ class CRUDRegistrySetTests {
         CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url);
         registrySet.setAgentRegistry(aliceAgentRegistry);
         registrySet.setAccessConsentRegistry(aliceAccessConsentRegistry);
-        aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistryUrl(dataRegistry); });
+        aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistry(dataRegistry); });
         assertDoesNotThrow(() -> registrySet.update());
         assertNotNull(registrySet);
     }
@@ -135,7 +135,7 @@ class CRUDRegistrySetTests {
         CRUDRegistrySet registrySet = trustedDataFactory.getCRUDRegistrySet(url, LD_JSON);
         registrySet.setAgentRegistry(aliceAgentRegistryJsonLd);
         registrySet.setAccessConsentRegistry(aliceAccessConsentRegistryJsonLd);
-        aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistryUrl(dataRegistry); });
+        aliceDataRegistries.forEach((dataRegistry) -> { registrySet.addDataRegistry(dataRegistry); });
         assertDoesNotThrow(() -> registrySet.update());
         assertNotNull(registrySet);
     }

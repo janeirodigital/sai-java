@@ -1,9 +1,7 @@
 package com.janeirodigital.sai.core.factories;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
-import com.janeirodigital.sai.core.crud.CRUDApplicationProfile;
-import com.janeirodigital.sai.core.crud.CRUDRegistrySet;
-import com.janeirodigital.sai.core.crud.CRUDSocialAgentProfile;
+import com.janeirodigital.sai.core.crud.*;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -133,6 +131,126 @@ public class TrustedDataFactory extends DataFactory {
      */
     public CRUDRegistrySet getCRUDRegistrySet(URL url, ContentType contentType, Resource resource) throws SaiException {
         return CRUDRegistrySet.build(url, this, contentType, resource);
+    }
+
+    /**
+     * Get a crud version of a Agent Registry for a Social Agent - {@link CRUDAgentRegistry}
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar-registry">Solid - Agent Registry</a>
+     * @param url URL of the {@link CRUDAgentRegistry}
+     * @return {@link CRUDAgentRegistry}
+     * @throws SaiException
+     */
+    public CRUDAgentRegistry getCRUDAgentRegistry(URL url) throws SaiException {
+        return CRUDAgentRegistry.build(url, this);
+    }
+
+    /**
+     * Get a crud version of a Agent Registry - {@link CRUDAgentRegistry} that will be remotely accessed
+     * via the provided <code>contentType</code>.
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar-registry">Solid - Agent Registry</a>
+     * @param url URL of the {@link CRUDAgentRegistry}
+     * @param contentType {@link ContentType} to use
+     * @return {@link CRUDAgentRegistry}
+     * @throws SaiException
+     */
+    public CRUDAgentRegistry getCRUDAgentRegistry(URL url, ContentType contentType) throws SaiException {
+        return CRUDAgentRegistry.build(url, this, contentType);
+    }
+
+    /**
+     * Get a crud version of a Agent Registry - {@link CRUDAgentRegistry} that will be remotely accessed
+     * via the provided <code>contentType</code>. If there is already a {@link CRUDAgentRegistry} at the provided
+     * <code>url</code>, the graph of the provided resource will be used. The remote graph
+     * will not be updated until update is called.
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar-registry">Solid - Agent Registry</a>
+     * @param url URL of the {@link CRUDAgentRegistry}
+     * @param contentType {@link ContentType} to use
+     * @param resource Jena Resource to populate with
+     * @return {@link CRUDAgentRegistry}
+     * @throws SaiException
+     */
+    public CRUDAgentRegistry getCRUDAgentRegistry(URL url, ContentType contentType, Resource resource) throws SaiException {
+        return CRUDAgentRegistry.build(url, this, contentType, resource);
+    }
+
+    /**
+     * Get a crud version of a Social Agent Registration for a Social Agent - {@link CRUDSocialAgentRegistration}
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agent-registration">Solid - Social Agent Registration</a>
+     * @param url URL of the {@link CRUDSocialAgentRegistration}
+     * @return {@link CRUDSocialAgentRegistration}
+     * @throws SaiException
+     */
+    public CRUDSocialAgentRegistration getCRUDSocialAgentRegistration(URL url) throws SaiException {
+        return CRUDSocialAgentRegistration.build(url, this);
+    }
+
+    /**
+     * Get a crud version of a Social Agent Registration - {@link CRUDSocialAgentRegistration} that will be remotely accessed
+     * via the provided <code>contentType</code>.
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agent-registration">Solid - Social Agent Registration</a>
+     * @param url URL of the {@link CRUDSocialAgentRegistration}
+     * @param contentType {@link ContentType} to use
+     * @return {@link CRUDSocialAgentRegistration}
+     * @throws SaiException
+     */
+    public CRUDSocialAgentRegistration getCRUDSocialAgentRegistration(URL url, ContentType contentType) throws SaiException {
+        return CRUDSocialAgentRegistration.build(url, this, contentType);
+    }
+
+    /**
+     * Get a crud version of a Social Agent Registration - {@link CRUDSocialAgentRegistration} that will be remotely accessed
+     * via the provided <code>contentType</code>. If there is already a {@link CRUDSocialAgentRegistration} at the provided
+     * <code>url</code>, the graph of the provided resource will be used. The remote graph
+     * will not be updated until update is called.
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agent-registration">Solid - Social Agent Registration</a>
+     * @param url URL of the {@link CRUDSocialAgentRegistration}
+     * @param contentType {@link ContentType} to use
+     * @param resource Jena Resource to populate with
+     * @return {@link CRUDSocialAgentRegistration}
+     * @throws SaiException
+     */
+    public CRUDSocialAgentRegistration getCRUDSocialAgentRegistration(URL url, ContentType contentType, Resource resource) throws SaiException {
+        return CRUDSocialAgentRegistration.build(url, this, contentType, resource);
+    }
+
+    /**
+     * Get a crud version of a Application Registration for a Social Agent - {@link CRUDApplicationRegistration}
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#application-registration">Solid - Application Registration</a>
+     * @param url URL of the {@link CRUDApplicationRegistration}
+     * @return {@link CRUDApplicationRegistration}
+     * @throws SaiException
+     */
+    public CRUDApplicationRegistration getCRUDApplicationRegistration(URL url) throws SaiException {
+        return CRUDApplicationRegistration.build(url, this);
+    }
+
+    /**
+     * Get a crud version of a Application Registration - {@link CRUDApplicationRegistration} that will be remotely accessed
+     * via the provided <code>contentType</code>.
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#application-registration">Solid - Application Registration</a>
+     * @param url URL of the {@link CRUDApplicationRegistration}
+     * @param contentType {@link ContentType} to use
+     * @return {@link CRUDApplicationRegistration}
+     * @throws SaiException
+     */
+    public CRUDApplicationRegistration getCRUDApplicationRegistration(URL url, ContentType contentType) throws SaiException {
+        return CRUDApplicationRegistration.build(url, this, contentType);
+    }
+
+    /**
+     * Get a crud version of a Application Registration - {@link CRUDApplicationRegistration} that will be remotely accessed
+     * via the provided <code>contentType</code>. If there is already a {@link CRUDApplicationRegistration} at the provided
+     * <code>url</code>, the graph of the provided resource will be used. The remote graph
+     * will not be updated until update is called.
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#application-registration">Solid - Application Registration</a>
+     * @param url URL of the {@link CRUDApplicationRegistration}
+     * @param contentType {@link ContentType} to use
+     * @param resource Jena Resource to populate with
+     * @return {@link CRUDApplicationRegistration}
+     * @throws SaiException
+     */
+    public CRUDApplicationRegistration getCRUDApplicationRegistration(URL url, ContentType contentType, Resource resource) throws SaiException {
+        return CRUDApplicationRegistration.build(url, this, contentType, resource);
     }
 
 }

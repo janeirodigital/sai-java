@@ -1,0 +1,11 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:application/ld+json'
+body: >
+
+  {
+    "@context": "https://deploy-preview-236--data-interoperability-panel.netlify.app/specification/contexts/agent-registry.jsonld",
+      "socialAgentRegistrations" : ["https://alice.example/agents/sa-1", "https://alice.example/agents/sa-2", "https://alice.example/agents/sa-3", "https://alice.example/agents/sa-4"],
+      "applicationRegistrations" : ["https://alice.example/agents/app-1", "https://alice.example/agents/app-2", "https://alice.example/agents/app-3", "https://alice.example/agents/app-4"]
+  }
