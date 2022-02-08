@@ -34,7 +34,7 @@ public abstract class CRUDAgentRegistration extends CRUDResource {
      * @param dataFactory {@link DataFactory} to assign
      * @throws SaiException
      */
-    public CRUDAgentRegistration(URL url, DataFactory dataFactory) throws SaiException {
+    protected CRUDAgentRegistration(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory, false);
         this.jsonLdContext = buildRemoteJsonLdContext(AGENT_REGISTRATION_CONTEXT);
     }
