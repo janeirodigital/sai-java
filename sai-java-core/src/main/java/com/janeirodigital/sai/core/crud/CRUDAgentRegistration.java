@@ -8,7 +8,7 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.AGENT_REGISTRATION_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.buildRemoteJsonLdContext;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.updateObject;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -36,7 +36,7 @@ public abstract class CRUDAgentRegistration extends CRUDResource {
      */
     protected CRUDAgentRegistration(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory, false);
-        this.jsonLdContext = buildRemoteJsonLdContext(AGENT_REGISTRATION_CONTEXT);
+        this.jsonLdContext = buildRemoteJsonLdContext(INTEROP_CONTEXT);
     }
 
     /**

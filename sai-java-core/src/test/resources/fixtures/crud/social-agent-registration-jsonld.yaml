@@ -5,13 +5,13 @@ headers:
 body: >
 
   {
-    "@context": "https://deploy-preview-236--data-interoperability-panel.netlify.app/specification/contexts/agent-registration.jsonld",
-      "agentRegistrationId" : "${SERVER_BASE}/jsonld/agents/sa-1/",
-      "registeredBy" : "https://alice.example/id#me",
-      "registeredWith" : "https://trusted.example/id#app",
-      "registeredAt" : "2021-04-04T20:15:47.000Z",
-      "updatedAt" : "2021-04-04T20:15:47.000Z",
-      "registeredAgent" : "https://bob.example/id#me",
-      "reciprocalRegistration" : "https://bob.example/agents/sa-7/",
-      "accessGrant" : "${SERVER_BASE}/ttl/agents/sa-1/access-grant"
+    "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
+    "id" : "${SERVER_BASE}/jsonld/agents/sa-1/",
+    "registeredBy" : "https://alice.example/id#me",
+    "registeredWith" : "https://trusted.example/id#app",
+    "registeredAt" : "2021-04-04T20:15:47.000Z",
+    "updatedAt" : "2021-04-04T20:15:47.000Z",
+    "registeredAgent" : "https://bob.example/id#me",
+    "reciprocalRegistration" : "https://bob.example/agents/sa-7/",
+    "hasAccessGrant" : "${SERVER_BASE}/ttl/agents/sa-1/access-grant"
   }

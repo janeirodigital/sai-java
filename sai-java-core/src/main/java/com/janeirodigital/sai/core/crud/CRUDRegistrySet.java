@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.REGISTRY_SET_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -37,7 +37,7 @@ public class CRUDRegistrySet extends CRUDResource {
     public CRUDRegistrySet(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory, false);
         this.dataRegistryUrls = new ArrayList<>();
-        this.jsonLdContext = buildRemoteJsonLdContext(REGISTRY_SET_CONTEXT);
+        this.jsonLdContext = buildRemoteJsonLdContext(INTEROP_CONTEXT);
     }
 
     /**

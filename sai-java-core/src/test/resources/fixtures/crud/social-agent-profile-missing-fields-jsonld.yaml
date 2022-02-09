@@ -5,8 +5,8 @@ headers:
 body: >
 
   {
-    "@context": "https://solid.github.io/data-interoperability-panel/specification/contexts/social-agent-profile.jsonld",
-    "socialAgentId" : "${SERVER_BASE}/jsonld/id",
-    "accessInbox" : "${SERVER_BASE}/access/inbox/",
-    "registrySet" : "${SERVER_BASE}/registry_set"
+    "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
+    "id" : "${SERVER_BASE}/jsonld/id",
+    "hasAccessInbox" : "${SERVER_BASE}/access/inbox/",
+    "hasRegistrySet" : "${SERVER_BASE}/registry_set"
   }
