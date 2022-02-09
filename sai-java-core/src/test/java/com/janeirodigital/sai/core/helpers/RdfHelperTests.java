@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
@@ -177,7 +178,7 @@ class RdfHelperTests {
     @Test
     @DisplayName("Serialize RDF model to JSON-LD string with context")
     void checkGetJsonLdStringFromRdfModel() throws SaiException {
-        String serialized = getJsonLdStringFromModel(readableModel, getJsonLdContextAsString());
+        String serialized = getJsonLdStringFromModel(readableModel, buildRemoteJsonLdContext(INTEROP_CONTEXT));
         assertNotNull(serialized);
     }
 
@@ -621,22 +622,6 @@ class RdfHelperTests {
                 "    \"First original comment\" ,\n" +
                 "    \"Second original comment\" ,\n" +
                 "    \"Third original comment\" .";
-    }
-
-    private static String getJsonLdResourceAsString() {
-        return "  {\n" +
-                "    \"socialAgentId\" : \"https://alice.example/id\",\n" +
-                "    \"authorizationAgent\" : \"https://trusted.example/alice/\",\n" +
-                "    \"accessInbox\" : \"https://alice.example/access/inbox/\",\n" +
-                "    \"registrySet\" : \"https://alice.example/registry_set\",\n" +
-                "    \"oidcIssuer\" : [\"https://idp.alice.example\"]\n" +
-                "  }";
-    }
-
-    private static String getJsonLdContextAsString() {
-        return "  {\n" +
-                "      \"@context\": \"https://solid.github.io/data-interoperability-panel/specification/contexts/social-agent-profile.jsonld\"\n" +
-                "  }";
     }
 
     private static String getInvalidJsonLdContext() {

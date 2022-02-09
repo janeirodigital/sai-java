@@ -5,10 +5,10 @@ headers:
 body: >
 
   {
-    "@context": "https://solid.github.io/data-interoperability-panel/specification/contexts/social-agent-profile.jsonld",
-    "socialAgentId" : "${SERVER_BASE}/jsonld/id",
-    "authorizationAgent" : "https://trusted.example/alice/",
-    "accessInbox" : "https://alice.example/access/inbox/",
-    "registrySet" : "https://alice.example/registry_set",
+    "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
+    "id" : "${SERVER_BASE}/jsonld/id",
+    "hasAuthorizationAgent" : "https://trusted.example/alice/",
+    "hasAccessInbox" : "https://alice.example/access/inbox/",
+    "hasRegistrySet" : "https://alice.example/registry_set",
     "oidcIssuer" : ["https://idp.alice.example"]
   }

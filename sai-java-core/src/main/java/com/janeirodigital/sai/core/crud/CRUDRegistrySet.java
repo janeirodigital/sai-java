@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.REGISTRY_SET_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -24,9 +24,9 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 @Getter
 public class CRUDRegistrySet extends CRUDResource {
 
-    URL agentRegistryUrl;
-    URL accessConsentRegistryUrl;
-    List<URL> dataRegistryUrls;
+    private URL agentRegistryUrl;
+    private URL accessConsentRegistryUrl;
+    private List<URL> dataRegistryUrls;
 
     /**
      * Construct a new {@link CRUDRegistrySet}
@@ -37,7 +37,7 @@ public class CRUDRegistrySet extends CRUDResource {
     public CRUDRegistrySet(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory, false);
         this.dataRegistryUrls = new ArrayList<>();
-        this.jsonLdContext = buildRemoteJsonLdContext(REGISTRY_SET_CONTEXT);
+        this.jsonLdContext = buildRemoteJsonLdContext(INTEROP_CONTEXT);
     }
 
     /**
@@ -117,7 +117,7 @@ public class CRUDRegistrySet extends CRUDResource {
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#data-registry">Data Registry</a>
      * @param dataRegistryUrl URL a data registry to add to the registry set
      */
-    public void addDataRegistryUrl(URL dataRegistryUrl) {
+    public void addDataRegistry(URL dataRegistryUrl) {
         Objects.requireNonNull(dataRegistryUrl, "Must provide a data registry to add to the registry set");
         this.dataRegistryUrls.add(dataRegistryUrl);
         updateUrlObjects(this.resource, HAS_DATA_REGISTRY, this.dataRegistryUrls);

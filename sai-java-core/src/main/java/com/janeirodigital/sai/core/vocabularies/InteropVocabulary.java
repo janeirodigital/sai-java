@@ -36,4 +36,27 @@ public class InteropVocabulary {
     public static final Property HAS_ACCESS_CONSENT_REGISTRY = model.createProperty(NS + "hasAccessConsentRegistry");
     public static final Property HAS_DATA_REGISTRY = model.createProperty(NS + "hasDataRegistry");
 
+    // Agent Registry
+    public static final String AGENT_REGISTRY = NS + "AgentRegistry";
+    public static final Property HAS_SOCIAL_AGENT_REGISTRATION = model.createProperty(NS + "hasSocialAgentRegistration");
+    public static final Property HAS_APPLICATION_REGISTRATION = model.createProperty(NS + "hasApplicationRegistration");
+
+    // Agent Registration
+    public static final String SOCIAL_AGENT_REGISTRATION = NS + "SocialAgentRegistration";
+    public static final String APPLICATION_REGISTRATION = NS + "ApplicationRegistration";
+    public static final Property RECIPROCAL_REGISTRATION = model.createProperty(NS + "reciprocalRegistration");
+    public static final Property HAS_ACCESS_GRANT = model.createProperty(NS + "hasAccessGrant");
+
+    // Registration Properties used by various classes
+    public static final Property REGISTERED_BY = model.createProperty(NS + "registeredBy");
+    public static final Property REGISTERED_WITH = model.createProperty(NS + "registeredWith");
+    public static final Property REGISTERED_AT = model.createProperty(NS + "registeredAt");
+    public static final Property UPDATED_AT = model.createProperty(NS + "updatedAt");
+    public static final Property REGISTERED_AGENT = model.createProperty(NS + "registeredAgent");
+
+
+
+
+
+
 }

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.APPLICATION_PROFILE_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.contexts.SolidOidcContexts.SOLID_OIDC_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
@@ -29,7 +29,7 @@ import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.*;
 @Getter
 public class CRUDApplicationProfile extends CRUDResource {
 
-    private static final List<String> contexts = Arrays.asList(SOLID_OIDC_CONTEXT, APPLICATION_PROFILE_CONTEXT);
+    private static final List<String> contexts = Arrays.asList(SOLID_OIDC_CONTEXT, INTEROP_CONTEXT);
 
     private String name;
     private String description;

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.SOCIAL_AGENT_PROFILE_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -40,7 +40,7 @@ public class CRUDSocialAgentProfile extends CRUDResource {
     public CRUDSocialAgentProfile(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory, false);
         this.oidcIssuerUrls = new ArrayList<>();
-        this.jsonLdContext = buildRemoteJsonLdContext(SOCIAL_AGENT_PROFILE_CONTEXT);
+        this.jsonLdContext = buildRemoteJsonLdContext(INTEROP_CONTEXT);
     }
 
     /**
