@@ -30,7 +30,7 @@
         <shapetrees.version>0.9.5</shapetrees.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <maven-javadoc.version>3.3.1</maven-javadoc.version>
+        <maven-javadoc.version>3.3.2</maven-javadoc.version>
         <snakeyaml.version>1.30</snakeyaml.version>
         <mockito.version>4.3.1</mockito.version>
         <maven-site-plugin.version>3.10.0</maven-site-plugin.version>
