@@ -7,8 +7,10 @@ import lombok.Getter;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.addChildToUrlPath;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.buildRemoteJsonLdContext;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.updateObject;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -19,7 +21,7 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
  * can be extended for type-specific implementations (i.e. Social Agent Registration, Application Registration).
  */
 @Getter
-public abstract class CRUDAgentRegistration extends CRUDResource {
+public abstract class AgentRegistration extends CRUDResource {
 
     URL registeredBy;
     URL registeredWith;
@@ -29,12 +31,12 @@ public abstract class CRUDAgentRegistration extends CRUDResource {
     URL accessGrantUrl;
 
     /**
-     * Construct a new {@link CRUDAgentRegistration}
-     * @param url URL of the {@link CRUDAgentRegistration}
+     * Construct a new {@link AgentRegistration}
+     * @param url URL of the {@link AgentRegistration}
      * @param dataFactory {@link DataFactory} to assign
      * @throws SaiException
      */
-    protected CRUDAgentRegistration(URL url, DataFactory dataFactory) throws SaiException {
+    protected AgentRegistration(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory, false);
         this.jsonLdContext = buildRemoteJsonLdContext(INTEROP_CONTEXT);
     }
@@ -105,4 +107,23 @@ public abstract class CRUDAgentRegistration extends CRUDResource {
         this.registeredAgent = accessGrantUrl;
         updateObject(this.resource, HAS_ACCESS_GRANT, accessGrantUrl);
     }
+
+    /**
+     * Generates the URL for a new {@link com.janeirodigital.sai.core.immutable.AccessGrant}
+     * @return Generated URL
+     * @throws SaiException
+     */
+    public URL generateAccessGrantUrl() throws SaiException {
+        return addChildToUrlPath(this.getUrl(), UUID.randomUUID().toString());
+    }
+
+    /**
+     * Indicates whether or not there is an {@link com.janeirodigital.sai.core.immutable.AccessGrant} linked
+     * to the registration
+     * @return true when there is an access grant
+     */
+    public boolean hasAccessGrant() {
+        return this.accessGrantUrl == null;
+    }
+
 }

@@ -55,7 +55,7 @@ public class DataFactory {
      * @throws SaiNotFoundException
      */
     public ReadableApplicationProfile getReadableApplicationProfile(URL url) throws SaiException, SaiNotFoundException {
-        return ReadableApplicationProfile.build(url, this);
+        return ReadableApplicationProfile.get(url, this);
     }
 
     /**
@@ -67,7 +67,7 @@ public class DataFactory {
      * @throws SaiNotFoundException
      */
     public ReadableSocialAgentProfile getReadableSocialAgentProfile(URL url) throws SaiNotFoundException, SaiException {
-        return ReadableSocialAgentProfile.build(url, this);
+        return ReadableSocialAgentProfile.get(url, this);
     }
 
 }

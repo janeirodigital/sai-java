@@ -19,8 +19,6 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 @Getter
 public class CRUDResource extends ReadableResource {
 
-    protected String jsonLdContext;
-
     /**
      * Construct a CRUD resource for <code>resourceUrl</code>. Calls the parent
      * {@link ReadableResource} constructor which assigns the provided

@@ -1,7 +1,9 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.factories.TrustedDataFactory;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -21,18 +23,17 @@ import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-class CRUDAgentRegistryTests {
+class AgentRegistryTests {
 
     private static TrustedDataFactory trustedDataFactory;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
-    private static URL aliceAgentRegistry;
     private static List<URL> aliceSocialAgents;
     private static List<URL> aliceApplications;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiNotFoundException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -42,6 +43,13 @@ class CRUDAgentRegistryTests {
         dispatcher = new RequestMatchingFixtureDispatcher();
         // GET agent registry in Turtle
         mockOnGet(dispatcher, "/ttl/agents/", "crud/agent-registry-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/sa-1/", "crud/social-agent-registration-1-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/sa-2/", "crud/social-agent-registration-2-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/sa-3/", "crud/social-agent-registration-3-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/sa-4/", "crud/social-agent-registration-4-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/app-1/", "crud/application-registration-1-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/app-2/", "crud/application-registration-2-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/app-3/", "crud/application-registration-3-ttl");
         mockOnPut(dispatcher, "/new/ttl/agents/", "http/201");  // create new
         mockOnPut(dispatcher, "/ttl/agents/", "http/204");  // update existing
         mockOnDelete(dispatcher, "/ttl/agents/", "http/204");  // delete
@@ -55,24 +63,22 @@ class CRUDAgentRegistryTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        aliceAgentRegistry = toUrl(server,"/ttl/agents/");
-        aliceSocialAgents = Arrays.asList(toUrl(server, "/ttl/agents/sa-1/"), 
+        aliceSocialAgents = Arrays.asList(toUrl(server, "/ttl/agents/sa-1/"),
                                           toUrl(server, "/ttl/agents/sa-2/"),
                                           toUrl(server, "/ttl/agents/sa-3/"),
                                           toUrl(server, "/ttl/agents/sa-4/"));
         aliceApplications = Arrays.asList(toUrl(server, "/ttl/agents/app-1/"),
                                           toUrl(server, "/ttl/agents/app-2/"),
-                                          toUrl(server, "/ttl/agents/app-3/"),
-                                          toUrl(server, "/ttl/agents/app-4/"));
+                                          toUrl(server, "/ttl/agents/app-3/"));
     }
 
     @Test
     @DisplayName("Create new agent registry in turtle")
-    void createNewAgentRegistry() throws SaiException {
+    void createNewAgentRegistry() throws SaiException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/new/ttl/agents/");
-        CRUDAgentRegistry agentRegistry = trustedDataFactory.getCRUDAgentRegistry(url);
-        aliceSocialAgents.forEach((registration) -> { agentRegistry.addSocialAgentRegistration(registration); });
-        aliceApplications.forEach((registration) -> { agentRegistry.addApplicationRegistration(registration); });
+        AgentRegistry agentRegistry = trustedDataFactory.getAgentRegistry(url);
+        for (URL registrationUrl : aliceSocialAgents) { agentRegistry.getSocialAgentRegistrations().add(registrationUrl); }
+        for (URL registrationUrl : aliceApplications) { agentRegistry.getApplicationRegistrations().add(registrationUrl); }
         assertDoesNotThrow(() -> agentRegistry.update());
         assertNotNull(agentRegistry);
     }
@@ -81,10 +87,10 @@ class CRUDAgentRegistryTests {
     @DisplayName("Create new agent registry in turtle with jena resource")
     void createCrudAgentRegistryWithJenaResource() throws SaiException {
         URL existingUrl = toUrl(server, "/ttl/agents/");
-        CRUDAgentRegistry existingAgentRegistry = trustedDataFactory.getCRUDAgentRegistry(existingUrl);
+        AgentRegistry existingAgentRegistry = trustedDataFactory.getAgentRegistry(existingUrl);
 
         URL newUrl = toUrl(server, "/new/ttl/agents/");
-        CRUDAgentRegistry resourceAgentRegistry = trustedDataFactory.getCRUDAgentRegistry(newUrl, TEXT_TURTLE, existingAgentRegistry.getResource());
+        AgentRegistry resourceAgentRegistry = trustedDataFactory.getAgentRegistry(newUrl, TEXT_TURTLE, existingAgentRegistry.getResource());
         assertDoesNotThrow(() -> resourceAgentRegistry.update());
         assertNotNull(resourceAgentRegistry);
     }
@@ -93,21 +99,23 @@ class CRUDAgentRegistryTests {
     @DisplayName("Read existing agent registry in turtle")
     void readAgentRegistry() throws SaiException {
         URL url = toUrl(server, "/ttl/agents/");
-        CRUDAgentRegistry agentRegistry = trustedDataFactory.getCRUDAgentRegistry(url);
+        AgentRegistry agentRegistry = trustedDataFactory.getAgentRegistry(url);
         assertNotNull(agentRegistry);
-        assertTrue(aliceSocialAgents.containsAll(agentRegistry.getSocialAgentRegistrations()));
-        assertTrue(aliceApplications.containsAll(agentRegistry.getApplicationRegistrations()));
+        assertTrue(aliceSocialAgents.containsAll(agentRegistry.getSocialAgentRegistrations().getRegistrationUrls()));
+        assertTrue(aliceApplications.containsAll(agentRegistry.getApplicationRegistrations().getRegistrationUrls()));
+        for (SocialAgentRegistration registration : agentRegistry.socialAgentRegistrations) { assertTrue(aliceSocialAgents.contains(registration.getUrl())); }
+        for (ApplicationRegistration registration : agentRegistry.applicationRegistrations) { assertTrue(aliceApplications.contains(registration.getUrl())); }
     }
     
     @Test
     @DisplayName("Update existing crud agent registry in turtle")
-    void updateAgentRegistry() throws SaiException {
+    void updateAgentRegistry() throws SaiException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/ttl/agents/");
-        CRUDAgentRegistry agentRegistry = trustedDataFactory.getCRUDAgentRegistry(url);
-        agentRegistry.removeSocialAgentRegistration(toUrl(server, "/ttl/agents/sa-1/"));
-        agentRegistry.addSocialAgentRegistration(toUrl(server, "/ttl/agents/sa-5/"));
-        agentRegistry.removeApplicationRegistration(toUrl(server, "/ttl/agents/app-1/"));
-        agentRegistry.addApplicationRegistration(toUrl(server, "/ttl/agents/app-5/"));
+        AgentRegistry agentRegistry = trustedDataFactory.getAgentRegistry(url);
+        agentRegistry.getSocialAgentRegistrations().remove(toUrl(server, "/ttl/agents/sa-1/"));
+        agentRegistry.getSocialAgentRegistrations().add(toUrl(server, "/ttl/agents/sa-5/"));
+        agentRegistry.getApplicationRegistrations().remove(toUrl(server, "/ttl/agents/app-1/"));
+        agentRegistry.getApplicationRegistrations().add(toUrl(server, "/ttl/agents/app-5/"));
         assertDoesNotThrow(() -> agentRegistry.update());
         assertNotNull(agentRegistry);
     }
@@ -116,19 +124,19 @@ class CRUDAgentRegistryTests {
     @DisplayName("Read existing agent registry in JSON-LD")
     void readAgentRegistryJsonLd() throws SaiException {
         URL url = toUrl(server, "/jsonld/agents/");
-        CRUDAgentRegistry agentRegistry = trustedDataFactory.getCRUDAgentRegistry(url, LD_JSON);
-        assertTrue(aliceSocialAgents.containsAll(agentRegistry.getSocialAgentRegistrations()));
-        assertTrue(aliceApplications.containsAll(agentRegistry.getApplicationRegistrations()));
+        AgentRegistry agentRegistry = trustedDataFactory.getAgentRegistry(url, LD_JSON);
+        assertTrue(aliceSocialAgents.containsAll(agentRegistry.getSocialAgentRegistrations().getRegistrationUrls()));
+        assertTrue(aliceApplications.containsAll(agentRegistry.getApplicationRegistrations().getRegistrationUrls()));
         assertNotNull(agentRegistry);
     }
 
     @Test
     @DisplayName("Create new crud agent registry in JSON-LD")
-    void createNewAgentRegistryJsonLd() throws SaiException {
+    void createNewAgentRegistryJsonLd() throws SaiException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/new/jsonld/agents/");
-        CRUDAgentRegistry agentRegistry = trustedDataFactory.getCRUDAgentRegistry(url, LD_JSON);
-        aliceSocialAgents.forEach((registration) -> { agentRegistry.addSocialAgentRegistration(registration); });
-        aliceApplications.forEach((registration) -> { agentRegistry.addApplicationRegistration(registration); });
+        AgentRegistry agentRegistry = trustedDataFactory.getAgentRegistry(url, LD_JSON);
+        for (URL registrationUrl : aliceSocialAgents) { agentRegistry.getSocialAgentRegistrations().add(registrationUrl); }
+        for (URL registrationUrl : aliceApplications) { agentRegistry.getApplicationRegistrations().add(registrationUrl); }
         assertDoesNotThrow(() -> agentRegistry.update());
         assertNotNull(agentRegistry);
     }
@@ -137,7 +145,7 @@ class CRUDAgentRegistryTests {
     @DisplayName("Delete crud agent registry")
     void deleteAgentRegistry() throws SaiException {
         URL url = toUrl(server, "/ttl/agents/");
-        CRUDAgentRegistry agentRegistry = trustedDataFactory.getCRUDAgentRegistry(url);
+        AgentRegistry agentRegistry = trustedDataFactory.getAgentRegistry(url);
         assertDoesNotThrow(() -> agentRegistry.delete());
         assertFalse(agentRegistry.isExists());
     }

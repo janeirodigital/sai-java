@@ -19,34 +19,34 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agent-registration">Social Agent Registration</a>.
  */
 @Getter
-public class CRUDSocialAgentRegistration extends CRUDAgentRegistration {
+public class SocialAgentRegistration extends AgentRegistration {
 
     URL reciprocalRegistration;
 
     /**
-     * Construct a new {@link CRUDSocialAgentRegistration}
-     * @param url URL of the {@link CRUDSocialAgentRegistration}
+     * Construct a new {@link SocialAgentRegistration}
+     * @param url URL of the {@link SocialAgentRegistration}
      * @param dataFactory {@link DataFactory} to assign
      * @throws SaiException
      */
-    public CRUDSocialAgentRegistration(URL url, DataFactory dataFactory) throws SaiException {
+    public SocialAgentRegistration(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory);
     }
 
     /**
-     * Builder used by a {@link DataFactory} to construct and initialize a {@link CRUDSocialAgentRegistration}.
-     * If a Jena <code>resource</code> is provided and there is already a {@link CRUDSocialAgentRegistration}
+     * Builder used by a {@link DataFactory} to construct and initialize a {@link SocialAgentRegistration}.
+     * If a Jena <code>resource</code> is provided and there is already a {@link SocialAgentRegistration}
      * at the provided <code>url</code>, the graph of the provided resource will be used. The remote graph
      * will not be updated until {@link #update()} is called.
-     * @param url URL of the {@link CRUDSocialAgentRegistration} to build
+     * @param url URL of the {@link SocialAgentRegistration} to build
      * @param dataFactory {@link DataFactory} to assign
      * @param contentType {@link ContentType} to use for read / write
      * @param resource Optional Jena Resource to populate the resource graph
-     * @return {@link CRUDSocialAgentRegistration}
+     * @return {@link SocialAgentRegistration}
      * @throws SaiException
      */
-    public static CRUDSocialAgentRegistration build(URL url, DataFactory dataFactory, ContentType contentType, Resource resource) throws SaiException {
-        CRUDSocialAgentRegistration registration = new CRUDSocialAgentRegistration(url, dataFactory);
+    public static SocialAgentRegistration build(URL url, DataFactory dataFactory, ContentType contentType, Resource resource) throws SaiException {
+        SocialAgentRegistration registration = new SocialAgentRegistration(url, dataFactory);
         registration.contentType = contentType;
         if (resource != null) {
             registration.resource = resource;
@@ -57,26 +57,26 @@ public class CRUDSocialAgentRegistration extends CRUDAgentRegistration {
     }
 
     /**
-     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link CRUDSocialAgentRegistration} with
+     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link SocialAgentRegistration} with
      * no Jena resource provided and the specified content type (e.g. JSON-LD).
-     * @param url URL of the {@link CRUDSocialAgentRegistration} to build
+     * @param url URL of the {@link SocialAgentRegistration} to build
      * @param dataFactory {@link DataFactory} to assign
-     * @return {@link CRUDSocialAgentRegistration}
+     * @return {@link SocialAgentRegistration}
      * @throws SaiException
      */
-    public static CRUDSocialAgentRegistration build(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException {
+    public static SocialAgentRegistration build(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException {
         return build(url, dataFactory, contentType, null);
     }
 
     /**
-     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link CRUDSocialAgentRegistration} with
+     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link SocialAgentRegistration} with
      * no Jena resource provided and the default content type.
-     * @param url URL of the {@link CRUDSocialAgentRegistration} to build
+     * @param url URL of the {@link SocialAgentRegistration} to build
      * @param dataFactory {@link DataFactory} to assign
-     * @return {@link CRUDSocialAgentRegistration}
+     * @return {@link SocialAgentRegistration}
      * @throws SaiException
      */
-    public static CRUDSocialAgentRegistration build(URL url, DataFactory dataFactory) throws SaiException {
+    public static SocialAgentRegistration build(URL url, DataFactory dataFactory) throws SaiException {
         return build(url, dataFactory, TEXT_TURTLE, null);
     }
 
@@ -93,7 +93,7 @@ public class CRUDSocialAgentRegistration extends CRUDAgentRegistration {
     }
 
     /**
-     * Bootstraps the {@link CRUDSocialAgentRegistration}. If a Jena Resource was provided, it will
+     * Bootstraps the {@link SocialAgentRegistration}. If a Jena Resource was provided, it will
      * be used to populate the instance. If not, the remote resource will be fetched and
      * populated. If the remote resource doesn't exist, a local graph will be created for it.
      * @throws SaiException
@@ -113,7 +113,7 @@ public class CRUDSocialAgentRegistration extends CRUDAgentRegistration {
     }
 
     /**
-     * Populates the {@link CRUDSocialAgentRegistration} instance with required and optional fields
+     * Populates the {@link SocialAgentRegistration} instance with required and optional fields
      * @throws SaiException If any required fields cannot be populated, or other exceptional conditions
      */
     private void populate() throws SaiException {
@@ -124,7 +124,7 @@ public class CRUDSocialAgentRegistration extends CRUDAgentRegistration {
             this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
             this.registeredAgent = getRequiredUrlObject(this.resource, REGISTERED_AGENT);
             this.reciprocalRegistration = getUrlObject(this.resource, RECIPROCAL_REGISTRATION);
-            this.accessGrantUrl = getRequiredUrlObject(this.resource, HAS_ACCESS_GRANT);
+            this.accessGrantUrl = getUrlObject(this.resource, HAS_ACCESS_GRANT);
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load social agent registration " + this.url + ": " + ex.getMessage());
         }

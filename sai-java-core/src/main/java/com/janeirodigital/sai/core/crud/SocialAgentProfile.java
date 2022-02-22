@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
-import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLID_OIDC_ISSUER;
@@ -24,7 +24,7 @@ import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLI
  * profile, which is also cross-pollinated with other terms from the Solid ecosystem.
  */
 @Getter
-public class CRUDSocialAgentProfile extends CRUDResource {
+public class SocialAgentProfile extends CRUDResource {
 
     URL registrySetUrl;
     URL authorizationAgentUrl;
@@ -32,30 +32,30 @@ public class CRUDSocialAgentProfile extends CRUDResource {
     List<URL> oidcIssuerUrls;
 
     /**
-     * Construct a new {@link CRUDSocialAgentProfile}
-     * @param url URL of the {@link CRUDSocialAgentProfile}
+     * Construct a new {@link SocialAgentProfile}
+     * @param url URL of the {@link SocialAgentProfile}
      * @param dataFactory {@link DataFactory} to assign
      * @throws SaiException
      */
-    public CRUDSocialAgentProfile(URL url, DataFactory dataFactory) throws SaiException {
+    public SocialAgentProfile(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory, false);
         this.oidcIssuerUrls = new ArrayList<>();
         this.jsonLdContext = buildRemoteJsonLdContext(INTEROP_CONTEXT);
     }
 
     /**
-     * Builder used by a {@link DataFactory} to construct and initialize a {@link CRUDSocialAgentProfile}.
-     * If a Jena <code>resource</code> is provided and there is already a {@link CRUDSocialAgentProfile}
+     * Builder used by a {@link DataFactory} to construct and initialize a {@link SocialAgentProfile}.
+     * If a Jena <code>resource</code> is provided and there is already a {@link SocialAgentProfile}
      * at the provided <code>url</code>, the graph of the provided resource will be used. The remote graph
      * will not be updated until {@link #update()} is called.
-     * @param url URL of the {@link CRUDSocialAgentProfile} to build
+     * @param url URL of the {@link SocialAgentProfile} to build
      * @param dataFactory {@link DataFactory} to assign
      * @param resource Optional Jena Resource to populate the resource graph
-     * @return {@link CRUDSocialAgentProfile}
+     * @return {@link SocialAgentProfile}
      * @throws SaiException
      */
-    public static CRUDSocialAgentProfile build(URL url, DataFactory dataFactory, ContentType contentType, Resource resource) throws SaiException {
-        CRUDSocialAgentProfile profile = new CRUDSocialAgentProfile(url, dataFactory);
+    public static SocialAgentProfile build(URL url, DataFactory dataFactory, ContentType contentType, Resource resource) throws SaiException {
+        SocialAgentProfile profile = new SocialAgentProfile(url, dataFactory);
         profile.contentType = contentType;
         if (resource != null) {
             profile.resource = resource;
@@ -66,27 +66,27 @@ public class CRUDSocialAgentProfile extends CRUDResource {
     }
 
     /**
-     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link CRUDSocialAgentProfile} with
+     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link SocialAgentProfile} with
      * no Jena resource provided and the specified content type (e.g. JSON-LD).
-     * @param url URL of the {@link CRUDSocialAgentProfile} to build
+     * @param url URL of the {@link SocialAgentProfile} to build
      * @param dataFactory {@link DataFactory} to assign
-     * @return {@link CRUDSocialAgentProfile}
+     * @return {@link SocialAgentProfile}
      * @throws SaiException
      */
-    public static CRUDSocialAgentProfile build(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException {
+    public static SocialAgentProfile build(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException {
         return build(url, dataFactory, contentType, null);
     }
 
     /**
-     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link CRUDSocialAgentProfile} with
+     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link SocialAgentProfile} with
      * no Jena resource provided and the default content type.
-     * @param url URL of the {@link CRUDSocialAgentProfile} to build
+     * @param url URL of the {@link SocialAgentProfile} to build
      * @param dataFactory {@link DataFactory} to assign
-     * @return {@link CRUDSocialAgentProfile}
+     * @return {@link SocialAgentProfile}
      * @throws SaiException
      */
-    public static CRUDSocialAgentProfile build(URL url, DataFactory dataFactory) throws SaiException {
-        return build(url, dataFactory, TEXT_TURTLE, null);
+    public static SocialAgentProfile build(URL url, DataFactory dataFactory) throws SaiException {
+        return build(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE, null);
     }
 
     /**
@@ -137,7 +137,7 @@ public class CRUDSocialAgentProfile extends CRUDResource {
     }
 
     /**
-     * Bootstraps the {@link CRUDSocialAgentProfile}. If a Jena Resource was provided, it will
+     * Bootstraps the {@link SocialAgentProfile}. If a Jena Resource was provided, it will
      * be used to populate the instance. If not, the remote resource will be fetched and
      * populated. If the remote resource doesn't exist, a local graph will be created for it.
      * @throws SaiException
@@ -157,7 +157,7 @@ public class CRUDSocialAgentProfile extends CRUDResource {
     }
 
     /**
-     * Populates the {@link CRUDSocialAgentProfile} instance with required and optional fields
+     * Populates the {@link SocialAgentProfile} instance with required and optional fields
      * @throws SaiException If any required fields cannot be populated, or other exceptional conditions
      */
     private void populate() throws SaiException {

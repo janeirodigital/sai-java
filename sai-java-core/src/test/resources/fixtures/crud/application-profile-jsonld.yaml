@@ -21,7 +21,7 @@ body: >
     "response_types": [ "code" ],
     "default_max_age": 3600,
     "require_auth_time": true,
-    "application_description": "Best project management ever",
+    "application_description": "Project management done right",
     "application_author": "http://acme.example/id",
     "has_access_need_group": [ "http://localhost/projectron/access#group1", "http://localhost/projectron/access#group2" ]
   }

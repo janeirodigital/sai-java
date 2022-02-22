@@ -24,7 +24,7 @@ class ReadableSocialAgentProfileTests {
     private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiNotFoundException {
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
         // GET Readable social agent profile in Turtle

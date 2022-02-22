@@ -7,5 +7,5 @@ body: >
   {
     "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
     "hasSocialAgentRegistrations" : ["https://alice.example/agents/sa-1", "https://alice.example/agents/sa-2", "https://alice.example/agents/sa-3", "https://alice.example/agents/sa-4"],
-    "hasApplicationRegistrations" : ["https://alice.example/agents/app-1", "https://alice.example/agents/app-2", "https://alice.example/agents/app-3", "https://alice.example/agents/app-4"]
+    "hasApplicationRegistrations" : ["https://alice.example/agents/app-1", "https://alice.example/agents/app-2", "https://alice.example/agents/app-3" ]
   }

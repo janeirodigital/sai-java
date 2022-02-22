@@ -34,7 +34,7 @@ class ReadableResourceTests {
     private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiNotFoundException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
@@ -62,21 +62,10 @@ class ReadableResourceTests {
     }
 
     @Test
-    @DisplayName("Initialize a readable resource")
-    void initializeReadableResource() throws SaiException {
-        URL url = toUrl(server, "/readable/readable-resource");
-        ReadableResource readable = new ReadableResource(url, dataFactory, false);
-        assertNotNull(readable);
-        assertEquals(url, readable.getUrl());
-        assertEquals(dataFactory, readable.getDataFactory());
-        assertNull(readable.getDataset());
-    }
-
-    @Test
-    @DisplayName("Build a readable resource")
-    void bootstrapReadableResource() throws SaiException, SaiNotFoundException {
+    @DisplayName("Get a readable resource")
+    void getReadableResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/readable/readable-resource#project");
-        TestableReadableResource testable = TestableReadableResource.build(url, dataFactory, true);
+        TestableReadableResource testable = TestableReadableResource.get(url, dataFactory, true);
 
         assertNotNull(testable);
         assertEquals(6, testable.getId());
@@ -96,7 +85,7 @@ class ReadableResourceTests {
     @DisplayName("Build a protected readable resource")
     void bootstrapProtectedReadableResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/readable/readable-resource#project");
-        TestableReadableResource testable = TestableReadableResource.build(url, dataFactory, false);
+        TestableReadableResource testable = TestableReadableResource.get(url, dataFactory, false);
         // No need to test all of the accessors again
         assertNotNull(testable);
         assertEquals("Great Validations", testable.getName());
@@ -106,7 +95,7 @@ class ReadableResourceTests {
     @DisplayName("Fail to build a protected readable resource - missing fields")
     void failToGetReadableResourceMissingFields() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/missing-fields/readable/readable-resource#project");
-        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.build(url, dataFactory, false));
+        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.get(url, dataFactory, false));
     }
 
     @Test
@@ -118,7 +107,7 @@ class ReadableResourceTests {
                 .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
                 .setBody("body")
                 .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY));
-        assertThrows(SaiException.class, () -> TestableReadableResource.build(url, dataFactory, false));
+        assertThrows(SaiException.class, () -> TestableReadableResource.get(url, dataFactory, false));
     }
 
     @Test
@@ -130,14 +119,14 @@ class ReadableResourceTests {
                 .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
                 .setBody("body")
                 .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY));
-        assertThrows(SaiException.class, () -> TestableReadableResource.build(url, dataFactory, true));
+        assertThrows(SaiException.class, () -> TestableReadableResource.get(url, dataFactory, true));
     }
 
     @Test
     @DisplayName("Test readable response check - unsuccessful - resource not found")
     void testReadableResponseCheckNotFound() throws SaiException {
         URL missingUrl = toUrl(server, "/missing/readable/resource");
-        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.build(missingUrl, dataFactory, false));
+        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.get(missingUrl, dataFactory, false));
     }
 
     @Test
@@ -148,7 +137,7 @@ class ReadableResourceTests {
                 .setResponseCode(500)
                 .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
                 .setBody("BAD"));
-        assertThrows(SaiException.class, () -> TestableReadableResource.build(errorUrl, dataFactory, true));
+        assertThrows(SaiException.class, () -> TestableReadableResource.get(errorUrl, dataFactory, true));
     }
 }
 

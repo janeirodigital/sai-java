@@ -12,12 +12,13 @@ import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
+import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.buildRemoteJsonLdContext;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getResourceFromModel;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
@@ -30,10 +31,10 @@ public class ReadableResource {
     protected final URL url;
     protected final DataFactory dataFactory;
     protected final OkHttpClient httpClient;
-    protected String body;
     protected Model dataset;
     protected Resource resource;
     protected ContentType contentType;
+    protected String jsonLdContext;
     protected boolean unprotected;
     protected boolean exists;
 
@@ -52,12 +53,11 @@ public class ReadableResource {
         this.url = resourceUrl;
         this.dataFactory = dataFactory;
         this.httpClient = dataFactory.getHttpClient();
-        this.body = null;
         this.dataset = null;
         this.resource = null;
         this.unprotected = unprotected;
-        // Turtle is the default content type for read and writes
-        this.contentType = ContentType.TEXT_TURTLE;
+        this.contentType = DEFAULT_RDF_CONTENT_TYPE;
+        this.jsonLdContext = buildRemoteJsonLdContext(INTEROP_CONTEXT);
     }
 
     /**
@@ -70,11 +70,8 @@ public class ReadableResource {
             // wrapping the call in try-with-resources automatically closes the response
             Headers headers = addHttpHeader(HttpHeader.ACCEPT, this.contentType.getValue());
             try (Response response = checkReadableResponse(getProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, headers))) {
-                this.body = response.peekBody(Long.MAX_VALUE).string();
                 this.dataset = getRdfModelFromResponse(response);
                 this.resource = getResourceFromModel(this.dataset, this.url);
-            } catch (IOException ex) {
-                throw new SaiException("Unable to process response body: " + ex.getMessage());
             }
         }
         this.exists = true;
@@ -89,11 +86,8 @@ public class ReadableResource {
         // wrapping the call in try-with-resources automatically closes the response
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, this.contentType.getValue());
         try (Response response = checkReadableResponse(getRdfResource(this.httpClient, this.url, headers))) {
-            this.body = response.peekBody(Long.MAX_VALUE).string();
             this.dataset = getRdfModelFromResponse(response);
             this.resource = getResourceFromModel(this.dataset, this.url);
-        } catch (IOException ex) {
-            throw new SaiException("Unable to process response body: " + ex.getMessage());
         }
     }
 
@@ -104,10 +98,10 @@ public class ReadableResource {
      * @throws SaiNotFoundException when the resource cannot be found (HTTP 404)
      * @throws SaiException when the response code is unsuccessful for any other reason
      */
-    private Response checkReadableResponse(Response response) throws SaiNotFoundException, SaiException {
-        if (response.code() == HTTP_NOT_FOUND) { throw new SaiNotFoundException("Resource " + this.url + " doesn't exist"); }
+    public static Response checkReadableResponse(Response response) throws SaiNotFoundException, SaiException {
+        if (response.code() == HTTP_NOT_FOUND) { throw new SaiNotFoundException("Resource " + response.request().url() + " doesn't exist"); }
         if (!response.isSuccessful()) {
-            throw new SaiException("Unable to fetch data for " + this.url + ": " + response.code() + " " + response.message());
+            throw new SaiException("Unable to fetch data for " + response.request().url() + ": " + response.code() + " " + response.message());
         }
         return response;
     }

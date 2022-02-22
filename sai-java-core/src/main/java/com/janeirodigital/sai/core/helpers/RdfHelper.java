@@ -158,6 +158,19 @@ public class RdfHelper {
 
     /**
      * Gets a new Jena Resource (and associated Model) for the provided <code>resourceUrl</code>
+     * and adds a statement identifying the resource as the provided RDF <code>type</code>.
+     * @param resourceUrl URL of the resource
+     * @param type RDF type
+     * @return Resource
+     */
+    public static Resource getNewResourceForType(URL resourceUrl, RDFNode type) {
+        Resource resource = getNewResource(resourceUrl);
+        resource.addProperty(RDF.type, type);
+        return resource;
+    }
+
+    /**
+     * Gets a new Jena Resource (and associated Model) for the provided <code>resourceUrl</code>
      * @param resourceUrl URL of the resource
      * @return Resource
      */

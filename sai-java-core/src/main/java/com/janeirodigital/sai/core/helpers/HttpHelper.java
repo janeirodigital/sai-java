@@ -36,6 +36,7 @@ import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 public class HttpHelper {
 
     public static final Set<ContentType> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
+    public static final ContentType DEFAULT_RDF_CONTENT_TYPE = TEXT_TURTLE;
 
     private HttpHelper() { }
 
@@ -522,6 +523,21 @@ public class HttpHelper {
             return uri.toURL();
         } catch (MalformedURLException ex) {
             throw new SaiException("Unable to convert URI to URL: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Adds a child to the end of the path of <code>baseUrl</code>
+     * @param baseUrl Base URL to append to
+     * @param child Child to add to the path
+     * @return URL with <code>child</code> appended
+     * @throws SaiException
+     */
+    public static URL addChildToUrlPath(URL baseUrl, String child) throws SaiException {
+        try {
+            return new URL(baseUrl, child);
+        } catch (MalformedURLException ex) {
+            throw new SaiException("Unable to append child " + child + "to URL path " + baseUrl + ": " + ex.getMessage());
         }
     }
 

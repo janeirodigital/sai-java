@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.contexts.InteropContexts.INTEROP_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;

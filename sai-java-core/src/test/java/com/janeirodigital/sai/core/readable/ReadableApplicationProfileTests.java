@@ -17,6 +17,7 @@ import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ReadableApplicationProfileTests {
 
@@ -25,9 +26,11 @@ class ReadableApplicationProfileTests {
     private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiNotFoundException {
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
+        // Provide a social agent endpoint for the authorized session
+        mockOnGet(dispatcher, "/ttl/id", "readable/social-agent-profile-ttl");
         // In a given test, the first request to this endpoint will return provider-response, the second will return provider-refresh (a different token)
         mockOnGet(dispatcher, "/jsonld/projectron/id", "readable/application-profile-jsonld");
         mockOnGet(dispatcher, "/missing-fields/jsonld/projectron/id", "readable/application-profile-missing-fields-jsonld");
@@ -35,6 +38,7 @@ class ReadableApplicationProfileTests {
         server.setDispatcher(dispatcher);
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
+        when(mockSession.getSocialAgentId()).thenReturn(toUrl(server, "/ttl/id"));
         dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
     }
 

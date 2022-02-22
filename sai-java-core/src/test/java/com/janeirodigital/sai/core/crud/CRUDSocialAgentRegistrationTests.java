@@ -2,6 +2,7 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.factories.TrustedDataFactory;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -37,7 +38,7 @@ class CRUDSocialAgentRegistrationTests {
     private static URL sa1AccessGrant;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiNotFoundException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -73,7 +74,7 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Create new crud social agent registration in turtle")
     void createNewCrudSocialAgentRegistration() throws SaiException {
         URL url = toUrl(server, "/new/ttl/agents/sa-1/");
-        CRUDSocialAgentRegistration registration = trustedDataFactory.getCRUDSocialAgentRegistration(url);
+        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
         registration.setRegisteredBy(sa1RegisteredBy);
         registration.setRegisteredWith(sa1RegisteredWith);
         registration.setRegisteredAt(sa1RegisteredAt);
@@ -89,10 +90,10 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Create new crud social agent registration in turtle with jena resource")
     void createCrudSocialAgentRegistrationWithJenaResource() throws SaiException {
         URL existingUrl = toUrl(server, "/ttl/agents/sa-1/");
-        CRUDSocialAgentRegistration existingRegistration = trustedDataFactory.getCRUDSocialAgentRegistration(existingUrl);
+        SocialAgentRegistration existingRegistration = trustedDataFactory.getSocialAgentRegistration(existingUrl);
 
         URL newUrl = toUrl(server, "/new/ttl/agents/sa-1/");
-        CRUDSocialAgentRegistration resourceRegistration = trustedDataFactory.getCRUDSocialAgentRegistration(newUrl, TEXT_TURTLE, existingRegistration.getResource());
+        SocialAgentRegistration resourceRegistration = trustedDataFactory.getSocialAgentRegistration(newUrl, TEXT_TURTLE, existingRegistration.getResource());
         assertDoesNotThrow(() -> resourceRegistration.update());
         assertNotNull(resourceRegistration);
     }
@@ -101,7 +102,7 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Read existing crud social agent registration in turtle")
     void readSocialAgentRegistration() throws SaiException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
-        CRUDSocialAgentRegistration registration = trustedDataFactory.getCRUDSocialAgentRegistration(url);
+        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
         assertNotNull(registration);
         assertEquals(sa1RegisteredBy, registration.getRegisteredBy());
         assertEquals(sa1RegisteredWith, registration.getRegisteredWith());
@@ -116,14 +117,14 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Fail to read existing crud social agent registration in turtle - missing required fields")
     void failToReadSocialAgentRegistration() throws SaiException {
         URL url = toUrl(server, "/missing-fields/ttl/agents/sa-1/");
-        assertThrows(SaiException.class, () -> CRUDSocialAgentRegistration.build(url, trustedDataFactory));
+        assertThrows(SaiException.class, () -> SocialAgentRegistration.build(url, trustedDataFactory));
     }
 
     @Test
     @DisplayName("Update existing crud social agent registration in turtle")
     void updateSocialAgentRegistration() throws SaiException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
-        CRUDSocialAgentRegistration registration = trustedDataFactory.getCRUDSocialAgentRegistration(url);
+        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
         registration.setReciprocalRegistration(stringToUrl("https://bob.example/agents/sa-222/"));
         assertDoesNotThrow(() -> registration.update());
     }
@@ -132,7 +133,7 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Read existing social agent registration in JSON-LD")
     void readSocialAgentRegistrationJsonLd() throws SaiException {
         URL url = toUrl(server, "/jsonld/agents/sa-1/");
-        CRUDSocialAgentRegistration registration = trustedDataFactory.getCRUDSocialAgentRegistration(url, LD_JSON);
+        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url, LD_JSON);
         assertNotNull(registration);
         assertEquals(sa1RegisteredBy, registration.getRegisteredBy());
         assertEquals(sa1RegisteredWith, registration.getRegisteredWith());
@@ -147,7 +148,7 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Create new crud social agent registration in JSON-LD")
     void createNewCrudSocialAgentRegistrationJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/agents/sa-1/");
-        CRUDSocialAgentRegistration registration = trustedDataFactory.getCRUDSocialAgentRegistration(url, LD_JSON);
+        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url, LD_JSON);
         registration.setRegisteredBy(sa1RegisteredBy);
         registration.setRegisteredWith(sa1RegisteredWith);
         registration.setRegisteredAt(sa1RegisteredAt);
@@ -162,7 +163,7 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Delete crud social agent registration")
     void deleteSocialAgentRegistration() throws SaiException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
-        CRUDSocialAgentRegistration registration = trustedDataFactory.getCRUDSocialAgentRegistration(url);
+        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
         assertDoesNotThrow(() -> registration.delete());
         assertFalse(registration.isExists());
     }

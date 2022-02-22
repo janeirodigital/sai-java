@@ -9,7 +9,7 @@ import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 
-import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
@@ -18,32 +18,32 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#application-registration">Application Registration</a>.
  */
 @Getter
-public class CRUDApplicationRegistration extends CRUDAgentRegistration {
+public class ApplicationRegistration extends AgentRegistration {
 
     /**
-     * Construct a new {@link CRUDApplicationRegistration}
-     * @param url URL of the {@link CRUDApplicationRegistration}
+     * Construct a new {@link ApplicationRegistration}
+     * @param url URL of the {@link ApplicationRegistration}
      * @param dataFactory {@link DataFactory} to assign
      * @throws SaiException
      */
-    public CRUDApplicationRegistration(URL url, DataFactory dataFactory) throws SaiException {
+    public ApplicationRegistration(URL url, DataFactory dataFactory) throws SaiException {
         super(url, dataFactory);
     }
 
     /**
-     * Builder used by a {@link DataFactory} to construct and initialize a {@link CRUDApplicationRegistration}.
-     * If a Jena <code>resource</code> is provided and there is already a {@link CRUDApplicationRegistration}
+     * Builder used by a {@link DataFactory} to construct and initialize a {@link ApplicationRegistration}.
+     * If a Jena <code>resource</code> is provided and there is already a {@link ApplicationRegistration}
      * at the provided <code>url</code>, the graph of the provided resource will be used. The remote graph
      * will not be updated until {@link #update()} is called.
-     * @param url URL of the {@link CRUDApplicationRegistration} to build
+     * @param url URL of the {@link ApplicationRegistration} to build
      * @param dataFactory {@link DataFactory} to assign
      * @param contentType {@link ContentType} to use for read / write
      * @param resource Optional Jena Resource to populate the resource graph
-     * @return {@link CRUDApplicationRegistration}
+     * @return {@link ApplicationRegistration}
      * @throws SaiException
      */
-    public static CRUDApplicationRegistration build(URL url, DataFactory dataFactory, ContentType contentType, Resource resource) throws SaiException {
-        CRUDApplicationRegistration registration = new CRUDApplicationRegistration(url, dataFactory);
+    public static ApplicationRegistration build(URL url, DataFactory dataFactory, ContentType contentType, Resource resource) throws SaiException {
+        ApplicationRegistration registration = new ApplicationRegistration(url, dataFactory);
         registration.contentType = contentType;
         if (resource != null) {
             registration.resource = resource;
@@ -54,31 +54,31 @@ public class CRUDApplicationRegistration extends CRUDAgentRegistration {
     }
 
     /**
-     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link CRUDApplicationRegistration} with
+     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link ApplicationRegistration} with
      * no Jena resource provided and the specified content type (e.g. JSON-LD).
-     * @param url URL of the {@link CRUDApplicationRegistration} to build
+     * @param url URL of the {@link ApplicationRegistration} to build
      * @param dataFactory {@link DataFactory} to assign
-     * @return {@link CRUDApplicationRegistration}
+     * @return {@link ApplicationRegistration}
      * @throws SaiException
      */
-    public static CRUDApplicationRegistration build(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException {
+    public static ApplicationRegistration build(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException {
         return build(url, dataFactory, contentType, null);
     }
 
     /**
-     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link CRUDApplicationRegistration} with
+     * Calls {@link #build(URL, DataFactory, ContentType, Resource)} to construct a {@link ApplicationRegistration} with
      * no Jena resource provided and the default content type.
-     * @param url URL of the {@link CRUDApplicationRegistration} to build
+     * @param url URL of the {@link ApplicationRegistration} to build
      * @param dataFactory {@link DataFactory} to assign
-     * @return {@link CRUDApplicationRegistration}
+     * @return {@link ApplicationRegistration}
      * @throws SaiException
      */
-    public static CRUDApplicationRegistration build(URL url, DataFactory dataFactory) throws SaiException {
-        return build(url, dataFactory, TEXT_TURTLE, null);
+    public static ApplicationRegistration build(URL url, DataFactory dataFactory) throws SaiException {
+        return build(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE, null);
     }
 
     /**
-     * Bootstraps the {@link CRUDApplicationRegistration}. If a Jena Resource was provided, it will
+     * Bootstraps the {@link ApplicationRegistration}. If a Jena Resource was provided, it will
      * be used to populate the instance. If not, the remote resource will be fetched and
      * populated. If the remote resource doesn't exist, a local graph will be created for it.
      * @throws SaiException
@@ -98,7 +98,7 @@ public class CRUDApplicationRegistration extends CRUDAgentRegistration {
     }
 
     /**
-     * Populates the {@link CRUDApplicationRegistration} instance with required and optional fields
+     * Populates the {@link ApplicationRegistration} instance with required and optional fields
      * @throws SaiException If any required fields cannot be populated, or other exceptional conditions
      */
     private void populate() throws SaiException {
@@ -108,7 +108,7 @@ public class CRUDApplicationRegistration extends CRUDAgentRegistration {
             this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
             this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
             this.registeredAgent = getRequiredUrlObject(this.resource, REGISTERED_AGENT);
-            this.accessGrantUrl = getRequiredUrlObject(this.resource, HAS_ACCESS_GRANT);
+            this.accessGrantUrl = getUrlObject(this.resource, HAS_ACCESS_GRANT);
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load application registration " + this.url + ": " + ex.getMessage());
         }
