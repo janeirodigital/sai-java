@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.immutable;
 
+import com.janeirodigital.sai.core.crud.*;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
@@ -13,9 +14,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
@@ -42,6 +41,7 @@ public class DataConsent extends ImmutableResource {
     private final List<URL> dataInstances;
     private final URL accessNeed;
     private final URL inheritsFrom;
+    private final List<DataConsent> inheritingConsents;
 
     /**
      * Construct a new {@link DataConsent}
@@ -68,6 +68,7 @@ public class DataConsent extends ImmutableResource {
         this.dataInstances = dataInstances;
         this.accessNeed = accessNeed;
         this.inheritsFrom = inheritsFrom;
+        this.inheritingConsents = new ArrayList<>();
     }
 
     /**
@@ -108,99 +109,184 @@ public class DataConsent extends ImmutableResource {
      * Generate one or more {@link DataGrant}s for this {@link DataConsent}.
      * @return List of generated {@link DataGrant}s
      */
-    public List<DataGrant> generateGrants() throws SaiException {
+    public List<DataGrant> generateGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
+                                          AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
+        Objects.requireNonNull(granteeRegistration, "Must provide a grantee agent registration to generate data grants");
+        Objects.requireNonNull(agentRegistry, "Must provide an agent registry to generate data grants");
+        Objects.requireNonNull(dataRegistries, "Must provide data registries to generate data grants");
         if (this.scopeOfConsent.equals(SCOPE_INHERITED)) { throw new SaiException("A data consent with an inherited scope cannot generate data grants"); }
         List<DataGrant> dataGrants = new ArrayList<>();
         if (this.dataOwner == null || this.dataOwner.equals(this.grantedBy)) {
-            // if the consent was granted by the data owner it is a source grant || if there's no owner (e.g. with All)
-            return generateSourceGrants();
+            // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
+            // Scope: AllFromRegistry - Data owner sharing all data of a type from a data registry they own (dataOwner == grantedBy)
+            // Scope: SelectedFromRegistry - Data owner sharing data instances of a type from a data registry they own (dataOwner == grantedBy)
+            dataGrants.addAll(generateSourceGrants(accessConsent, granteeRegistration, agentRegistry, dataRegistries));
         }
 
         if (this.dataOwner == null || !this.dataOwner.equals(this.grantedBy)) {
-            // if the consent wasn't granted by the data owner it is a delegated grant || if there's no owner (e.g. with All)
-            return generateDelegatedGrants();
+            // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
+            // Scope: AllFromAgent - Data owner sharing all data of a type shared with them (dataOwner != grantedBy)
+            dataGrants.addAll(generateDelegatedGrants(accessConsent, granteeRegistration, agentRegistry, dataRegistries));
         }
         return dataGrants;
     }
 
-    private List<DataGrant> generateSourceGrants() {
+    private List<DataGrant> generateSourceGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
+                                                 AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException {
+
+        if (!this.scopeOfConsent.equals(SCOPE_ALL) && !this.scopeOfConsent.equals(SCOPE_ALL_FROM_REGISTRY) && !this.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY)) {
+            throw new SaiException("Cannot generate a regular (non-delegated) data grant for a data consent with scope: " + this.scopeOfConsent);
+        }
         // get data registrations from all registries that match the registered shape tree
-        // filter down to a specifically matched data registration if hasDataRegistration was set
-        // for each matching registration
+        Map<DataRegistration, DataRegistry> dataRegistrations = new HashMap<>();
+        for (DataRegistry dataRegistry : dataRegistries) {
+            DataRegistration matchingRegistration = dataRegistry.getDataRegistrations().find(this.registeredShapeTree);
+            if (matchingRegistration != null) { dataRegistrations.put(matchingRegistration, dataRegistry); }
+        }
+
+        if (this.dataRegistration != null) {
+            // filter down to a specifically matched data registration if hasDataRegistration was set
+            Map.Entry<DataRegistration,DataRegistry> filtered = dataRegistrations.entrySet().stream()
+                                                         .filter(e -> this.dataRegistration.equals(e.getKey().getUrl()))
+                                                         .findAny().orElse(null);
+            if (filtered == null) { throw new SaiException("Data registration " + this.dataRegistration + "not found in data registries: " + dataRegistries.toString()); }
+            dataRegistrations.clear();
+            dataRegistrations.put(filtered.getKey(), filtered.getValue());
+        }
+
+        List<DataGrant> dataGrants = new ArrayList<>();
+        for (Map.Entry<DataRegistration, DataRegistry> entry : dataRegistrations.entrySet()) {
+            URL dataGrantUrl = granteeRegistration.generateContainedUrl();
+            DataGrant.Builder grantBuilder = new DataGrant.Builder(dataGrantUrl, this.dataFactory, this.contentType);
             // create children if needed (generate child source grants)
-            // let scope of grant = AllFromRegistry (default value)
-            // if scope of consent is selected then set scope of grant to selected
-            // start building the data grant
-                // dataowner = grantedBy
-                // registeredShapeTree
-                // hasDataRegistration = current matching registration
-                // scope of grant
-                // access modes
-                // creator access modes
-            // if any data instances were set with hasDataInstance set those on the data grant
-            // if any child data grants were generated add those to hasInheritingGrant list (need to add this to data grant)
-            // finish building the data grant with builder and add to list
-        // return list of data grants
-        return null;
+            List<DataGrant> childDataGrants = generateChildSourceGrants(accessConsent, dataGrantUrl, entry.getKey(), entry.getValue(), granteeRegistration);
+            // build the data grant
+            grantBuilder.setScopeOfGrant(SCOPE_ALL_FROM_REGISTRY); // default value in this context
+            if (this.getScopeOfConsent().equals(SCOPE_SELECTED_FROM_REGISTRY)) { grantBuilder.setScopeOfGrant(SCOPE_SELECTED_FROM_REGISTRY); }
+            grantBuilder.setDataOwner(this.grantedBy);
+            grantBuilder.setGrantee(this.grantee);
+            grantBuilder.setRegisteredShapeTree(this.registeredShapeTree);
+            grantBuilder.setAccessModes(this.accessModes);
+            grantBuilder.setAccessNeed(this.accessNeed);
+            if (this.dataRegistration != null) { grantBuilder.setDataRegistration(this.dataRegistration); }
+            if (this.creatorAccessModes != null) { grantBuilder.setCreatorAccessModes(this.creatorAccessModes); }
+            if (!this.dataInstances.isEmpty()) { grantBuilder.setDataInstances(this.dataInstances); }
+            // add the data grant (and child grants if they exist) to the list
+            dataGrants.add(grantBuilder.build());
+            if (!childDataGrants.isEmpty()) { dataGrants.addAll(childDataGrants); }
+        }
+        return dataGrants;
     }
 
-    private List<DataGrant> generateChildSourceGrants(DataGrant parentGrant) {
-        // generate the child (inheriting) grants for a given parent source grant
-        // for each child data consent that inherits from the current one (e.g. specifies it with inheritsFrom)
-            // generate an iri for the data grant in the agent registration
-            // find the data registration for the child data consent (must be same registry as parent)
-            // build the child registration with data grant builder
-                // data owner = granted by
-                // registered shape tree
-                // hasDataRegistration = matched registration from above
-                // scope must be inherited
-                // access mode / creator access mode
-                // inheritsFromGrant (parent grant iri)
-                // add to list
-        // return the list
-        return null;
+    private List<DataGrant> generateChildSourceGrants(AccessConsent accessConsent, URL dataGrantUrl, DataRegistration dataRegistration,
+                                                      DataRegistry dataRegistry, AgentRegistration granteeRegistration) throws SaiException {
+        List<DataGrant> childDataGrants = new ArrayList<>();
+        for (DataConsent childConsent : accessConsent.getDataConsents()) {
+            // for each child data consent that inherits from the current one (e.g. specifies it with inheritsFrom)
+            if (childConsent.scopeOfConsent.equals(SCOPE_INHERITED) && childConsent.inheritsFrom.equals(this.getUrl())) {
+                URL childGrantUrl = granteeRegistration.generateContainedUrl();
+                // find the data registration for the child data consent (must be same registry as parent)
+                DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(this.registeredShapeTree);
+                if (childRegistration == null) { throw new SaiException("Could not find data registration " + dataRegistration.getUrl() + " in registry " + dataRegistry.getUrl()); }
+                DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.dataFactory, this.contentType);
+                childBuilder.setDataOwner(childConsent.dataOwner);
+                childBuilder.setRegisteredShapeTree(childConsent.registeredShapeTree);
+                childBuilder.setDataRegistration(childRegistration.getUrl());
+                childBuilder.setScopeOfGrant(SCOPE_INHERITED);
+                childBuilder.setAccessModes(childConsent.accessModes);
+                childBuilder.setCreatorAccessModes(childConsent.creatorAccessModes);
+                childBuilder.setInheritsFrom(dataGrantUrl);
+                childDataGrants.add(childBuilder.build());
+            }
+        }
+        return childDataGrants;
     }
 
-    private List<DataGrant> generateDelegatedGrants() {
-        // for each social agent registration in the agent registry
-            // continue if the data owner is set but the agent registration is not theirs (registeredAgent) ... if data owner is not set, that could mean we have scope of all, and we're sharing all data shared from everyone
+    /**
+     * Generate {@link DataGrant}s that "delegate" access to data that was granted from another
+     * social agent. It is delegated because the access is being shared by the grantee
+     * of the original grant. A simple example of delegation is a social agent who was
+     * given access to another social agent's data "delegating" access to an application
+     * that they would like to use to access that data.
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#delegated-data-grant">Delegated Data Grant</a>
+     * @param accessConsent Associated {@link AccessConsent}
+     * @param granteeRegistration {@link AgentRegistration} of the grantee receiving delegated permissions
+     * @param agentRegistry {@link AgentRegistry} of the social agent delegating permission
+     * @param dataRegistries {@link DataRegistry} list of the social agent delegating permission
+     * @return
+     */
+    private List<DataGrant> generateDelegatedGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
+                                                    AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
+        if (!this.scopeOfConsent.equals(SCOPE_ALL) && !this.scopeOfConsent.equals(SCOPE_ALL_FROM_AGENT)) {
+            throw new SaiException("Cannot generate a delegated data grant for a data consent with scope: " + this.scopeOfConsent);
+        }
+
+        List<DataGrant> delegatedGrants = new ArrayList<>();
+        for (SocialAgentRegistration agentRegistration : agentRegistry.getSocialAgentRegistrations()) {
+            // Continue if the data owner is set (AllFromAgent) but the agent registration is not theirs (registeredAgent)
+            if (this.dataOwner != null && !agentRegistration.getRegisteredAgent().equals(this.dataOwner)) { continue; }
             // continue if the grantee of the data consent is the registered agent of the agent registration (don't delegate to themselves)
-            // set access grant iri to hasAccessGrant of the reciprocal registration
+            if (this.grantee.equals(agentRegistration.getRegisteredAgent())) { continue; }
             // continue if there's no access grant iri in the reciprocal (which would mean they haven't shared anything so there's nothing to delegate)
-            // in the remote access grant, find data grants matching the the registered shape tree of the data consent
-            // filter to a given data registration if specified
-            // for each matching data grant from the list above
-                // get the iri for the delegated data grant
+            if (agentRegistration.getReciprocalRegistration() == null) { continue; }
+            // Lookup the remote agent registration
+            SocialAgentRegistration remoteRegistration = SocialAgentRegistration.build(agentRegistration.getReciprocalRegistration(), this.dataFactory);
+            if (remoteRegistration.getAccessGrantUrl() == null) { continue; }
+            // Get the remote access grant - TODO - change this to ReadableAccessGrant
+            AccessGrant remoteGrant = AccessGrant.get(remoteRegistration.getAccessGrantUrl(), this.dataFactory);
+            for (DataGrant remoteDataGrant : remoteGrant.getDataGrants()) {
+                // skip data grants that don't match the shape tree of this data consent
+                if (!remoteDataGrant.getRegisteredShapeTree().equals(this.registeredShapeTree)) { continue; }
+                // filter to a given data registration if specified
+                if (this.getDataRegistration() != null) { if (!remoteDataGrant.getDataRegistration().equals(this.dataRegistration)) { continue; } }
+                // Build the delegated data grant based on this data consent and the remote data grant
+                URL grantUrl = granteeRegistration.generateContainedUrl();
+                DataGrant.Builder grantBuilder = new DataGrant.Builder(grantUrl, this.dataFactory, this.contentType);
                 // generate child delegated data grants if necessary
+                List<DataGrant> childDataGrants = generateChildDelegatedGrants(grantUrl, remoteDataGrant, granteeRegistration);
                 // build the delegated data grant
-                    // dataowner = source grant data owner
-                    // registered shape tree = source grant shape tree
-                    // data registration = source grant data registration
-                    // scope of grant = source grant scope
-                    // delegationOfGrant = source grant iri
-                    // access mode = filter granted modes by source grant modes (subset)
-                // if child grants were generated - add to hasInheritingGrants
-                // build the delegated grant
-                // add to the list
-        // return the created list
-        return null;
+                grantBuilder.setDataOwner(remoteDataGrant.getDataOwner());
+                grantBuilder.setRegisteredShapeTree(remoteDataGrant.getRegisteredShapeTree());
+                grantBuilder.setScopeOfGrant(remoteDataGrant.getScopeOfGrant());
+                grantBuilder.setDelegationOf(remoteDataGrant.getUrl());
+                if (!remoteDataGrant.getAccessModes().containsAll(this.accessModes)) { throw new SaiException("Data consent issues access modes that were not granted by remote social agent"); }
+                grantBuilder.setAccessModes(this.accessModes);
+                if (this.canCreate()) {
+                    if (!remoteDataGrant.getCreatorAccessModes().containsAll(this.creatorAccessModes)) { throw new SaiException("Data consent issues creator access modes that were not granted by remote social agent"); }
+                    grantBuilder.setCreatorAccessModes(this.creatorAccessModes);
+                }
+                if (remoteDataGrant.getDataRegistration() != null) { grantBuilder.setDataRegistration(remoteDataGrant.getDataRegistration()); }
+                delegatedGrants.add(grantBuilder.build());
+                if (!childDataGrants.isEmpty()) { delegatedGrants.addAll(childDataGrants); }
+            }
+        }
+        return delegatedGrants;
     }
 
-    private List<DataGrant> generateChildDelegatedGrants() {
-        // for each inheriting consent of the data consent
-            // make the iri for the child grant
-            // find the child source grant - look at the parent source grant and find the child grant with same shape tree
-            // build the child source grant
-                // data owner = child source grant data owner
-                // registered shape tree = child consent registered shape tree
-                // data registration = child source grant data registration
-                // scope of grant = inherited
-                // access mode = filter the subset of modes
-                // inherits from grant = parent grant iri
-                // delegation of grant = child source grant iri
-            // build and add to the list
-        // return the list
-        return null;
+    private List<DataGrant> generateChildDelegatedGrants(URL dataGrantUrl, DataGrant remoteDataGrant, AgentRegistration granteeRegistration) throws SaiException {
+        List<DataGrant> childDataGrants = new ArrayList<>();
+        for (DataConsent childConsent : this.getInheritingConsents()) {
+            for (DataGrant remoteChildGrant: remoteDataGrant.getInheritingGrants()) {
+                // continue if the remote inheriting grant isn't the same shape tree as the child consent
+                if (!remoteChildGrant.getRegisteredShapeTree().equals(childConsent.getRegisteredShapeTree())) { continue; }
+                URL childGrantUrl = granteeRegistration.generateContainedUrl();
+                DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.dataFactory, this.contentType);
+                childBuilder.setDataOwner(remoteChildGrant.getDataOwner());
+                childBuilder.setRegisteredShapeTree(remoteChildGrant.getRegisteredShapeTree());
+                childBuilder.setScopeOfGrant(SCOPE_INHERITED);
+                if (this.getDataRegistration() != null) { childBuilder.setDataRegistration(remoteChildGrant.getDataRegistration()); }
+                if (!remoteChildGrant.getAccessModes().containsAll(childConsent.accessModes)) { throw new SaiException("Data consent issues access modes that were not granted by remote social agent"); }
+                childBuilder.setAccessModes(childConsent.accessModes);
+                if (childConsent.canCreate()) {
+                    if (!remoteChildGrant.getCreatorAccessModes().containsAll(childConsent.creatorAccessModes)) { throw new SaiException("Data consent issues creator access modes that were not granted by remote social agent"); }
+                    childBuilder.setCreatorAccessModes(this.creatorAccessModes);
+                }
+                childBuilder.setInheritsFrom(dataGrantUrl);
+                childBuilder.setDelegationOf(remoteChildGrant.getUrl());
+                childDataGrants.add(childBuilder.build());
+            }
+        }
+        return childDataGrants;
     }
 
     /**

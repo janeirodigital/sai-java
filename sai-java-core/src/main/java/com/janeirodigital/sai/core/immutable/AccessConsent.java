@@ -103,17 +103,18 @@ public class AccessConsent extends ImmutableResource {
      * @return Generated {@link AccessGrant}
      * @throws SaiException
      */
-    public AccessGrant generateGrant(AgentRegistration granteeRegistration, AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException {
+    public AccessGrant generateGrant(AgentRegistration granteeRegistration, AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
+        Objects.requireNonNull(granteeRegistration, "Must provide a grantee agent registration to generate an access grant");
+        Objects.requireNonNull(agentRegistry, "Must provide an agent registry to generate an access grant");
+        Objects.requireNonNull(dataRegistries, "Must provide data registries to generate an access grant");
         List<DataConsent> primaryDataConsents = new ArrayList<>();
         this.dataConsents.forEach((dataConsent) -> {
             if (!dataConsent.getScopeOfConsent().equals(SCOPE_INHERITED)) { primaryDataConsents.add(dataConsent); }
         });
         List<DataGrant> dataGrants = new ArrayList<>();
-        for (DataConsent dataConsent : primaryDataConsents) { dataGrants.addAll(dataConsent.generateGrants()); }
-        if (granteeRegistration.hasAccessGrant()) {
-            // TODO - If there was a prior access grant, look at reusing some data grants
-        }
-        URL accessGrantUrl = granteeRegistration.generateAccessGrantUrl();
+        for (DataConsent dataConsent : primaryDataConsents) { dataGrants.addAll(dataConsent.generateGrants(this, granteeRegistration, agentRegistry, dataRegistries)); }
+        // TODO - If there was a prior access grant, look at reusing some data grants
+        URL accessGrantUrl = granteeRegistration.generateContainedUrl();
         AccessGrant.Builder grantBuilder = new AccessGrant.Builder(accessGrantUrl, this.dataFactory, DEFAULT_RDF_CONTENT_TYPE);
         return grantBuilder.setGrantedBy(this.grantedBy).setGrantedAt(this.grantedAt).setGrantee(this.grantee)
                            .setAccessNeedGroup(this.accessNeedGroup).setDataGrants(dataGrants).build();
@@ -215,6 +216,21 @@ public class AccessConsent extends ImmutableResource {
         }
 
         /**
+         * Populates "parent" data consents with the "child" data consents that inherit from them
+         */
+        private void organizeInheritance() {
+            for (DataConsent dataConsent : this.dataConsents) {
+                if (!dataConsent.getScopeOfConsent().equals(SCOPE_INHERITED)) {
+                    for (DataConsent childConsent : this.dataConsents) {
+                        if (childConsent.getScopeOfConsent().equals(SCOPE_INHERITED) && childConsent.getInheritsFrom().equals(dataConsent.getUrl())) {
+                            dataConsent.getInheritingConsents().add(childConsent);
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
          * Populates the fields of the {@link AccessConsent} based on the associated Jena resource.
          * @throws SaiException
          */
@@ -228,6 +244,7 @@ public class AccessConsent extends ImmutableResource {
                 this.replaces = getUrlObject(this.resource, REPLACES);
                 List<URL> dataConsentUrls = getRequiredUrlObjects(this.resource, HAS_DATA_CONSENT);
                 for (URL dataConsentUrl : dataConsentUrls) { this.dataConsents.add(DataConsent.get(dataConsentUrl, this.dataFactory)); }
+                organizeInheritance();
             } catch (SaiNotFoundException | SaiException ex) {
                 throw new SaiException("Unable to populate immutable access consent resource: " + ex.getMessage());
             }

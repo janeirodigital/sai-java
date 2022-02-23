@@ -82,8 +82,13 @@ public class InteropVocabulary {
 
     // Data Grants
     public static final RDFNode DATA_GRANT = model.getResource(NS + "DataGrant");
+    public static final RDFNode DELEGATED_DATA_GRANT = model.getResource(NS + "DelegatedDataGrant");
     public static final Property SCOPE_OF_GRANT = model.createProperty(NS + "scopeOfGrant");
     public static final Property INHERITS_FROM_GRANT = model.createProperty(NS + "inheritsFromGrant");
+    public static final Property DELEGATION_OF_GRANT = model.createProperty(NS + "delegationOfGrant");
+
+    // Data Registry
+    public static final RDFNode DATA_REGISTRY = model.getResource(NS + "DataRegistry");
 
     // Data Registrations
     public static final RDFNode DATA_REGISTRATION = model.getResource(NS + "DataRegistration");

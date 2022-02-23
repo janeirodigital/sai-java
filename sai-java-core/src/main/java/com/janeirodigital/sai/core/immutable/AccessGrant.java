@@ -164,6 +164,21 @@ public class AccessGrant extends ImmutableResource {
         }
 
         /**
+         * Populates "parent" data grants with the "child" data grants that inherit from them
+         */
+        private void organizeInheritance() {
+            for (DataGrant dataGrant : this.dataGrants) {
+                if (!dataGrant.getScopeOfGrant().equals(SCOPE_INHERITED)) {
+                    for (DataGrant childGrant : this.dataGrants) {
+                        if (childGrant.getScopeOfGrant().equals(SCOPE_INHERITED) && childGrant.getInheritsFrom().equals(dataGrant.getUrl())) {
+                            dataGrant.getInheritingGrants().add(childGrant);
+                        }
+                    }
+                }
+            }
+        }
+        
+        /**
          * Populates the fields of the {@link AccessGrant.Builder} based on the associated Jena resource.
          * Also retrieves and populates the associated {@link DataConsent}s.
          * @throws SaiException
@@ -176,6 +191,7 @@ public class AccessGrant extends ImmutableResource {
                 this.accessNeedGroup = getRequiredUrlObject(this.resource, HAS_ACCESS_NEED_GROUP);
                 List<URL> dataGrantUrls = getRequiredUrlObjects(this.resource, HAS_DATA_GRANT);
                 for (URL url : dataGrantUrls) { this.dataGrants.add(DataGrant.get(url, this.dataFactory)); }
+                organizeInheritance();
             } catch (SaiNotFoundException | SaiException ex) {
                 throw new SaiException("Unable to populate immutable access grant resource: " + ex.getMessage());
             }

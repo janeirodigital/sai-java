@@ -109,11 +109,11 @@ public abstract class AgentRegistration extends CRUDResource {
     }
 
     /**
-     * Generates the URL for a new {@link com.janeirodigital.sai.core.immutable.AccessGrant}
+     * Generates the URL for a new contained "child" resource in the {@link AgentRegistration}
      * @return Generated URL
      * @throws SaiException
      */
-    public URL generateAccessGrantUrl() throws SaiException {
+    public URL generateContainedUrl() throws SaiException {
         return addChildToUrlPath(this.getUrl(), UUID.randomUUID().toString());
     }
 

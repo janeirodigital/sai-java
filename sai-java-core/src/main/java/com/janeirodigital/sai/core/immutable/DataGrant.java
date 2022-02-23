@@ -41,6 +41,8 @@ public class DataGrant extends ImmutableResource {
     private final List<URL> dataInstances;
     private final URL accessNeed;
     private final URL inheritsFrom;
+    private final URL delegationOf;
+    private final List<DataGrant> inheritingGrants;
 
     /**
      * Construct a new {@link DataGrant}. Should only be called from {@link Builder}
@@ -51,7 +53,7 @@ public class DataGrant extends ImmutableResource {
     private DataGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
                       URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
                       RDFNode scopeOfGrant, URL dataRegistration, List<URL> dataInstances, URL accessNeed,
-                      URL inheritsFrom) throws SaiException {
+                      URL inheritsFrom, URL delegationOf) throws SaiException {
         super(url, dataFactory, false);
         this.dataset = dataset;
         this.resource = resource;
@@ -66,6 +68,8 @@ public class DataGrant extends ImmutableResource {
         this.dataInstances = dataInstances;
         this.accessNeed = accessNeed;
         this.inheritsFrom = inheritsFrom;
+        this.delegationOf = delegationOf;
+        this.inheritingGrants = new ArrayList<>();
     }
 
     /**
@@ -194,6 +198,7 @@ public class DataGrant extends ImmutableResource {
         private List<URL> dataInstances;
         private URL accessNeed;
         private URL inheritsFrom;
+        private URL delegationOf;
 
         /**
          * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
@@ -339,6 +344,17 @@ public class DataGrant extends ImmutableResource {
         }
 
         /**
+         * Set the {@link DataGrant} that is being delegated
+         * @param delegationOf URL of the data grant to delegate
+         * @return {@link Builder}
+         */
+        public Builder setDelegationOf(URL delegationOf) {
+            Objects.requireNonNull(delegationOf, "Must provide a URL for the data grant being delegated");
+            this.delegationOf = delegationOf;
+            return this;
+        }
+
+        /**
          * Populates the fields of the {@link DataGrant} based on the associated Jena resource.
          * @throws SaiException
          */
@@ -354,6 +370,7 @@ public class DataGrant extends ImmutableResource {
                 this.dataInstances = getUrlObjects(this.resource, HAS_DATA_INSTANCE);
                 this.accessNeed = getRequiredUrlObject(this.resource, SATISFIES_ACCESS_NEED);
                 this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_GRANT);
+                this.delegationOf = getUrlObject(this.resource, DELEGATION_OF_GRANT);
             } catch (SaiNotFoundException ex) {
                 throw new SaiException("Unable to populate immutable data grant. Missing required fields: " + ex.getMessage());
             }
@@ -364,7 +381,10 @@ public class DataGrant extends ImmutableResource {
          * @throws SaiException
          */
         private void populateDataset() throws SaiException {
-            this.resource = getNewResourceForType(this.url, DATA_GRANT);
+
+            if (this.delegationOf == null) { this.resource = getNewResourceForType(this.url, DATA_GRANT); } else {
+                this.resource = getNewResourceForType(this.url, DELEGATED_DATA_GRANT);
+            }
             this.dataset = this.resource.getModel();
             updateObject(this.resource, DATA_OWNER, this.dataOwner);
             updateObject(this.resource, GRANTEE, this.grantee);
@@ -375,6 +395,7 @@ public class DataGrant extends ImmutableResource {
 
             if (!this.dataInstances.isEmpty()) { updateUrlObjects(this.resource, HAS_DATA_INSTANCE, this.dataInstances); }
             if (this.inheritsFrom != null) { updateObject(this.resource, INHERITS_FROM_GRANT, this.inheritsFrom); }
+            if (this.delegationOf != null) { updateObject(this.resource, DELEGATION_OF_GRANT, this.delegationOf); }
 
             final List<URL> accessModeUrls = new ArrayList<>();
             for(RDFNode mode : this.accessModes) { accessModeUrls.add(stringToUrl(mode.asResource().getURI())); }
@@ -406,7 +427,7 @@ public class DataGrant extends ImmutableResource {
             if (this.dataset == null) { populateDataset(); }
             return new DataGrant(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.dataOwner,
                                 this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes, this.scopeOfGrant,
-                                this.dataRegistration, this.dataInstances, this.accessNeed, this.inheritsFrom);
+                                this.dataRegistration, this.dataInstances, this.accessNeed, this.inheritsFrom, this.delegationOf);
         }
     }
 

@@ -20,6 +20,10 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
+/**
+ * Modifiable instantiation of an
+ * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-registration">Data Registration</a>
+ */
 @Getter
 public class DataRegistration extends CRUDResource {
 

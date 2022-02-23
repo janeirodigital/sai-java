@@ -66,6 +66,18 @@ public abstract class RegistrationList<T> implements Iterable<T> {
         updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
     }
 
+    public void addAll(List<URL> registrationUrls) throws SaiAlreadyExistsException {
+        Objects.requireNonNull(registrationUrls, "Must provide a list of URLs of the registrations to add to registry");
+        for (URL registrationUrl: registrationUrls) {
+            T found = find(registrationUrl); // Check first to see if it already exists
+            if (found != null) { throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists"); }
+        }
+        this.registrationUrls.addAll(registrationUrls);
+        updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
+    }
+
+    public boolean isEmpty() { return this.registrationUrls.isEmpty(); }
+
     public abstract T find(URL targetUrl);
 
     /**
