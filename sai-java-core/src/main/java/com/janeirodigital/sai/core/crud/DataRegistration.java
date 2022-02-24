@@ -27,11 +27,11 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 @Getter
 public class DataRegistration extends CRUDResource {
 
-    private URL registeredBy;
-    private URL registeredWith;
-    private OffsetDateTime registeredAt;
-    private OffsetDateTime updatedAt;
-    private URL registeredShapeTree;
+    private final URL registeredBy;
+    private final URL registeredWith;
+    private final OffsetDateTime registeredAt;
+    private final OffsetDateTime updatedAt;
+    private final URL registeredShapeTree;
 
     /**
      * Construct a new {@link DataRegistration}

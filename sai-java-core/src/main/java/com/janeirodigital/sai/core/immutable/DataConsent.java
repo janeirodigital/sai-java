@@ -230,7 +230,7 @@ public class DataConsent extends ImmutableResource {
             // continue if there's no access grant iri in the reciprocal (which would mean they haven't shared anything so there's nothing to delegate)
             if (agentRegistration.getReciprocalRegistration() == null) { continue; }
             // Lookup the remote agent registration
-            SocialAgentRegistration remoteRegistration = SocialAgentRegistration.build(agentRegistration.getReciprocalRegistration(), this.dataFactory);
+            SocialAgentRegistration remoteRegistration = SocialAgentRegistration.get(agentRegistration.getReciprocalRegistration(), this.dataFactory);
             if (remoteRegistration.getAccessGrantUrl() == null) { continue; }
             // Get the remote access grant - TODO - change this to ReadableAccessGrant
             AccessGrant remoteGrant = AccessGrant.get(remoteRegistration.getAccessGrantUrl(), this.dataFactory);

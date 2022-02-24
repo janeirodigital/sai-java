@@ -70,34 +70,20 @@ class CRUDApplicationRegistrationTests {
 
     @Test
     @DisplayName("Create new crud application registration in turtle")
-    void createNewCrudApplicationRegistration() throws SaiException {
+    void createNewCrudApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/new/ttl/agents/app-1/");
-        ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url);
-        registration.setRegisteredBy(app1RegisteredBy);
-        registration.setRegisteredWith(app1RegisteredWith);
-        registration.setRegisteredAt(app1RegisteredAt);
-        registration.setUpdatedAt(app1UpdatedAt);
-        registration.setRegisteredAgent(app1RegisteredAgent);
-        registration.setAccessGrant(app1AccessGrant);
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
+                                                      .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
+                                                      .setRegisteredAgent(app1RegisteredAgent)
+                                                      .setAccessGrant(app1AccessGrant).build();
         assertDoesNotThrow(() -> registration.update());
         assertNotNull(registration);
     }
 
     @Test
-    @DisplayName("Create new crud application registration in turtle with jena resource")
-    void createCrudApplicationRegistrationWithJenaResource() throws SaiException {
-        URL existingUrl = toUrl(server, "/ttl/agents/app-1/");
-        ApplicationRegistration existingRegistration = trustedDataFactory.getApplicationRegistration(existingUrl);
-
-        URL newUrl = toUrl(server, "/new/ttl/agents/app-1/");
-        ApplicationRegistration resourceRegistration = trustedDataFactory.getApplicationRegistration(newUrl, TEXT_TURTLE, existingRegistration.getResource());
-        assertDoesNotThrow(() -> resourceRegistration.update());
-        assertNotNull(resourceRegistration);
-    }
-
-    @Test
     @DisplayName("Read existing crud application registration in turtle")
-    void readApplicationRegistration() throws SaiException {
+    void readApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url);
         assertNotNull(registration);
@@ -113,21 +99,22 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Fail to read existing crud application registration in turtle - missing required fields")
     void failToReadApplicationRegistration() throws SaiException {
         URL url = toUrl(server, "/missing-fields/ttl/agents/app-1/");
-        assertThrows(SaiException.class, () -> ApplicationRegistration.build(url, trustedDataFactory));
+        assertThrows(SaiException.class, () -> ApplicationRegistration.get(url, trustedDataFactory));
     }
 
     @Test
     @DisplayName("Update existing crud application registration in turtle")
-    void updateApplicationRegistration() throws SaiException {
+    void updateApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url);
-        registration.setAccessGrant(toUrl(server, "/ttl/agents/app-1/access-granted"));
-        assertDoesNotThrow(() -> registration.update());
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        ApplicationRegistration updated = builder.setDataset(registration.getDataset()).setAccessGrant(toUrl(server, "/ttl/agents/app-1/access-granted")).build();
+        assertDoesNotThrow(() -> updated.update());
     }
 
     @Test
     @DisplayName("Read existing application registration in JSON-LD")
-    void readApplicationRegistrationJsonLd() throws SaiException {
+    void readApplicationRegistrationJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/app-1/");
         ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url, LD_JSON);
         assertNotNull(registration);
@@ -143,19 +130,17 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Create new crud application registration in JSON-LD")
     void createNewCrudApplicationRegistrationJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/agents/app-1/");
-        ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url, LD_JSON);
-        registration.setRegisteredBy(app1RegisteredBy);
-        registration.setRegisteredWith(app1RegisteredWith);
-        registration.setRegisteredAt(app1RegisteredAt);
-        registration.setUpdatedAt(app1UpdatedAt);
-        registration.setRegisteredAgent(app1RegisteredAgent);
-        registration.setAccessGrant(app1AccessGrant);
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, trustedDataFactory, LD_JSON);
+        ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
+                .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
+                .setRegisteredAgent(app1RegisteredAgent)
+                .setAccessGrant(app1AccessGrant).build();
         assertDoesNotThrow(() -> registration.update());
     }
 
     @Test
     @DisplayName("Delete crud application registration")
-    void deleteApplicationRegistration() throws SaiException {
+    void deleteApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url);
         assertDoesNotThrow(() -> registration.delete());

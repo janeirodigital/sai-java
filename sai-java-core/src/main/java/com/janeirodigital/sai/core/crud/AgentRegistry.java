@@ -143,7 +143,7 @@ public class AgentRegistry extends CRUDResource {
             @Override
             public T next() {
                 URL registrationUrl = current.next();
-                return (T) SocialAgentRegistration.build(registrationUrl, dataFactory);
+                return (T) SocialAgentRegistration.get(registrationUrl, dataFactory);
             }
         }
     }
@@ -171,7 +171,7 @@ public class AgentRegistry extends CRUDResource {
             @Override
             public T next() {
                 URL registrationUrl = current.next();
-                return (T) ApplicationRegistration.build(registrationUrl, dataFactory);
+                return (T) ApplicationRegistration.get(registrationUrl, dataFactory);
             }
         }
     }

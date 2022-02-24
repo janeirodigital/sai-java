@@ -73,7 +73,7 @@ public class DataGrant extends ImmutableResource {
     }
 
     /**
-     * Get an {@link DataGrant} at the provided <code>url</code>
+     * Get a {@link DataGrant} at the provided <code>url</code>
      * @param url URL of the {@link DataGrant} to get
      * @param dataFactory {@link DataFactory} to assign
      * @return Retrieved {@link DataGrant}

@@ -154,8 +154,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link SocialAgentRegistration}
      * @throws SaiException
      */
-    public SocialAgentRegistration getSocialAgentRegistration(URL url) throws SaiException {
-        return SocialAgentRegistration.build(url, this);
+    public SocialAgentRegistration getSocialAgentRegistration(URL url) throws SaiException, SaiNotFoundException {
+        return SocialAgentRegistration.get(url, this);
     }
 
     /**
@@ -167,24 +167,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link SocialAgentRegistration}
      * @throws SaiException
      */
-    public SocialAgentRegistration getSocialAgentRegistration(URL url, ContentType contentType) throws SaiException {
-        return SocialAgentRegistration.build(url, this, contentType);
-    }
-
-    /**
-     * Get a crud version of a Social Agent Registration - {@link SocialAgentRegistration} that will be remotely accessed
-     * via the provided <code>contentType</code>. If there is already a {@link SocialAgentRegistration} at the provided
-     * <code>url</code>, the graph of the provided resource will be used. The remote graph
-     * will not be updated until update is called.
-     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agent-registration">Solid - Social Agent Registration</a>
-     * @param url URL of the {@link SocialAgentRegistration}
-     * @param contentType {@link ContentType} to use
-     * @param resource Jena Resource to populate with
-     * @return {@link SocialAgentRegistration}
-     * @throws SaiException
-     */
-    public SocialAgentRegistration getSocialAgentRegistration(URL url, ContentType contentType, Resource resource) throws SaiException {
-        return SocialAgentRegistration.build(url, this, contentType, resource);
+    public SocialAgentRegistration getSocialAgentRegistration(URL url, ContentType contentType) throws SaiException, SaiNotFoundException {
+        return SocialAgentRegistration.get(url, this, contentType);
     }
 
     /**
@@ -194,8 +178,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link ApplicationRegistration}
      * @throws SaiException
      */
-    public ApplicationRegistration getApplicationRegistration(URL url) throws SaiException {
-        return ApplicationRegistration.build(url, this);
+    public ApplicationRegistration getApplicationRegistration(URL url) throws SaiException, SaiNotFoundException {
+        return ApplicationRegistration.get(url, this);
     }
 
     /**
@@ -207,24 +191,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link ApplicationRegistration}
      * @throws SaiException
      */
-    public ApplicationRegistration getApplicationRegistration(URL url, ContentType contentType) throws SaiException {
-        return ApplicationRegistration.build(url, this, contentType);
-    }
-
-    /**
-     * Get a crud version of a Application Registration - {@link ApplicationRegistration} that will be remotely accessed
-     * via the provided <code>contentType</code>. If there is already a {@link ApplicationRegistration} at the provided
-     * <code>url</code>, the graph of the provided resource will be used. The remote graph
-     * will not be updated until update is called.
-     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#application-registration">Solid - Application Registration</a>
-     * @param url URL of the {@link ApplicationRegistration}
-     * @param contentType {@link ContentType} to use
-     * @param resource Jena Resource to populate with
-     * @return {@link ApplicationRegistration}
-     * @throws SaiException
-     */
-    public ApplicationRegistration getApplicationRegistration(URL url, ContentType contentType, Resource resource) throws SaiException {
-        return ApplicationRegistration.build(url, this, contentType, resource);
+    public ApplicationRegistration getApplicationRegistration(URL url, ContentType contentType) throws SaiException, SaiNotFoundException {
+        return ApplicationRegistration.get(url, this, contentType);
     }
 
     public AccessConsent getAccessConsent(URL url) throws SaiNotFoundException, SaiException {

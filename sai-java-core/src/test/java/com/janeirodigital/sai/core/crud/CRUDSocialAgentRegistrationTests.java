@@ -74,33 +74,18 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Create new crud social agent registration in turtle")
     void createNewCrudSocialAgentRegistration() throws SaiException {
         URL url = toUrl(server, "/new/ttl/agents/sa-1/");
-        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
-        registration.setRegisteredBy(sa1RegisteredBy);
-        registration.setRegisteredWith(sa1RegisteredWith);
-        registration.setRegisteredAt(sa1RegisteredAt);
-        registration.setUpdatedAt(sa1UpdatedAt);
-        registration.setRegisteredAgent(sa1RegisteredAgent);
-        registration.setReciprocalRegistration(sa1ReciprocalRegistration);
-        registration.setAccessGrant(sa1AccessGrant);
+        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        SocialAgentRegistration registration = builder.setRegisteredBy(sa1RegisteredBy).setRegisteredWith(sa1RegisteredWith)
+                .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
+                .setRegisteredAgent(sa1RegisteredAgent)
+                .setAccessGrant(sa1AccessGrant).setReciprocalRegistration(sa1ReciprocalRegistration).build();
         assertDoesNotThrow(() -> registration.update());
         assertNotNull(registration);
     }
-
-    @Test
-    @DisplayName("Create new crud social agent registration in turtle with jena resource")
-    void createCrudSocialAgentRegistrationWithJenaResource() throws SaiException {
-        URL existingUrl = toUrl(server, "/ttl/agents/sa-1/");
-        SocialAgentRegistration existingRegistration = trustedDataFactory.getSocialAgentRegistration(existingUrl);
-
-        URL newUrl = toUrl(server, "/new/ttl/agents/sa-1/");
-        SocialAgentRegistration resourceRegistration = trustedDataFactory.getSocialAgentRegistration(newUrl, TEXT_TURTLE, existingRegistration.getResource());
-        assertDoesNotThrow(() -> resourceRegistration.update());
-        assertNotNull(resourceRegistration);
-    }
-
+    
     @Test
     @DisplayName("Read existing crud social agent registration in turtle")
-    void readSocialAgentRegistration() throws SaiException {
+    void readSocialAgentRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
         assertNotNull(registration);
@@ -117,21 +102,25 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Fail to read existing crud social agent registration in turtle - missing required fields")
     void failToReadSocialAgentRegistration() throws SaiException {
         URL url = toUrl(server, "/missing-fields/ttl/agents/sa-1/");
-        assertThrows(SaiException.class, () -> SocialAgentRegistration.build(url, trustedDataFactory));
+        assertThrows(SaiException.class, () -> SocialAgentRegistration.get(url, trustedDataFactory));
     }
 
     @Test
     @DisplayName("Update existing crud social agent registration in turtle")
-    void updateSocialAgentRegistration() throws SaiException {
+    void updateSocialAgentRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
+
         SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
-        registration.setReciprocalRegistration(stringToUrl("https://bob.example/agents/sa-222/"));
-        assertDoesNotThrow(() -> registration.update());
+        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        SocialAgentRegistration updated = builder.setDataset(registration.getDataset())
+                                                 .setReciprocalRegistration(stringToUrl("https://bob.example/agents/sa-222/"))
+                                                 .build();
+        assertDoesNotThrow(() -> updated.update());
     }
 
     @Test
     @DisplayName("Read existing social agent registration in JSON-LD")
-    void readSocialAgentRegistrationJsonLd() throws SaiException {
+    void readSocialAgentRegistrationJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/sa-1/");
         SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url, LD_JSON);
         assertNotNull(registration);
@@ -148,20 +137,17 @@ class CRUDSocialAgentRegistrationTests {
     @DisplayName("Create new crud social agent registration in JSON-LD")
     void createNewCrudSocialAgentRegistrationJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/agents/sa-1/");
-        SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url, LD_JSON);
-        registration.setRegisteredBy(sa1RegisteredBy);
-        registration.setRegisteredWith(sa1RegisteredWith);
-        registration.setRegisteredAt(sa1RegisteredAt);
-        registration.setUpdatedAt(sa1UpdatedAt);
-        registration.setRegisteredAgent(sa1RegisteredAgent);
-        registration.setReciprocalRegistration(sa1ReciprocalRegistration);
-        registration.setAccessGrant(sa1AccessGrant);
+        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, trustedDataFactory, LD_JSON);
+        SocialAgentRegistration registration = builder.setRegisteredBy(sa1RegisteredBy).setRegisteredWith(sa1RegisteredWith)
+                .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
+                .setRegisteredAgent(sa1RegisteredAgent)
+                .setAccessGrant(sa1AccessGrant).setReciprocalRegistration(sa1ReciprocalRegistration).build();
         assertDoesNotThrow(() -> registration.update());
     }
 
     @Test
     @DisplayName("Delete crud social agent registration")
-    void deleteSocialAgentRegistration() throws SaiException {
+    void deleteSocialAgentRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = trustedDataFactory.getSocialAgentRegistration(url);
         assertDoesNotThrow(() -> registration.delete());
