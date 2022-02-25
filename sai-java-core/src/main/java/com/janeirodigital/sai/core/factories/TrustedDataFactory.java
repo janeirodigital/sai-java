@@ -9,7 +9,6 @@ import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.immutable.AccessConsent;
 import com.janeirodigital.sai.core.immutable.AccessGrant;
 import lombok.Getter;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 
@@ -50,8 +49,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link SocialAgentProfile}
      * @throws SaiException
      */
-    public SocialAgentProfile getSocialAgentProfile(URL url) throws SaiException {
-        return SocialAgentProfile.build(url, this);
+    public SocialAgentProfile getSocialAgentProfile(URL url) throws SaiException, SaiNotFoundException {
+        return SocialAgentProfile.get(url, this);
     }
 
     /**
@@ -63,24 +62,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link SocialAgentProfile}
      * @throws SaiException
      */
-    public SocialAgentProfile getSocialAgentProfile(URL url, ContentType contentType) throws SaiException {
-        return SocialAgentProfile.build(url, this, contentType);
-    }
-
-    /**
-     * Get a crud version of a Social Agent Profile - {@link SocialAgentProfile} that will be remotely accessed
-     * via the provided <code>contentType</code>. If there is already a {@link SocialAgentProfile} at the provided
-     * <code>url</code>, the graph of the provided resource will be used. The remote graph
-     * will not be updated until update is called.
-     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agents">Solid - Social Agent Profile</a>
-     * @param url URL of the {@link SocialAgentProfile}
-     * @param contentType {@link ContentType} to use
-     * @param resource Jena Resource to populate with
-     * @return {@link SocialAgentProfile}
-     * @throws SaiException
-     */
-    public SocialAgentProfile getSocialAgentProfile(URL url, ContentType contentType, Resource resource) throws SaiException {
-        return SocialAgentProfile.build(url, this, contentType, resource);
+    public SocialAgentProfile getSocialAgentProfile(URL url, ContentType contentType) throws SaiException, SaiNotFoundException {
+        return SocialAgentProfile.get(url, this, contentType);
     }
 
     /**
@@ -114,8 +97,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link AgentRegistry}
      * @throws SaiException
      */
-    public AgentRegistry getAgentRegistry(URL url) throws SaiException {
-        return AgentRegistry.build(url, this);
+    public AgentRegistry getAgentRegistry(URL url) throws SaiException, SaiNotFoundException {
+        return AgentRegistry.get(url, this);
     }
 
     /**
@@ -127,24 +110,8 @@ public class TrustedDataFactory extends DataFactory {
      * @return {@link AgentRegistry}
      * @throws SaiException
      */
-    public AgentRegistry getAgentRegistry(URL url, ContentType contentType) throws SaiException {
-        return AgentRegistry.build(url, this, contentType);
-    }
-
-    /**
-     * Get a crud version of a Agent Registry - {@link AgentRegistry} that will be remotely accessed
-     * via the provided <code>contentType</code>. If there is already a {@link AgentRegistry} at the provided
-     * <code>url</code>, the graph of the provided resource will be used. The remote graph
-     * will not be updated until update is called.
-     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar-registry">Solid - Agent Registry</a>
-     * @param url URL of the {@link AgentRegistry}
-     * @param contentType {@link ContentType} to use
-     * @param resource Jena Resource to populate with
-     * @return {@link AgentRegistry}
-     * @throws SaiException
-     */
-    public AgentRegistry getAgentRegistry(URL url, ContentType contentType, Resource resource) throws SaiException {
-        return AgentRegistry.build(url, this, contentType, resource);
+    public AgentRegistry getAgentRegistry(URL url, ContentType contentType) throws SaiException, SaiNotFoundException {
+        return AgentRegistry.get(url, this, contentType);
     }
 
     /**

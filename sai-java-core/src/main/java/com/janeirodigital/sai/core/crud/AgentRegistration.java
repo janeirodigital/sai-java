@@ -14,7 +14,7 @@ import java.util.UUID;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.addChildToUrlPath;
 
 /**
- * Base instantiation of an
+ * Abstract base instantiation of an
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#ar">Agent Registration</a>, which
  * can be extended for type-specific implementations (i.e. Social Agent Registration, Application Registration).
  */

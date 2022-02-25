@@ -130,7 +130,7 @@ public class ApplicationProfile extends CRUDResource {
 
         /**
          * Initialize builder with <code>url</code> and <code>dataFactory</code> 
-         * @param url URL of the {@link RegistrySet} to build
+         * @param url URL of the {@link ApplicationProfile} to build
          * @param dataFactory {@link DataFactory} to assign
          */
         public Builder(URL url, DataFactory dataFactory) {
@@ -349,11 +349,11 @@ public class ApplicationProfile extends CRUDResource {
         }
 
         /**
-         * Build the {@link RegistrySet} using attributes from the Builder. If no Jena dataset has been
+         * Build the {@link ApplicationProfile} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
          * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
          * Builder will be populated from it.
-         * @return {@link RegistrySet}
+         * @return {@link ApplicationProfile}
          * @throws SaiException
          */
         public ApplicationProfile build() throws SaiException {
@@ -367,7 +367,6 @@ public class ApplicationProfile extends CRUDResource {
             Objects.requireNonNull(grantTypes, "Must provide grant types for solid-oidc");
             Objects.requireNonNull(responseTypes, "Must provide response types for solid-oidc");
             if (this.dataset == null) { populateDataset(); }
-            // TODO - fill this out
             return new ApplicationProfile(this.url, this.dataFactory, this.dataset, this.resource, this.contentType,
                                           this.name, this.description, this.authorUrl, this.logoUrl, this.accessNeedGroupUrls,
                                           this.redirectUrls, this.clientUrl, this.tosUrl, this.scopes, this.grantTypes,

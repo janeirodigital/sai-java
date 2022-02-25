@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
+import java.util.Arrays;
 
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
@@ -68,30 +69,16 @@ class SocialAgentProfileTests {
     @DisplayName("Create new crud social agent profile in turtle")
     void createNewCrudSocialAgentProfile() throws SaiException {
         URL url = toUrl(server, "/new/ttl/id");
-        SocialAgentProfile profile = trustedDataFactory.getSocialAgentProfile(url);
-        profile.setAuthorizationAgent(aliceAuthzAgent);
-        profile.setAccessInbox(aliceAccessInbox);
-        profile.setRegistrySet(aliceRegistrySet);
-        profile.addOidcIssuerUrl(aliceOidcIssuer);
+        SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        SocialAgentProfile profile = builder.setAuthorizationAgent(aliceAuthzAgent).setAccessInbox(aliceAccessInbox)
+                                            .setRegistrySet(aliceRegistrySet).setOidcIssuerUrls(Arrays.asList(aliceOidcIssuer)).build();
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
 
     @Test
-    @DisplayName("Create new crud social agent profile in turtle with jena resource")
-    void createCrudSocialAgentProfileWithJenaResource() throws SaiException {
-        URL existingUrl = toUrl(server, "/ttl/id");
-        SocialAgentProfile existingProfile = trustedDataFactory.getSocialAgentProfile(existingUrl);
-
-        URL newUrl = toUrl(server, "/new/ttl/id");
-        SocialAgentProfile resourceProfile = trustedDataFactory.getSocialAgentProfile(newUrl, TEXT_TURTLE, existingProfile.getResource());
-        assertDoesNotThrow(() -> resourceProfile.update());
-        assertNotNull(resourceProfile);
-    }
-
-    @Test
     @DisplayName("Read existing crud social agent profile in turtle")
-    void readSocialAgentProfile() throws SaiException {
+    void readSocialAgentProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/id");
         SocialAgentProfile profile = trustedDataFactory.getSocialAgentProfile(url);
         assertNotNull(profile);
@@ -110,17 +97,20 @@ class SocialAgentProfileTests {
 
     @Test
     @DisplayName("Update existing crud social agent profile in turtle")
-    void updateSocialAgentProfile() throws SaiException {
+    void updateSocialAgentProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/id");
-        SocialAgentProfile profile = trustedDataFactory.getSocialAgentProfile(url);;
-        profile.setAuthorizationAgent(stringToUrl("https://other.example/alice/"));
-        assertDoesNotThrow(() -> profile.update());
+        SocialAgentProfile profile = trustedDataFactory.getSocialAgentProfile(url);
+        SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        SocialAgentProfile updated = builder.setDataset(profile.getDataset())
+                                            .setAuthorizationAgent(stringToUrl("https://other.example/alice/"))
+                                            .build();
+        assertDoesNotThrow(() -> updated.update());
         assertNotNull(profile);
     }
 
     @Test
     @DisplayName("Read existing social agent profile in JSON-LD")
-    void readSocialAgentProfileJsonLd() throws SaiException {
+    void readSocialAgentProfileJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/id");
         SocialAgentProfile profile = trustedDataFactory.getSocialAgentProfile(url, LD_JSON);
         assertNotNull(profile);
@@ -134,18 +124,16 @@ class SocialAgentProfileTests {
     @DisplayName("Create new crud social agent profile in JSON-LD")
     void createNewCrudSocialAgentProfileJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/id");
-        SocialAgentProfile profile = trustedDataFactory.getSocialAgentProfile(url, LD_JSON);
-        profile.setAuthorizationAgent(aliceAuthzAgent);
-        profile.setAccessInbox(aliceAccessInbox);
-        profile.setRegistrySet(aliceRegistrySet);
-        profile.addOidcIssuerUrl(aliceOidcIssuer);
+        SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, trustedDataFactory, LD_JSON);
+        SocialAgentProfile profile = builder.setAuthorizationAgent(aliceAuthzAgent).setAccessInbox(aliceAccessInbox)
+                .setRegistrySet(aliceRegistrySet).setOidcIssuerUrls(Arrays.asList(aliceOidcIssuer)).build();
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
 
     @Test
     @DisplayName("Delete crud social agent profile")
-    void deleteSocialAgentProfile() throws SaiException {
+    void deleteSocialAgentProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/id");
         SocialAgentProfile profile = trustedDataFactory.getSocialAgentProfile(url);
         assertDoesNotThrow(() -> profile.delete());

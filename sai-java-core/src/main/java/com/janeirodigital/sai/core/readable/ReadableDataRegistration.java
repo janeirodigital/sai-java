@@ -41,7 +41,7 @@ public class ReadableDataRegistration extends ReadableResource {
     private ReadableDataRegistration(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
                                      URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
                                      URL registeredShapeTree) throws SaiException {
-        super(url, dataFactory, true);
+        super(url, dataFactory, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
