@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.readable.ReadableResource;
 import lombok.Getter;
 import okhttp3.Headers;
@@ -24,13 +24,13 @@ public class ImmutableResource extends ReadableResource {
     /**
      * Construct an immutable resource for <code>resourceUrl</code>. Calls the parent
      * {@link ReadableResource} constructor which assigns the provided
-     * <code>dataFactory</code>, and gets an HTTP client.
+     * <code>saiSession</code>, and gets an HTTP client.
      * @param resourceUrl URL of the immutable resource
-     * @param dataFactory Data factory to assign
+     * @param saiSession Data factory to assign
      * @param unprotected When true no authorization credentials will be sent in requests to this resource
      */
-    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, boolean unprotected) throws SaiException {
-        super(resourceUrl, dataFactory, unprotected);
+    public ImmutableResource(URL resourceUrl, SaiSession saiSession, boolean unprotected) throws SaiException {
+        super(resourceUrl, saiSession, unprotected);
         this.exists = false; // assume the resource doesn't exist until it's bootstrapped
     }
 
@@ -43,7 +43,7 @@ public class ImmutableResource extends ReadableResource {
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
         if (this.isUnprotected()) { this.createUnprotected(headers); } else {
-            Response response = putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
+            Response response = putProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
             if (!response.isSuccessful()) { throw new SaiException("Failed to create " + this.url + ": " + getResponseFailureMessage(response)); }
         }
         this.exists = true;
@@ -63,7 +63,7 @@ public class ImmutableResource extends ReadableResource {
      */
     public void delete() throws SaiException {
         if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-            Response response = deleteProtectedResource(this.getDataFactory().getAuthorizedSession(), this.httpClient, this.url);
+            Response response = deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url);
             if (!response.isSuccessful()) { throw new SaiException("Failed to delete " + this.url + ": " + getResponseFailureMessage(response)); }
         }
         this.exists = false;

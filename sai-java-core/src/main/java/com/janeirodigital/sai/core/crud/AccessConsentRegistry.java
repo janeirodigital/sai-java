@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.immutable.AccessConsent;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -38,9 +38,9 @@ public class AccessConsentRegistry extends CRUDResource {
      * Construct a new {@link AccessConsentRegistry}
      * @throws SaiException
      */
-    private AccessConsentRegistry(URL url, DataFactory dataFactory, Model dataset, Resource resource, 
+    private AccessConsentRegistry(URL url, SaiSession saiSession, Model dataset, Resource resource,
                                   ContentType contentType, AccessConsentList<AccessConsent> accessConsents) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -50,31 +50,31 @@ public class AccessConsentRegistry extends CRUDResource {
     /**
      * Get a {@link AccessConsentRegistry} at the provided <code>url</code>
      * @param url URL of the {@link AccessConsentRegistry} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link AccessConsentRegistry}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static AccessConsentRegistry get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static AccessConsentRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the access consent registry to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the access consent registry");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the access consent registry");
         Objects.requireNonNull(contentType, "Must provide a content type for the access consent registry");
-        AccessConsentRegistry.Builder builder = new AccessConsentRegistry.Builder(url, dataFactory, contentType);
+        AccessConsentRegistry.Builder builder = new AccessConsentRegistry.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link AccessConsentRegistry}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static AccessConsentRegistry get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static AccessConsentRegistry get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -83,26 +83,26 @@ public class AccessConsentRegistry extends CRUDResource {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
         private AccessConsentList<AccessConsent> accessConsents;
 
         /**
-         * Initialize builder with <code>url</code> and <code>dataFactory</code>
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link AccessConsentRegistry} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the access consent registry builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the access consent registry builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the access consent registry builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the access consent registry builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
-            this.accessConsents = new AccessConsentList<>(this.dataFactory, this.resource);
+            this.accessConsents = new AccessConsentList<>(this.saiSession, this.resource);
         }
 
         /**
@@ -164,7 +164,7 @@ public class AccessConsentRegistry extends CRUDResource {
          */
         public AccessConsentRegistry build() throws SaiException {
             if (this.dataset == null) { populateDataset(); }
-            return new AccessConsentRegistry(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.accessConsents);
+            return new AccessConsentRegistry(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.accessConsents);
         }
 
     }
@@ -176,14 +176,14 @@ public class AccessConsentRegistry extends CRUDResource {
      */
     public static class AccessConsentList<T> extends RegistrationList<T> {
 
-        public AccessConsentList(DataFactory dataFactory, Resource resource) { super(dataFactory, resource, HAS_ACCESS_CONSENT); }
+        public AccessConsentList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_ACCESS_CONSENT); }
 
         @Override
         public void add(URL consentUrl) throws SaiException {
             Objects.requireNonNull(consentUrl, "Must provide the URL of the access consent to add to registry");
             // Get the consent to add
             AccessConsent consent;
-            try { consent = AccessConsent.get(consentUrl, this.dataFactory); } catch (SaiNotFoundException ex) {
+            try { consent = AccessConsent.get(consentUrl, this.saiSession); } catch (SaiNotFoundException ex) {
                 throw new SaiException("Failed to get access consent at " + consentUrl + ": " + ex.getMessage());
             }
             // Check to see if an access consent for that grantee already exists
@@ -207,15 +207,15 @@ public class AccessConsentRegistry extends CRUDResource {
         }
 
         @Override
-        public Iterator<T> iterator() { return new AccessConsentListIterator(this.getDataFactory(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new AccessConsentListIterator(this.getSaiSession(), this.getRegistrationUrls()); }
 
         private class AccessConsentListIterator<T> extends RegistrationListIterator<T> {
-            public AccessConsentListIterator(DataFactory dataFactory, List<URL> registrationUrls) { super(dataFactory, registrationUrls); }
+            public AccessConsentListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
             @SneakyThrows
             @Override
             public T next() {
                 URL registrationUrl = current.next();
-                return (T) AccessConsent.get(registrationUrl, dataFactory);
+                return (T) AccessConsent.get(registrationUrl, saiSession);
             }
         }
     }

@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.mock;
 
 class CRUDResourceTests {
 
-    private static DataFactory dataFactory;
+    private static SaiSession saiSession;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
@@ -35,7 +35,7 @@ class CRUDResourceTests {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
+        saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
@@ -55,7 +55,7 @@ class CRUDResourceTests {
     @DisplayName("Get a CRUD resource")
     void buildExistingCRUDResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
-        TestableCRUDResource testable = TestableCRUDResource.get(url, dataFactory,true);
+        TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession,true);
         checkTestableGraph(testable);
     }
 
@@ -65,7 +65,7 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/new/crud/crud-resource");
         List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, dataFactory, true, ContentType.TEXT_TURTLE);
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, true, ContentType.TEXT_TURTLE);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
                .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
                .setComments(comments).build();
@@ -78,7 +78,7 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/crud/crud-resource#project");
         List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, dataFactory, true, ContentType.TEXT_TURTLE);
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, true, ContentType.TEXT_TURTLE);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
                 .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
                 .setComments(comments).build();
@@ -91,7 +91,7 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/crud/crud-resource#project");
         List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, dataFactory, false, ContentType.TEXT_TURTLE);
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, false, ContentType.TEXT_TURTLE);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
                 .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
                 .setComments(comments).build();
@@ -104,7 +104,7 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/crud/missing");
         List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, dataFactory, false, ContentType.TEXT_TURTLE);
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, false, ContentType.TEXT_TURTLE);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
                 .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
                 .setComments(comments).build();
@@ -115,7 +115,7 @@ class CRUDResourceTests {
     @DisplayName("Delete a CRUD resource")
     void deleteCRUDResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
-        TestableCRUDResource testable = TestableCRUDResource.get(url, dataFactory, true);
+        TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession, true);
         assertDoesNotThrow(() -> testable.delete());
     }
 
@@ -123,7 +123,7 @@ class CRUDResourceTests {
     @DisplayName("Delete a protected CRUD resource")
     void deleteProtectedCRUDResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
-        TestableCRUDResource testable = TestableCRUDResource.get(url, dataFactory, false);
+        TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession, false);
         assertDoesNotThrow(() -> testable.delete());
     }
 

@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.immutable.DataGrant;
 import lombok.Getter;
 import okhttp3.Headers;
@@ -34,10 +34,10 @@ public class SocialAgentRegistration extends AgentRegistration {
      * Construct a new {@link SocialAgentRegistration}
      * @throws SaiException
      */
-    private SocialAgentRegistration(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
-                                   URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
-                                   URL registeredAgent, URL accessGrantUrl, URL reciprocalRegistration) throws SaiException {
-        super(url, dataFactory, dataset, resource, contentType, registeredBy, registeredWith,
+    private SocialAgentRegistration(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
+                                    URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
+                                    URL registeredAgent, URL accessGrantUrl, URL reciprocalRegistration) throws SaiException {
+        super(url, saiSession, dataset, resource, contentType, registeredBy, registeredWith,
               registeredAt, updatedAt, registeredAgent, accessGrantUrl);
         this.reciprocalRegistration = reciprocalRegistration;
     }
@@ -45,33 +45,33 @@ public class SocialAgentRegistration extends AgentRegistration {
     /**
      * Get a {@link SocialAgentRegistration} at the provided <code>url</code>
      * @param url URL of the {@link SocialAgentRegistration} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link SocialAgentRegistration}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static SocialAgentRegistration get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static SocialAgentRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the social agent registration to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the social agent registration");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the social agent registration");
         Objects.requireNonNull(contentType, "Must provide a content type for the social agent registration");
-        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, dataFactory, contentType);
+        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link SocialAgentRegistration} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link SocialAgentRegistration}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static SocialAgentRegistration get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static SocialAgentRegistration get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -80,7 +80,7 @@ public class SocialAgentRegistration extends AgentRegistration {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -93,17 +93,17 @@ public class SocialAgentRegistration extends AgentRegistration {
         URL reciprocalRegistration;
 
         /**
-         * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
          * @param url URL of the {@link SocialAgentRegistration} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the social agent registration builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the social agent registration builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the social agent registration builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the social agent registration builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
         }
 
@@ -250,7 +250,7 @@ public class SocialAgentRegistration extends AgentRegistration {
             Objects.requireNonNull(this.updatedAt, "Must provide the time that the agent registration was updated");
             Objects.requireNonNull(this.registeredAgent, "Must provide the agent to register");
             if (this.dataset == null) { populateDataset(); }
-            return new SocialAgentRegistration(this.url, this.dataFactory, this.dataset, this.resource, this.contentType,
+            return new SocialAgentRegistration(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
                                                this.registeredBy, this.registeredWith, this.registeredAt, this.updatedAt,
                                                this.registeredAgent, this.accessGrantUrl, this.reciprocalRegistration);
         }

@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.crud.DataRegistration;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -23,10 +23,10 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_A
 @Getter
 public class AllFromRegistryDataGrant extends InheritableDataGrant {
 
-    protected AllFromRegistryDataGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
+    protected AllFromRegistryDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
                                        URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
                                        URL dataRegistration, URL accessNeed, URL delegationOf) throws SaiException {
-        super(url, dataFactory, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
+        super(url, saiSession, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
               SCOPE_ALL_FROM_REGISTRY, dataRegistration, accessNeed, delegationOf);
     }
 
@@ -34,9 +34,8 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
     public DataInstanceList getDataInstances() throws SaiException {
         // Get the data registration
         try {
-            // TODO - change get to call from data factory instead
-            DataRegistration registration = DataRegistration.get(this.getDataRegistration(), this.dataFactory);
-            return new DataInstanceList(dataFactory, this, registration.getDataInstances());
+            DataRegistration registration = DataRegistration.get(this.getDataRegistration(), this.saiSession);
+            return new DataInstanceList(saiSession, this, registration.getDataInstances());
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
         }

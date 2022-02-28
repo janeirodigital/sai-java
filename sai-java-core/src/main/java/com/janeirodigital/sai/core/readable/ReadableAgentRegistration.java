@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -27,13 +27,13 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
     /**
      * Construct a {@link ReadableAgentRegistration} instance from the provided <code>url</code>.
      * @param url URL to generate the {@link ReadableAgentRegistration} from
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    protected ReadableAgentRegistration(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
+    protected ReadableAgentRegistration(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
                                         URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
                                         URL registeredAgent, URL accessGrantUrl) throws SaiException {
-        super(url, dataFactory, true);
+        super(url, saiSession, true);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;

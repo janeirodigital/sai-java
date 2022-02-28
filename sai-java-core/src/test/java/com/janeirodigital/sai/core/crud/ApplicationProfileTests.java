@@ -3,7 +3,7 @@ package com.janeirodigital.sai.core.crud;
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.TrustedDataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 
 class ApplicationProfileTests {
 
-    private static TrustedDataFactory trustedDataFactory;
+    private static SaiSession saiSession;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
@@ -46,7 +46,7 @@ class ApplicationProfileTests {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        trustedDataFactory = new TrustedDataFactory(mockSession, new HttpClientFactory(false, false, false));
+        saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
@@ -77,7 +77,7 @@ class ApplicationProfileTests {
     void createNewCrudApplicationProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/new/crud/application");
 
-        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, trustedDataFactory);
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
         ApplicationProfile profile = builder.setName(PROJECTRON_NAME).setDescription(PROJECTRON_DESCRIPTION)
                                             .setAuthorUrl(PROJECTRON_AUTHOR).setAccessNeedGroupUrls(PROJECTRON_NEED_GROUPS)
                                             .setClientUrl(PROJECTRON_CLIENT_URL).setRedirectUrls(PROJECTRON_REDIRECTS)
@@ -93,7 +93,7 @@ class ApplicationProfileTests {
     @DisplayName("Read existing crud application profile")
     void readCrudApplicationProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = trustedDataFactory.getApplicationProfile(url);
+        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         assertEquals(PROJECTRON_NAME, profile.getName());
         assertEquals(PROJECTRON_LOGO, profile.getLogoUrl());
         assertEquals(PROJECTRON_DESCRIPTION, profile.getDescription());
@@ -113,15 +113,15 @@ class ApplicationProfileTests {
     @DisplayName("Fail to read existing crud application profile - missing required fields")
     void failToReadCrudApplicationProfileMissingFields() {
         URL url = toUrl(server, "/missing-fields/crud/application");
-        assertThrows(SaiException.class, () -> trustedDataFactory.getApplicationProfile(url));
+        assertThrows(SaiException.class, () -> ApplicationProfile.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Update existing crud application profile")
     void updateCrudApplicationProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = trustedDataFactory.getApplicationProfile(url);;
-        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, trustedDataFactory);
+        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
         ApplicationProfile updatedProfile = builder.setDataset(profile.getDataset()).setName("Projectimus Prime").build();
         assertDoesNotThrow(() -> updatedProfile.update());
         assertEquals("Projectimus Prime", updatedProfile.getName());
@@ -131,7 +131,7 @@ class ApplicationProfileTests {
     @DisplayName("Delete existing crud application profile")
     void deleteCrudApplicationProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = trustedDataFactory.getApplicationProfile(url);
+        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
     }

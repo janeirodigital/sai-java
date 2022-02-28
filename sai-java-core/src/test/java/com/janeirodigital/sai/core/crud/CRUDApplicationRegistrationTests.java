@@ -3,7 +3,7 @@ package com.janeirodigital.sai.core.crud;
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.TrustedDataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import okhttp3.mockwebserver.MockWebServer;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 
 class CRUDApplicationRegistrationTests {
 
-    private static TrustedDataFactory trustedDataFactory;
+    private static SaiSession saiSession;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
@@ -41,7 +41,7 @@ class CRUDApplicationRegistrationTests {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        trustedDataFactory = new TrustedDataFactory(mockSession, new HttpClientFactory(false, false, false));
+        saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
         dispatcher = new RequestMatchingFixtureDispatcher();
@@ -72,7 +72,7 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Create new crud application registration in turtle")
     void createNewCrudApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/new/ttl/agents/app-1/");
-        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession, TEXT_TURTLE);
         ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
                                                       .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
                                                       .setRegisteredAgent(app1RegisteredAgent)
@@ -85,7 +85,7 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Read existing crud application registration in turtle")
     void readApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
-        ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url);
+        ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         assertNotNull(registration);
         assertEquals(app1RegisteredBy, registration.getRegisteredBy());
         assertEquals(app1RegisteredWith, registration.getRegisteredWith());
@@ -99,15 +99,15 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Fail to read existing crud application registration in turtle - missing required fields")
     void failToReadApplicationRegistration() throws SaiException {
         URL url = toUrl(server, "/missing-fields/ttl/agents/app-1/");
-        assertThrows(SaiException.class, () -> ApplicationRegistration.get(url, trustedDataFactory));
+        assertThrows(SaiException.class, () -> ApplicationRegistration.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Update existing crud application registration in turtle")
     void updateApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
-        ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url);
-        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, trustedDataFactory, TEXT_TURTLE);
+        ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession, TEXT_TURTLE);
         ApplicationRegistration updated = builder.setDataset(registration.getDataset()).setAccessGrant(toUrl(server, "/ttl/agents/app-1/access-granted")).build();
         assertDoesNotThrow(() -> updated.update());
     }
@@ -116,7 +116,7 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Read existing application registration in JSON-LD")
     void readApplicationRegistrationJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/app-1/");
-        ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url, LD_JSON);
+        ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession, LD_JSON);
         assertNotNull(registration);
         assertEquals(app1RegisteredBy, registration.getRegisteredBy());
         assertEquals(app1RegisteredWith, registration.getRegisteredWith());
@@ -130,7 +130,7 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Create new crud application registration in JSON-LD")
     void createNewCrudApplicationRegistrationJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/agents/app-1/");
-        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, trustedDataFactory, LD_JSON);
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession, LD_JSON);
         ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
                 .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
                 .setRegisteredAgent(app1RegisteredAgent)
@@ -142,7 +142,7 @@ class CRUDApplicationRegistrationTests {
     @DisplayName("Delete crud application registration")
     void deleteApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
-        ApplicationRegistration registration = trustedDataFactory.getApplicationRegistration(url);
+        ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         assertDoesNotThrow(() -> registration.delete());
         assertFalse(registration.isExists());
     }

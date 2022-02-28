@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -33,10 +33,10 @@ public class TestableReadableResource extends ReadableResource {
     private final List<URL> tags;
     private final List<String> comments;
 
-    private TestableReadableResource(URL resourceUrl, DataFactory dataFactory, boolean unprotected, Model dataset,
-                                    Resource resource, ContentType contentType, int id, String name, OffsetDateTime createdAt,
-                                    URL milestone, boolean active, List<URL> tags, List<String> comments) throws SaiException {
-        super(resourceUrl, dataFactory, unprotected);
+    private TestableReadableResource(URL resourceUrl, SaiSession saiSession, boolean unprotected, Model dataset,
+                                     Resource resource, ContentType contentType, int id, String name, OffsetDateTime createdAt,
+                                     URL milestone, boolean active, List<URL> tags, List<String> comments) throws SaiException {
+        super(resourceUrl, saiSession, unprotected);
         this.dataset =  dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -49,28 +49,28 @@ public class TestableReadableResource extends ReadableResource {
         this.comments = comments;
     }
 
-    public static TestableReadableResource get(URL url, DataFactory dataFactory, boolean unprotected) throws SaiException, SaiNotFoundException {
-        if (unprotected) { return getProtected(url, dataFactory); } else { return getUnprotected(url, dataFactory); }
+    public static TestableReadableResource get(URL url, SaiSession saiSession, boolean unprotected) throws SaiException, SaiNotFoundException {
+        if (unprotected) { return getProtected(url, saiSession); } else { return getUnprotected(url, saiSession); }
     }
 
-    private static TestableReadableResource getProtected(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
+    private static TestableReadableResource getProtected(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, TEXT_TURTLE.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
-            return new Builder(url, dataFactory, false, TEXT_TURTLE, getRdfModelFromResponse(response)).build();
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
+            return new Builder(url, saiSession, false, TEXT_TURTLE, getRdfModelFromResponse(response)).build();
         }
     }
 
-    private static TestableReadableResource getUnprotected(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
+    private static TestableReadableResource getUnprotected(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, TEXT_TURTLE.getValue());
-        try (Response response = checkReadableResponse(getRdfResource(dataFactory.getHttpClient(), url, headers))) {
-            return new Builder(url, dataFactory, true, TEXT_TURTLE, getRdfModelFromResponse(response)).build();
+        try (Response response = checkReadableResponse(getRdfResource(saiSession.getHttpClient(), url, headers))) {
+            return new Builder(url, saiSession, true, TEXT_TURTLE, getRdfModelFromResponse(response)).build();
         }
     }
 
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final boolean unprotected;
         private final ContentType contentType;
         private final Model dataset;
@@ -83,13 +83,13 @@ public class TestableReadableResource extends ReadableResource {
         private List<URL> tags;
         private List<String> comments;
 
-        public Builder(URL url, DataFactory dataFactory, boolean unprotected, ContentType contentType, Model dataset) throws SaiException, SaiNotFoundException {
+        public Builder(URL url, SaiSession saiSession, boolean unprotected, ContentType contentType, Model dataset) throws SaiException, SaiNotFoundException {
             Objects.requireNonNull(url, "Must provide a URL for the readable social agent profile builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the readable social agent profile builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the readable social agent profile builder");
             Objects.requireNonNull(contentType, "Must provide a content type to use for retrieval of readable social agent profile ");
             Objects.requireNonNull(dataset, "Must provide a dateset to use to populate the readable social agent profile ");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.unprotected = unprotected;
             this.contentType = contentType;
             this.dataset = dataset;
@@ -108,7 +108,7 @@ public class TestableReadableResource extends ReadableResource {
         }
 
         public TestableReadableResource build() throws SaiException {
-            return new TestableReadableResource(this.url, this.dataFactory, this.unprotected, this.dataset, this.resource,
+            return new TestableReadableResource(this.url, this.saiSession, this.unprotected, this.dataset, this.resource,
                                                 this.contentType, this.id, this.name, this.createdAt, this.milestone,
                                                 this.active, this.tags, this.comments);
         }

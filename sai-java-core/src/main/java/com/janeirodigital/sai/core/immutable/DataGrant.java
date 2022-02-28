@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -47,14 +47,14 @@ public class DataGrant extends ImmutableResource {
     /**
      * Construct a new {@link DataGrant}. Should only be called from {@link Builder}
      * @param url URL of the {@link DataGrant}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    private DataGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
+    private DataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
                       URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
                       RDFNode scopeOfGrant, URL dataRegistration, List<URL> dataInstances, URL accessNeed,
                       URL inheritsFrom, URL delegationOf) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -75,18 +75,18 @@ public class DataGrant extends ImmutableResource {
     /**
      * Get a {@link DataGrant} at the provided <code>url</code>
      * @param url URL of the {@link DataGrant} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataGrant}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static DataGrant get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static DataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the data grant to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the data grant");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the data grant");
         Objects.requireNonNull(contentType, "Must provide a content type for the data grant");
-        DataGrant.Builder builder = new DataGrant.Builder(url, dataFactory, contentType);
+        DataGrant.Builder builder = new DataGrant.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         DataGrant dataGrant = builder.build();
@@ -95,15 +95,15 @@ public class DataGrant extends ImmutableResource {
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link DataGrant} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataGrant}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static DataGrant get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static DataGrant get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -184,7 +184,7 @@ public class DataGrant extends ImmutableResource {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -201,17 +201,17 @@ public class DataGrant extends ImmutableResource {
         private URL delegationOf;
 
         /**
-         * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
          * @param url URL of the {@link DataGrant} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the data grant builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the data grant builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the data grant builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the data grant builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
             this.accessModes = new ArrayList<>();
             this.creatorAccessModes = new ArrayList<>();
@@ -425,7 +425,7 @@ public class DataGrant extends ImmutableResource {
             Objects.requireNonNull(dataRegistration, "Must provide a URL for the data registration associated with the data grant");
             Objects.requireNonNull(accessNeed, "Must provide a URL for the access need associated with the data grant");
             if (this.dataset == null) { populateDataset(); }
-            return new DataGrant(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.dataOwner,
+            return new DataGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
                                 this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes, this.scopeOfGrant,
                                 this.dataRegistration, this.dataInstances, this.accessNeed, this.inheritsFrom, this.delegationOf);
         }

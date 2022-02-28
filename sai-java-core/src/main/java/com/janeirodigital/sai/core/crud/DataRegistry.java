@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import okhttp3.Headers;
@@ -37,9 +37,9 @@ public class DataRegistry extends CRUDResource {
     /**
      * Construct a new {@link DataRegistry}. Should only be called from {@link Builder}
      */
-    private DataRegistry(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
+    private DataRegistry(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
                          DataRegistrationList<DataRegistration> dataRegistrations) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -49,31 +49,31 @@ public class DataRegistry extends CRUDResource {
     /**
      * Get a {@link DataRegistry} at the provided <code>url</code>
      * @param url URL of the {@link DataRegistry} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataRegistry}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static DataRegistry get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static DataRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the data registry to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the data registry");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the data registry");
         Objects.requireNonNull(contentType, "Must provide a content type for the data registry");
-        DataRegistry.Builder builder = new DataRegistry.Builder(url, dataFactory, contentType);
+        DataRegistry.Builder builder = new DataRegistry.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link DataRegistry}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static DataRegistry get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static DataRegistry get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
     
     /**
@@ -81,26 +81,26 @@ public class DataRegistry extends CRUDResource {
      */
     public static class Builder {
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
         private DataRegistrationList<DataRegistration> dataRegistrations;
 
         /**
-         * Initialize builder with <code>url</code> and <code>dataFactory</code> 
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link DataRegistry} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the data registry builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the data registry builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the data registry builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the data registry builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
-            this.dataRegistrations = new DataRegistrationList<>(this.dataFactory, this.resource);
+            this.dataRegistrations = new DataRegistrationList<>(this.saiSession, this.resource);
         }
 
         /**
@@ -162,7 +162,7 @@ public class DataRegistry extends CRUDResource {
          */
          public DataRegistry build() throws SaiException {
              if (this.dataset == null) { populateDataset(); }
-             return new DataRegistry(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.dataRegistrations);
+             return new DataRegistry(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataRegistrations);
          }
     }
 
@@ -172,7 +172,7 @@ public class DataRegistry extends CRUDResource {
      * types are built and returned by the iterator.
      */
     public static class DataRegistrationList<T> extends RegistrationList<T> {
-        public DataRegistrationList(DataFactory dataFactory, Resource resource) { super(dataFactory, resource, HAS_DATA_REGISTRATION); }
+        public DataRegistrationList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_DATA_REGISTRATION); }
 
         @Override
         public T find(URL shapeTreeUrl) {
@@ -184,15 +184,15 @@ public class DataRegistry extends CRUDResource {
         }
 
         @Override
-        public Iterator<T> iterator() { return new DataRegistrationListIterator(this.getDataFactory(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new DataRegistrationListIterator(this.getSaiSession(), this.getRegistrationUrls()); }
 
         private class DataRegistrationListIterator<T> extends RegistrationListIterator<T> {
-            public DataRegistrationListIterator(DataFactory dataFactory, List<URL> registrationUrls) { super(dataFactory, registrationUrls); }
+            public DataRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
             @SneakyThrows
             @Override
             public T next() {
                 URL registrationUrl = (URL) current.next();
-                return (T) DataRegistration.get(registrationUrl, dataFactory);
+                return (T) DataRegistration.get(registrationUrl, saiSession);
             }
         }
 

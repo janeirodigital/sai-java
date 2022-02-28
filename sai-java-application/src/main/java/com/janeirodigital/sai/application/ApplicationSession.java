@@ -2,6 +2,7 @@ package com.janeirodigital.sai.application;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -21,6 +22,6 @@ public class ApplicationSession {
     @NonNull
     private final HttpClientFactory clientFactory;
     @NonNull
-    private final ApplicationDataFactory dataFactory;
+    private final SaiSession saiSession;
 
 }

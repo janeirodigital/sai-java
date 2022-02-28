@@ -3,7 +3,7 @@ package com.janeirodigital.sai.core.readable;
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 
 class ReadableSocialAgentProfileTests {
 
-    private static DataFactory dataFactory;
+    private static SaiSession saiSession;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
@@ -35,13 +35,13 @@ class ReadableSocialAgentProfileTests {
         server.setDispatcher(dispatcher);
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        dataFactory = new DataFactory(mockSession, new HttpClientFactory(false, false, false));
+        saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
     }
 
     @Test
     @DisplayName("Get readable social agent profile document as turtle")
     void getReadableSocialAgentProfileTurtle() throws SaiException, SaiNotFoundException {
-        ReadableSocialAgentProfile socialProfile = dataFactory.getReadableSocialAgentProfile(MockWebServerHelper.toUrl(server, "/ttl/id"));
+        ReadableSocialAgentProfile socialProfile = ReadableSocialAgentProfile.get(MockWebServerHelper.toUrl(server, "/ttl/id"), saiSession);
         assertNotNull(socialProfile);
         assertEquals(stringToUrl("https://trusted.example/alice/"), socialProfile.getAuthorizationAgentUrl());
         assertEquals(stringToUrl("https://alice.example/access/inbox/"), socialProfile.getAccessInboxUrl());
@@ -53,7 +53,7 @@ class ReadableSocialAgentProfileTests {
     @Test
     @DisplayName("Get readable social agent profile document as json-ld")
     void getReadableSocialAgentProfileJsonLd() throws SaiException, SaiNotFoundException {
-        ReadableSocialAgentProfile socialProfile = dataFactory.getReadableSocialAgentProfile(MockWebServerHelper.toUrl(server, "/jsonld/id"));
+        ReadableSocialAgentProfile socialProfile = ReadableSocialAgentProfile.get(MockWebServerHelper.toUrl(server, "/jsonld/id"), saiSession);
         assertNotNull(socialProfile);
         assertEquals(stringToUrl("https://trusted.example/alice/"), socialProfile.getAuthorizationAgentUrl());
         assertEquals(stringToUrl("https://alice.example/access/inbox/"), socialProfile.getAccessInboxUrl());

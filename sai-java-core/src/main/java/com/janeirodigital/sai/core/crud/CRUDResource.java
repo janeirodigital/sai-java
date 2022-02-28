@@ -1,7 +1,7 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.readable.ReadableResource;
 import lombok.Getter;
 import okhttp3.Response;
@@ -22,13 +22,13 @@ public class CRUDResource extends ReadableResource {
     /**
      * Construct a CRUD resource for <code>resourceUrl</code>. Calls the parent
      * {@link ReadableResource} constructor which assigns the provided
-     * <code>dataFactory</code>, and gets an HTTP client.
+     * <code>saiSession</code>, and gets an HTTP client.
      * @param resourceUrl URL of the CRUD resource
-     * @param dataFactory Data factory to assign
+     * @param saiSession Data factory to assign
      * @param unprotected When true no authorization credentials will be sent in requests to this resource
      */
-    public CRUDResource(URL resourceUrl, DataFactory dataFactory, boolean unprotected) throws SaiException {
-        super(resourceUrl, dataFactory, unprotected);
+    public CRUDResource(URL resourceUrl, SaiSession saiSession, boolean unprotected) throws SaiException {
+        super(resourceUrl, saiSession, unprotected);
         this.exists = false; // assume the resource doesn't exist until it's bootstrapped
     }
 
@@ -39,7 +39,7 @@ public class CRUDResource extends ReadableResource {
      */
     public void update() throws SaiException {
         if (this.isUnprotected()) { this.updateUnprotected(); } else {
-            Response response = putProtectedRdfResource(this.getDataFactory().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext);
+            Response response = putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext);
             if (!response.isSuccessful()) { throw new SaiException("Failed to update " + this.url + ": " + getResponseFailureMessage(response)); }
         }
         this.exists = true;
@@ -51,7 +51,7 @@ public class CRUDResource extends ReadableResource {
      */
     public void delete() throws SaiException {
         if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-            Response response = deleteProtectedResource(this.getDataFactory().getAuthorizedSession(), this.httpClient, this.url);
+            Response response = deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url);
             if (!response.isSuccessful()) { throw new SaiException("Failed to delete " + this.url + ": " + getResponseFailureMessage(response)); }
         }
         this.exists = false;

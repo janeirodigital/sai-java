@@ -7,7 +7,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -43,13 +43,13 @@ public class AccessConsent extends ImmutableResource {
     /**
      * Construct a new {@link AccessConsent}
      * @param url URL of the {@link AccessConsent}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    private AccessConsent(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
+    private AccessConsent(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
                           URL grantedBy, URL grantedWith, OffsetDateTime grantedAt, URL grantee, URL accessNeedGroup,
                           URL replaces, List<DataConsent> dataConsents) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -65,34 +65,34 @@ public class AccessConsent extends ImmutableResource {
     /**
      * Get an {@link AccessConsent} at the provided <code>url</code>
      * @param url URL of the {@link AccessConsent} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link AccessConsent}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static AccessConsent get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static AccessConsent get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the access consent to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the access consent");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the access consent");
         Objects.requireNonNull(contentType, "Must provide a content type for the access consent");
-        Builder builder = new Builder(url, dataFactory, contentType);
+        Builder builder = new Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link AccessConsent} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link AccessConsent}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static AccessConsent get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static AccessConsent get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -115,7 +115,7 @@ public class AccessConsent extends ImmutableResource {
         for (DataConsent dataConsent : primaryDataConsents) { dataGrants.addAll(dataConsent.generateGrants(this, granteeRegistration, agentRegistry, dataRegistries)); }
         // TODO - If there was a prior access grant, look at reusing some data grants
         URL accessGrantUrl = granteeRegistration.generateContainedUrl();
-        AccessGrant.Builder grantBuilder = new AccessGrant.Builder(accessGrantUrl, this.dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+        AccessGrant.Builder grantBuilder = new AccessGrant.Builder(accessGrantUrl, this.saiSession, DEFAULT_RDF_CONTENT_TYPE);
         return grantBuilder.setGrantedBy(this.grantedBy).setGrantedAt(this.grantedAt).setGrantee(this.grantee)
                            .setAccessNeedGroup(this.accessNeedGroup).setDataGrants(dataGrants).build();
     }
@@ -125,7 +125,7 @@ public class AccessConsent extends ImmutableResource {
      */
     public static class Builder {
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -138,17 +138,17 @@ public class AccessConsent extends ImmutableResource {
         private List<DataConsent> dataConsents;
 
         /**
-         * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
          * @param url URL of the {@link AccessConsent} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the access consent builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the access consent builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the access consent builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the access consent builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
             this.dataConsents = new ArrayList<>();
         }
@@ -243,7 +243,7 @@ public class AccessConsent extends ImmutableResource {
                 this.accessNeedGroup = getRequiredUrlObject(this.resource, HAS_ACCESS_NEED_GROUP);
                 this.replaces = getUrlObject(this.resource, REPLACES);
                 List<URL> dataConsentUrls = getRequiredUrlObjects(this.resource, HAS_DATA_CONSENT);
-                for (URL dataConsentUrl : dataConsentUrls) { this.dataConsents.add(DataConsent.get(dataConsentUrl, this.dataFactory)); }
+                for (URL dataConsentUrl : dataConsentUrls) { this.dataConsents.add(DataConsent.get(dataConsentUrl, this.saiSession)); }
                 organizeInheritance();
             } catch (SaiNotFoundException | SaiException ex) {
                 throw new SaiException("Unable to populate immutable access consent resource: " + ex.getMessage());
@@ -284,7 +284,7 @@ public class AccessConsent extends ImmutableResource {
             Objects.requireNonNull(this.accessNeedGroup, "Must provide a URL for the access need group of the access consent");
             Objects.requireNonNull(this.dataConsents, "Must provide a list of data consents for the access consent");
             if (this.dataset == null) { populateDataset(); }
-            return new AccessConsent(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.grantedBy,
+            return new AccessConsent(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.grantedBy,
                                     this.grantedWith, this.grantedAt, this.grantee, this.accessNeedGroup,
                                     this.replaces, this.dataConsents);
         }

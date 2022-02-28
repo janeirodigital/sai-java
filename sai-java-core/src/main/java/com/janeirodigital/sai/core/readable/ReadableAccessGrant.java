@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -38,12 +38,12 @@ public class ReadableAccessGrant extends ReadableResource {
     /**
      * Construct a {@link ReadableAccessGrant} instance from the provided <code>url</code>.
      * @param url URL to generate the {@link ReadableAccessGrant} from
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    private ReadableAccessGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL grantedBy,
-                        OffsetDateTime grantedAt, URL grantee, URL accessNeedGroup, List<ReadableDataGrant> dataGrants) throws SaiException {
-        super(url, dataFactory, false);
+    private ReadableAccessGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL grantedBy,
+                                OffsetDateTime grantedAt, URL grantee, URL accessNeedGroup, List<ReadableDataGrant> dataGrants) throws SaiException {
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -57,34 +57,34 @@ public class ReadableAccessGrant extends ReadableResource {
     /**
      * Get an {@link ReadableAccessGrant} at the provided <code>url</code>
      * @param url URL of the {@link ReadableAccessGrant} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link ReadableAccessGrant}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static ReadableAccessGrant get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ReadableAccessGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the access grants to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the access grants");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the access grants");
         Objects.requireNonNull(contentType, "Must provide a content type for the access grant");
-        ReadableAccessGrant.Builder builder = new ReadableAccessGrant.Builder(url, dataFactory, contentType);
+        ReadableAccessGrant.Builder builder = new ReadableAccessGrant.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link ReadableAccessGrant} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableAccessGrant}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static ReadableAccessGrant get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableAccessGrant get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -92,7 +92,7 @@ public class ReadableAccessGrant extends ReadableResource {
      */
     public static class Builder {
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -103,18 +103,18 @@ public class ReadableAccessGrant extends ReadableResource {
         private List<ReadableDataGrant> dataGrants;
 
         /**
-         * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
          *
          * @param url URL of the {@link ReadableAccessGrant} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the readable access grant builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the readable access grant builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the readable access grant builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the readable access grant builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
             this.dataGrants = new ArrayList<>();
         }
@@ -167,7 +167,7 @@ public class ReadableAccessGrant extends ReadableResource {
                 this.grantee = getRequiredUrlObject(this.resource, GRANTEE);
                 this.accessNeedGroup = getRequiredUrlObject(this.resource, HAS_ACCESS_NEED_GROUP);
                 List<URL> dataGrantUrls = getRequiredUrlObjects(this.resource, HAS_DATA_GRANT);
-                for (URL url : dataGrantUrls) { this.dataGrants.add(ReadableDataGrant.get(url, this.dataFactory)); }
+                for (URL url : dataGrantUrls) { this.dataGrants.add(ReadableDataGrant.get(url, this.saiSession)); }
                 organizeInheritance();
             } catch (SaiNotFoundException | SaiException ex) {
                 throw new SaiException("Unable to populate immutable access grant resource: " + ex.getMessage());
@@ -180,7 +180,7 @@ public class ReadableAccessGrant extends ReadableResource {
          * @throws SaiException
          */
         public ReadableAccessGrant build() throws SaiException {
-            return new ReadableAccessGrant(this.url, this.dataFactory, this.dataset, this.resource, this.contentType,
+            return new ReadableAccessGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
                                            this.grantedBy, this.grantedAt, this.grantee, this.accessNeedGroup, this.dataGrants);
         }
     }

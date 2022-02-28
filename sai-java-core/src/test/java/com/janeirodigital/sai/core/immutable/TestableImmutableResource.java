@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -37,10 +37,10 @@ public class TestableImmutableResource extends ImmutableResource {
     private final List<URL> tags;
     private final List<String> comments;
 
-    public TestableImmutableResource(URL resourceUrl, DataFactory dataFactory, boolean unprotected, Model dataset,
+    public TestableImmutableResource(URL resourceUrl, SaiSession saiSession, boolean unprotected, Model dataset,
                                      Resource resource, ContentType contentType, int id, String name, OffsetDateTime createdAt, URL milestone,
                                      boolean active, List<URL> tags, List<String> comments) throws SaiException {
-        super(resourceUrl, dataFactory, unprotected);
+        super(resourceUrl, saiSession, unprotected);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -53,25 +53,25 @@ public class TestableImmutableResource extends ImmutableResource {
         this.comments = comments;
     }
 
-    public static TestableImmutableResource get(URL url, DataFactory dataFactory, boolean unprotected) throws SaiNotFoundException, SaiException {
+    public static TestableImmutableResource get(URL url, SaiSession saiSession, boolean unprotected) throws SaiNotFoundException, SaiException {
         Objects.requireNonNull(url, "Must provide a URL to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign");
-        if (unprotected) { return getProtected(url, dataFactory); } else { return getUnprotected(url, dataFactory); }
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign");
+        if (unprotected) { return getProtected(url, saiSession); } else { return getUnprotected(url, saiSession); }
     }
 
-    private static TestableImmutableResource getProtected(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
-        TestableImmutableResource.Builder builder = new TestableImmutableResource.Builder(url, dataFactory, false, TEXT_TURTLE);
+    private static TestableImmutableResource getProtected(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
+        TestableImmutableResource.Builder builder = new TestableImmutableResource.Builder(url, saiSession, false, TEXT_TURTLE);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, TEXT_TURTLE.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
-    private static TestableImmutableResource getUnprotected(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
-        TestableImmutableResource.Builder builder = new TestableImmutableResource.Builder(url, dataFactory, false, TEXT_TURTLE);
+    private static TestableImmutableResource getUnprotected(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
+        TestableImmutableResource.Builder builder = new TestableImmutableResource.Builder(url, saiSession, false, TEXT_TURTLE);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, TEXT_TURTLE.getValue());
-        try (Response response = checkReadableResponse(getRdfResource(dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getRdfResource(saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
@@ -80,7 +80,7 @@ public class TestableImmutableResource extends ImmutableResource {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private final boolean unprotected;
         private Model dataset;
@@ -93,11 +93,11 @@ public class TestableImmutableResource extends ImmutableResource {
         private List<URL> tags;
         private List<String> comments;
 
-        public Builder(URL url, DataFactory dataFactory, boolean unprotected, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, boolean unprotected, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory");
+            Objects.requireNonNull(saiSession, "Must provide a sai session");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.unprotected = unprotected;
             this.contentType = contentType;
             this.tags = new ArrayList<>();
@@ -181,7 +181,7 @@ public class TestableImmutableResource extends ImmutableResource {
 
         public TestableImmutableResource build() throws SaiException {
             if (this.dataset == null) { populateDataset(); }
-            return new TestableImmutableResource(this.url, this.dataFactory, this.unprotected, this.dataset, this.resource,
+            return new TestableImmutableResource(this.url, this.saiSession, this.unprotected, this.dataset, this.resource,
                                                  this.contentType, this.id, this.name, this.createdAt, this.milestone, this.active,
                                                  this.tags, this.comments);
         }

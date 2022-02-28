@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -25,21 +25,21 @@ import static com.janeirodigital.sai.core.helpers.RdfHelper.updateUrlObjects;
 public abstract class RegistrationList<T> implements Iterable<T> {
 
     protected List<URL> registrationUrls;
-    protected DataFactory dataFactory;
+    protected SaiSession saiSession;
     protected Resource resource;
     protected Property linkedVia;
 
     /**
      * Construct a {@link RegistrationList} (called by sub-classes)
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @param resource Jena resource for the associated registry
      * @param linkedVia Jena property that links the registry to the registry set
      */
-    public RegistrationList(DataFactory dataFactory, Resource resource, Property linkedVia) {
-        Objects.requireNonNull(dataFactory, "Must provide a data factory for the registration list");
+    public RegistrationList(SaiSession saiSession, Resource resource, Property linkedVia) {
+        Objects.requireNonNull(saiSession, "Must provide a sai session for the registration list");
         Objects.requireNonNull(resource, "Must provide a Jena resource for the registry the registration list is associated with");
         Objects.requireNonNull(linkedVia, "Must provide a property to link the registration to the registry");
-        this.dataFactory = dataFactory;
+        this.saiSession = saiSession;
         this.resource = resource;
         this.linkedVia = linkedVia;
         this.registrationUrls = new ArrayList<>();
@@ -95,7 +95,7 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      * @return
      */
     public Iterator<T> iterator() {
-        return new RegistrationListIterator<T>(this.dataFactory, this.registrationUrls);
+        return new RegistrationListIterator<T>(this.saiSession, this.registrationUrls);
     }
 
     /**
@@ -104,10 +104,10 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      */
     public class RegistrationListIterator<T> implements Iterator<T> {
         public Iterator<URL> current;
-        public DataFactory dataFactory;
-        public RegistrationListIterator(DataFactory dataFactory, List<URL> registrationUrls) {
+        public SaiSession saiSession;
+        public RegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) {
 
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.current = registrationUrls.iterator();
         }
         public boolean hasNext() { return current.hasNext(); }

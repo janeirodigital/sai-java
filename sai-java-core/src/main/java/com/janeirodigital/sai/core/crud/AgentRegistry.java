@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import okhttp3.Headers;
@@ -38,13 +38,13 @@ public class AgentRegistry extends CRUDResource {
     /**
      * Construct a new {@link AgentRegistry}
      * @param url URL of the {@link AgentRegistry}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    public AgentRegistry(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
+    public AgentRegistry(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
                          SocialAgentRegistrationList<SocialAgentRegistration> socialAgentRegistrations,
                          ApplicationRegistrationList<ApplicationRegistration> applicationRegistrations) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -55,31 +55,31 @@ public class AgentRegistry extends CRUDResource {
     /**
      * Get a {@link AgentRegistry} at the provided <code>url</code>
      * @param url URL of the {@link AgentRegistry} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link AgentRegistry}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static AgentRegistry get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static AgentRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the agent registry to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the agent registry");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the agent registry");
         Objects.requireNonNull(contentType, "Must provide a content type for the agent registry");
-        AgentRegistry.Builder builder = new AgentRegistry.Builder(url, dataFactory, contentType);
+        AgentRegistry.Builder builder = new AgentRegistry.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link AgentRegistry}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static AgentRegistry get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static AgentRegistry get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
     
     /**
@@ -87,7 +87,7 @@ public class AgentRegistry extends CRUDResource {
      */
     public static class Builder {
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -97,18 +97,18 @@ public class AgentRegistry extends CRUDResource {
         private List<URL> applicationRegistrationUrls;
 
         /**
-         * Initialize builder with <code>url</code> and <code>dataFactory</code>
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
          *
          * @param url URL of the {@link AgentRegistry} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the agent registry builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the agent registry builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the agent registry builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the agent registry builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
             this.socialAgentRegistrationUrls = new ArrayList<>();
             this.applicationRegistrationUrls = new ArrayList<>();
@@ -158,8 +158,8 @@ public class AgentRegistry extends CRUDResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.socialAgentRegistrations = new SocialAgentRegistrationList<>(this.dataFactory, this.resource);
-                this.applicationRegistrations = new ApplicationRegistrationList<>(this.dataFactory, this.resource);
+                this.socialAgentRegistrations = new SocialAgentRegistrationList<>(this.saiSession, this.resource);
+                this.applicationRegistrations = new ApplicationRegistrationList<>(this.saiSession, this.resource);
                 if (!socialAgentRegistrationUrls.isEmpty()) { this.socialAgentRegistrations.addAll(socialAgentRegistrationUrls); }
                 if (!applicationRegistrationUrls.isEmpty()) { this.applicationRegistrations.addAll(applicationRegistrationUrls); }
                 this.socialAgentRegistrations.populate();
@@ -191,7 +191,7 @@ public class AgentRegistry extends CRUDResource {
          */
         public AgentRegistry build() throws SaiException {
             if (this.dataset == null) { populateDataset(); }
-            return new AgentRegistry(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, 
+            return new AgentRegistry(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
                                      this.socialAgentRegistrations, this.applicationRegistrations);
         }
     }
@@ -202,7 +202,7 @@ public class AgentRegistry extends CRUDResource {
      * types are built and returned by the iterator.
      */
     public static class SocialAgentRegistrationList<T> extends RegistrationList<T> {
-        public SocialAgentRegistrationList(DataFactory dataFactory, Resource resource) { super(dataFactory, resource, HAS_SOCIAL_AGENT_REGISTRATION); }
+        public SocialAgentRegistrationList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_SOCIAL_AGENT_REGISTRATION); }
         @Override
         public T find(URL agentUrl) {
             for (T registration : this) {
@@ -212,14 +212,14 @@ public class AgentRegistry extends CRUDResource {
             return null;
         }
         @Override
-        public Iterator<T> iterator() { return new SocialAgentRegistrationListIterator<>(this.getDataFactory(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new SocialAgentRegistrationListIterator<>(this.getSaiSession(), this.getRegistrationUrls()); }
         private class SocialAgentRegistrationListIterator<T> extends RegistrationListIterator<T> {
-            public SocialAgentRegistrationListIterator(DataFactory dataFactory, List<URL> registrationUrls) { super(dataFactory, registrationUrls); }
+            public SocialAgentRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
             @SneakyThrows
             @Override
             public T next() {
                 URL registrationUrl = current.next();
-                return (T) SocialAgentRegistration.get(registrationUrl, dataFactory);
+                return (T) SocialAgentRegistration.get(registrationUrl, saiSession);
             }
         }
     }
@@ -230,7 +230,7 @@ public class AgentRegistry extends CRUDResource {
      * types are built and returned by the iterator.
      */
     public static class ApplicationRegistrationList<T> extends RegistrationList<T> {
-        public ApplicationRegistrationList(DataFactory dataFactory, Resource resource) { super(dataFactory, resource, HAS_APPLICATION_REGISTRATION); }
+        public ApplicationRegistrationList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_APPLICATION_REGISTRATION); }
         @Override
         public T find(URL agentUrl) {
             for (T registration : this) {
@@ -240,14 +240,14 @@ public class AgentRegistry extends CRUDResource {
             return null;
         }
         @Override
-        public Iterator<T> iterator() { return new ApplicationRegistrationListIterator<>(this.getDataFactory(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new ApplicationRegistrationListIterator<>(this.getSaiSession(), this.getRegistrationUrls()); }
         private class ApplicationRegistrationListIterator<T> extends RegistrationListIterator<T> {
-            public ApplicationRegistrationListIterator(DataFactory dataFactory, List<URL> registrationUrls) { super(dataFactory, registrationUrls); }
+            public ApplicationRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
             @SneakyThrows
             @Override
             public T next() {
                 URL registrationUrl = current.next();
-                return (T) ApplicationRegistration.get(registrationUrl, dataFactory);
+                return (T) ApplicationRegistration.get(registrationUrl, saiSession);
             }
         }
     }

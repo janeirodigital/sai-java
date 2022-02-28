@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -37,12 +37,12 @@ public class SocialAgentProfile extends CRUDResource {
     /**
      * Construct a new {@link SocialAgentProfile}
      * @param url URL of the {@link SocialAgentProfile}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    public SocialAgentProfile(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
+    public SocialAgentProfile(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
                               URL registrySetUrl, URL authorizationAgentUrl, URL accessInboxUrl, List<URL> oidcIssuerUrls) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -55,31 +55,31 @@ public class SocialAgentProfile extends CRUDResource {
     /**
      * Get a {@link SocialAgentProfile} at the provided <code>url</code>
      * @param url URL of the {@link SocialAgentProfile} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link SocialAgentProfile}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static SocialAgentProfile get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static SocialAgentProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the social agent profile to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the social agent profile");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the social agent profile");
         Objects.requireNonNull(contentType, "Must provide a content type for the social agent profile");
-        SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, dataFactory, contentType);
+        SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link SocialAgentProfile}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static SocialAgentProfile get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static SocialAgentProfile get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
     
     /**
@@ -88,7 +88,7 @@ public class SocialAgentProfile extends CRUDResource {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -98,15 +98,15 @@ public class SocialAgentProfile extends CRUDResource {
         List<URL> oidcIssuerUrls;
 
         /**
-         * Initialize builder with <code>url</code> and <code>dataFactory</code> 
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link SocialAgentProfile} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the social agent profile builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the social agent profile builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the social agent profile builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
         }
 
@@ -214,7 +214,7 @@ public class SocialAgentProfile extends CRUDResource {
             Objects.requireNonNull(accessInboxUrl, "Must provide an access inbox for the social agent");
             Objects.requireNonNull(oidcIssuerUrls, "Must provide oidc issuer urls for the social agent");
             if (this.dataset == null) { populateDataset(); }
-            return new SocialAgentProfile(this.url, this.dataFactory, this.dataset, this.resource, this.contentType,
+            return new SocialAgentProfile(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
                                           this.registrySetUrl, this.authorizationAgentUrl, this.accessInboxUrl, this.oidcIssuerUrls);                   
         }
 

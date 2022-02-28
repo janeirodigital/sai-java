@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import com.janeirodigital.shapetrees.core.validation.ShapeTree;
 import com.janeirodigital.shapetrees.core.validation.ShapeTreeFactory;
@@ -38,9 +38,9 @@ public class DataInstance extends CRUDResource {
     private boolean draft;
 
 
-    private DataInstance(URL url, DataFactory dataFactory, boolean unprotected, Model dataset, Resource resource, ContentType contentType,
+    private DataInstance(URL url, SaiSession saiSession, boolean unprotected, Model dataset, Resource resource, ContentType contentType,
                          ReadableDataGrant dataGrant, DataInstance parent, ShapeTree shapeTree, boolean draft) throws SaiException {
-        super(url, dataFactory, unprotected);
+        super(url, saiSession, unprotected);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -53,45 +53,45 @@ public class DataInstance extends CRUDResource {
     /**
      * Get a {@link DataInstance} at the provided <code>url</code>
      * @param url URL of the {@link DataInstance} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataInstance}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static DataInstance get(URL url, DataFactory dataFactory, boolean unprotected, ContentType contentType, ReadableDataGrant dataGrant) throws SaiException, SaiNotFoundException {
+    public static DataInstance get(URL url, SaiSession saiSession, boolean unprotected, ContentType contentType, ReadableDataGrant dataGrant) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the readable data instance to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the readable data instance");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable data instance");
         Objects.requireNonNull(contentType, "Must provide a content type for the readable data instance");
-        DataInstance.Builder builder = new DataInstance.Builder(url, dataFactory, contentType);
-        if (!unprotected) { return getProtected(url, dataFactory, contentType, dataGrant, builder); } else { return getUnprotected(url, dataFactory, contentType, dataGrant, builder); }
+        DataInstance.Builder builder = new DataInstance.Builder(url, saiSession, contentType);
+        if (!unprotected) { return getProtected(url, saiSession, contentType, dataGrant, builder); } else { return getUnprotected(url, saiSession, contentType, dataGrant, builder); }
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, boolean, ContentType, ReadableDataGrant)}
+     * Call {@link #get(URL, SaiSession, boolean, ContentType, ReadableDataGrant)}
      * without specifying a desired content type for retrieval
      * @param url URL of the {@link DataInstance} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @param dataGrant {@link ReadableDataGrant} associated with {@link DataInstance} access
      * @return Retrieved {@link DataInstance}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static DataInstance get(URL url, DataFactory dataFactory, ReadableDataGrant dataGrant) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, false, DEFAULT_RDF_CONTENT_TYPE, dataGrant);
+    public static DataInstance get(URL url, SaiSession saiSession, ReadableDataGrant dataGrant) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, false, DEFAULT_RDF_CONTENT_TYPE, dataGrant);
     }
     
-    private static DataInstance getProtected(URL url, DataFactory dataFactory, ContentType contentType, ReadableDataGrant dataGrant, DataInstance.Builder builder) throws SaiException, SaiNotFoundException {
+    private static DataInstance getProtected(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance.Builder builder) throws SaiException, SaiNotFoundException {
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         builder.setDataGrant(dataGrant);
         return builder.build();
     }
 
-    private static DataInstance getUnprotected(URL url, DataFactory dataFactory, ContentType contentType, ReadableDataGrant dataGrant, DataInstance.Builder builder) throws SaiException, SaiNotFoundException {
+    private static DataInstance getUnprotected(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance.Builder builder) throws SaiException, SaiNotFoundException {
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getRdfResource(dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getRdfResource(saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         builder.setDataGrant(dataGrant);
@@ -119,7 +119,7 @@ public class DataInstance extends CRUDResource {
         ReadableDataGrant childGrant = findChildGrant(shapeTreeUrl);
         // get "child references" for shape tree - gets the shape path for a referenced shape tree // looks in the graph for instances
         List<URL> childUrls = getChildReferences(shapeTreeUrl);
-        return new DataInstanceList(this.dataFactory, childGrant, childUrls);
+        return new DataInstanceList(this.saiSession, childGrant, childUrls);
     }
 
     public DataInstance newChildInstance(URL shapeTreeUrl) throws SaiException, SaiNotFoundException {
@@ -213,7 +213,7 @@ public class DataInstance extends CRUDResource {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -224,12 +224,12 @@ public class DataInstance extends CRUDResource {
         private boolean draft;
 
 
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the data instance builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the data instance builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the data instance builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the data instance builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
             this.unprotected = false;
             this.draft = true;
@@ -283,7 +283,7 @@ public class DataInstance extends CRUDResource {
                 this.resource = getNewResource(this.url);
                 this.dataset = this.resource.getModel();
             }
-            return new DataInstance(this.url, this.dataFactory, this.unprotected, this.dataset, this.resource,
+            return new DataInstance(this.url, this.saiSession, this.unprotected, this.dataset, this.resource,
                                     this.contentType, this.dataGrant, this.parent, this.shapeTree, this.draft);
         }
 

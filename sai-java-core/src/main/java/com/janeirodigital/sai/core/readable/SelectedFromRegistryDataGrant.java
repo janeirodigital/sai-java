@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -22,17 +22,17 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_S
 public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
 
     List<URL> dataInstances;
-    protected SelectedFromRegistryDataGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
+    protected SelectedFromRegistryDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
                                             URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
                                             URL dataRegistration, List<URL> dataInstances, URL accessNeed, URL delegationOf) throws SaiException {
-        super(url, dataFactory, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
+        super(url, saiSession, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
               SCOPE_SELECTED_FROM_REGISTRY, dataRegistration, accessNeed, delegationOf);
         this.dataInstances = dataInstances;
     }
 
     @Override
     public DataInstanceList getDataInstances() {
-        return new DataInstanceList(dataFactory, this, this.dataInstances);
+        return new DataInstanceList(saiSession, this, this.dataInstances);
     }
 
     @Override

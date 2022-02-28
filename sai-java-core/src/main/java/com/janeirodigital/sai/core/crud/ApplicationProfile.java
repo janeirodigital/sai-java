@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -57,14 +57,14 @@ public class ApplicationProfile extends CRUDResource {
     /**
      * Construct a new {@link ApplicationProfile}
      * @param url URL of the {@link ApplicationProfile}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    private ApplicationProfile(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
-                              String name, String description, URL authorUrl, URL logoUrl, List<URL>accessNeedGroupUrls,
-                              List<URL> redirectUrls, URL clientUrl, URL tosUrl, List<String> scopes, List<String> grantTypes,
-                              List<String> responseTypes, int defaultMaxAge, boolean requireAuthTime) throws SaiException {
-        super(url, dataFactory, false);
+    private ApplicationProfile(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
+                               String name, String description, URL authorUrl, URL logoUrl, List<URL>accessNeedGroupUrls,
+                               List<URL> redirectUrls, URL clientUrl, URL tosUrl, List<String> scopes, List<String> grantTypes,
+                               List<String> responseTypes, int defaultMaxAge, boolean requireAuthTime) throws SaiException {
+        super(url, saiSession, false);
         // By default the application profile document is JSON-LD
         this.dataset = dataset;
         this.resource = resource;
@@ -88,16 +88,16 @@ public class ApplicationProfile extends CRUDResource {
     /**
      * Get a {@link ApplicationProfile} from the provided <code>url</code>
      * @param url URL of the {@link RegistrySet} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ApplicationProfile}
      * @throws SaiException
      */
-    public static ApplicationProfile get(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
+    public static ApplicationProfile get(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the data grant to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the data grant");
-        Builder builder = new Builder(url, dataFactory);
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the data grant");
+        Builder builder = new Builder(url, saiSession);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, LD_JSON.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         return builder.build();
@@ -109,7 +109,7 @@ public class ApplicationProfile extends CRUDResource {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -129,15 +129,15 @@ public class ApplicationProfile extends CRUDResource {
         private Boolean requireAuthTime;
 
         /**
-         * Initialize builder with <code>url</code> and <code>dataFactory</code> 
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link ApplicationProfile} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, DataFactory dataFactory) {
+        public Builder(URL url, SaiSession saiSession) {
             Objects.requireNonNull(url, "Must provide a URL for the application profile builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the application profile builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the application profile builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = LD_JSON; // Client Identifier documents are JSON-LD
         }
 
@@ -367,7 +367,7 @@ public class ApplicationProfile extends CRUDResource {
             Objects.requireNonNull(grantTypes, "Must provide grant types for solid-oidc");
             Objects.requireNonNull(responseTypes, "Must provide response types for solid-oidc");
             if (this.dataset == null) { populateDataset(); }
-            return new ApplicationProfile(this.url, this.dataFactory, this.dataset, this.resource, this.contentType,
+            return new ApplicationProfile(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
                                           this.name, this.description, this.authorUrl, this.logoUrl, this.accessNeedGroupUrls,
                                           this.redirectUrls, this.clientUrl, this.tosUrl, this.scopes, this.grantTypes,
                                           this.responseTypes, this.defaultMaxAge, this.requireAuthTime);

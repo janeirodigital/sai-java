@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -40,10 +40,10 @@ public abstract class ReadableDataGrant extends ReadableResource {
     private final URL accessNeed;
     private final URL delegationOf;
 
-    protected ReadableDataGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
+    protected ReadableDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
                                 URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
                                 RDFNode scopeOfGrant, URL dataRegistration, URL accessNeed, URL delegationOf) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;
@@ -61,18 +61,18 @@ public abstract class ReadableDataGrant extends ReadableResource {
     /**
      * Get a {@link ReadableDataGrant} at the provided <code>url</code>
      * @param url URL of the {@link ReadableDataGrant} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataGrant}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static ReadableDataGrant get(URL url, DataFactory dataFactory, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ReadableDataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the readable data grant to get");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory to assign to the readable data grant");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable data grant");
         Objects.requireNonNull(contentType, "Must provide a content type for the readable data grant");
-        ReadableDataGrant.Builder builder = new ReadableDataGrant.Builder(url, dataFactory, contentType);
+        ReadableDataGrant.Builder builder = new ReadableDataGrant.Builder(url, saiSession, contentType);
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(dataFactory.getAuthorizedSession(), dataFactory.getHttpClient(), url, headers))) {
+        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
             builder.setDataset(getRdfModelFromResponse(response));
         }
         ReadableDataGrant dataGrant = builder.build();
@@ -80,15 +80,15 @@ public abstract class ReadableDataGrant extends ReadableResource {
     }
 
     /**
-     * Call {@link #get(URL, DataFactory, ContentType)} without specifying a desired content type for retrieval
+     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link ReadableDataGrant} to get
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataGrant}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static ReadableDataGrant get(URL url, DataFactory dataFactory) throws SaiNotFoundException, SaiException {
-        return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableDataGrant get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     protected abstract DataInstanceList getDataInstances() throws SaiNotFoundException, SaiException;
@@ -99,7 +99,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
     public static DataInstance newDataInstance(ReadableDataGrant dataGrant, DataInstance parent) throws SaiException {
         // Get a URL for the data instance to add (built from the data registration)
         URL instanceUrl = addChildToUrlPath(dataGrant.dataRegistration, UUID.randomUUID().toString());
-        DataInstance.Builder builder = new DataInstance.Builder(instanceUrl, dataGrant.dataFactory, dataGrant.contentType);
+        DataInstance.Builder builder = new DataInstance.Builder(instanceUrl, dataGrant.saiSession, dataGrant.contentType);
         builder.setDataGrant(dataGrant).setDraft(true);
         if (parent != null) { builder.setParent(parent); }  // if this is a child instance set the parent
         return builder.build();
@@ -111,7 +111,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
     public static class Builder {
 
         private final URL url;
-        private final DataFactory dataFactory;
+        private final SaiSession saiSession;
         private final ContentType contentType;
         private Model dataset;
         private Resource resource;
@@ -128,17 +128,17 @@ public abstract class ReadableDataGrant extends ReadableResource {
         private URL delegationOf;
 
         /**
-         * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
          * @param url URL of the {@link ReadableDataGrant} to build
-         * @param dataFactory {@link DataFactory} to assign
+         * @param saiSession {@link SaiSession} to assign
          * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, DataFactory dataFactory, ContentType contentType) {
+        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
             Objects.requireNonNull(url, "Must provide a URL for the data grant builder");
-            Objects.requireNonNull(dataFactory, "Must provide a data factory for the data grant builder");
+            Objects.requireNonNull(saiSession, "Must provide a sai session for the data grant builder");
             Objects.requireNonNull(contentType, "Must provide a content type for the data grant builder");
             this.url = url;
-            this.dataFactory = dataFactory;
+            this.saiSession = saiSession;
             this.contentType = contentType;
             this.accessModes = new ArrayList<>();
             this.creatorAccessModes = new ArrayList<>();
@@ -190,15 +190,15 @@ public abstract class ReadableDataGrant extends ReadableResource {
          */
         public ReadableDataGrant build() throws SaiException {
             if (this.scopeOfGrant.equals(SCOPE_ALL_FROM_REGISTRY)) {
-                return new AllFromRegistryDataGrant(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.dataOwner,
+                return new AllFromRegistryDataGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
                         this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes,
                         this.dataRegistration, this.accessNeed, this.delegationOf);
             } else if (this.scopeOfGrant.equals(SCOPE_SELECTED_FROM_REGISTRY)) {
-                return new SelectedFromRegistryDataGrant(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.dataOwner,
+                return new SelectedFromRegistryDataGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
                         this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes, this.dataRegistration,
                         this.dataInstances, this.accessNeed, this.delegationOf);
             } else if (this.scopeOfGrant.equals(SCOPE_INHERITED)) {
-                return new InheritedDataGrant(this.url, this.dataFactory, this.dataset, this.resource, this.contentType, this.dataOwner,
+                return new InheritedDataGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
                         this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes,
                         this.dataRegistration, this.accessNeed, this.inheritsFrom, this.delegationOf);
             }

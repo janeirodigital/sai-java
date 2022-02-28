@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -31,13 +31,13 @@ public abstract class AgentRegistration extends CRUDResource {
     /**
      * Construct a new {@link AgentRegistration}
      * @param url URL of the {@link AgentRegistration}
-     * @param dataFactory {@link DataFactory} to assign
+     * @param saiSession {@link SaiSession} to assign
      * @throws SaiException
      */
-    protected AgentRegistration(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
+    protected AgentRegistration(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
                                 URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
                                 URL registeredAgent, URL accessGrantUrl) throws SaiException {
-        super(url, dataFactory, false);
+        super(url, saiSession, false);
         this.dataset = dataset;
         this.resource = resource;
         this.contentType = contentType;

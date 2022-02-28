@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -22,10 +22,10 @@ public abstract class InheritableDataGrant extends ReadableDataGrant {
 
     private final List<InheritedDataGrant> inheritingGrants;
 
-    protected InheritableDataGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
+    protected InheritableDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
                                    URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
                                    RDFNode scopeOfGrant, URL dataRegistration, URL accessNeed, URL delegationOf) throws SaiException {
-        super(url, dataFactory, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
+        super(url, saiSession, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
               scopeOfGrant, dataRegistration, accessNeed, delegationOf);
         this.inheritingGrants = new ArrayList<>();
     }

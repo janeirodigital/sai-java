@@ -3,7 +3,7 @@ package com.janeirodigital.sai.core.readable;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -23,10 +23,10 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_I
 @Getter
 public class InheritedDataGrant extends ReadableDataGrant {
     private final URL inheritsFrom;  // TODO - Should this be a URL or a DataGrant?
-    protected InheritedDataGrant(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
+    protected InheritedDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
                                  URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
                                  URL dataRegistration, URL accessNeed, URL inheritsFrom, URL delegationOf) throws SaiException {
-        super(url, dataFactory, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
+        super(url, saiSession, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
                 SCOPE_INHERITED, dataRegistration, accessNeed, delegationOf);
         this.inheritsFrom = inheritsFrom;
     }
@@ -34,13 +34,12 @@ public class InheritedDataGrant extends ReadableDataGrant {
     @Override
     public DataInstanceList getDataInstances() throws SaiException {
         try {
-            // TODO - change this to call from the data factory
-            ReadableDataGrant parentGrant = ReadableDataGrant.get(this.inheritsFrom, this.dataFactory);
+            ReadableDataGrant parentGrant = ReadableDataGrant.get(this.inheritsFrom, this.saiSession);
             List<URL> childInstanceUrls = new ArrayList<>();
             for (DataInstance parentInstance : parentGrant.getDataInstances()) {
                 childInstanceUrls.addAll(parentInstance.getChildReferences(this.getRegisteredShapeTree()));
             }
-            return new DataInstanceList(this.dataFactory, this, childInstanceUrls);
+            return new DataInstanceList(this.saiSession, this, childInstanceUrls);
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
         }

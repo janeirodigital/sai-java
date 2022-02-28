@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -29,7 +29,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 public class ReadableResource {
 
     protected final URL url;
-    protected final DataFactory dataFactory;
+    protected final SaiSession saiSession;
     protected final OkHttpClient httpClient;
     protected Model dataset;
     protected Resource resource;
@@ -40,19 +40,19 @@ public class ReadableResource {
 
     /**
      * Construct a Readable resource for <code>resourceUrl</code>, assigning the provided
-     * <code>dataFactory</code> for subsequent operations, along with an HTTP client to
+     * <code>saiSession</code> for subsequent operations, along with an HTTP client to
      * facilitate them, and the associated credentials to use if the resource is protected
      * @param resourceUrl URL of the Readable resource
-     * @param dataFactory Data factory to assign
+     * @param saiSession Data factory to assign
      * @param unprotected When true no authorization credentials will be sent in requests to this resource
      */
-    public ReadableResource(URL resourceUrl, DataFactory dataFactory, boolean unprotected) throws SaiException {
+    public ReadableResource(URL resourceUrl, SaiSession saiSession, boolean unprotected) throws SaiException {
         Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory");
-        Objects.requireNonNull(dataFactory.getHttpClient(), "Must provide a valid HTTP client");
+        Objects.requireNonNull(saiSession, "Must provide a sai session");
+        Objects.requireNonNull(saiSession.getHttpClient(), "Must provide a valid HTTP client");
         this.url = resourceUrl;
-        this.dataFactory = dataFactory;
-        this.httpClient = dataFactory.getHttpClient();
+        this.saiSession = saiSession;
+        this.httpClient = saiSession.getHttpClient();
         this.dataset = null;
         this.resource = null;
         this.unprotected = unprotected;
@@ -69,7 +69,7 @@ public class ReadableResource {
         if (this.isUnprotected()) { this.fetchUnprotectedData(); } else {
             // wrapping the call in try-with-resources automatically closes the response
             Headers headers = addHttpHeader(HttpHeader.ACCEPT, this.contentType.getValue());
-            try (Response response = checkReadableResponse(getProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, headers))) {
+            try (Response response = checkReadableResponse(getProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.url, headers))) {
                 this.dataset = getRdfModelFromResponse(response);
                 this.resource = getResourceFromModel(this.dataset, this.url);
             }

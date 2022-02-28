@@ -39,7 +39,7 @@ class ApplicationTests {
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         ApplicationSession applicationSession = ApplicationSessionFactory.get(app, mockSession);
         assertNotNull(applicationSession);
-        assertNotNull(applicationSession.getDataFactory());
+        assertNotNull(applicationSession.getSaiSession());
         assertEquals(app, applicationSession.getApplication());
         assertEquals(mockSession, applicationSession.getAuthorizedSession());
         assertEquals(app.getClientFactory(), applicationSession.getClientFactory());
