@@ -99,6 +99,21 @@ public class DataInstance extends CRUDResource {
         return builder.build();
     }
 
+    @Override
+    public void update() throws SaiException {
+        if (this.parent != null && this.draft) { this.parent.addChildReference(this); }
+        super.update();
+        this.draft = false;
+    }
+
+    @Override
+    public void delete() throws SaiException {
+        if (!this.draft) {
+            super.delete();
+            this.parent.removeChildReference(this);
+        }
+    }
+
     public DataInstanceList getChildInstances(URL shapeTreeUrl) throws SaiException {
         // Lookup the inherited child grant based on the shape tree type
         ReadableDataGrant childGrant = findChildGrant(shapeTreeUrl);
@@ -113,10 +128,10 @@ public class DataInstance extends CRUDResource {
         return childGrant.newDataInstance(this);
     }
 
-    public void addChildReference(DataInstance childInstance) throws SaiException, SaiNotFoundException {
+    public void addChildReference(DataInstance childInstance) throws SaiException {
         // Lookup the shape tree reference for the child instance
         ShapeTreeReference reference = findChildReference(childInstance.shapeTree.getId());
-        if (reference == null) { throw new SaiNotFoundException("Cannot find a child reference to shape tree " + this.shapeTree.getId() + " to add to parent data instance: " + this.getUrl()); }
+        if (reference == null) { throw new SaiException("Cannot find a child reference to shape tree " + this.shapeTree.getId() + " to add to parent data instance: " + this.getUrl()); }
         // Get the property use from the shape tree reference
         Property property = getPropertyFromReference(reference);
         if (property == null) { throw new SaiException("Unable to find a property to add child instance to parent instance with: " + this.getUrl()); }
@@ -126,10 +141,10 @@ public class DataInstance extends CRUDResource {
         this.update();
     }
 
-    public void removeChildReference(DataInstance childInstance) throws SaiException, SaiNotFoundException {
+    public void removeChildReference(DataInstance childInstance) throws SaiException {
         // Lookup the shape tree reference for the child instance
         ShapeTreeReference reference = findChildReference(childInstance.shapeTree.getId());
-        if (reference == null) { throw new SaiNotFoundException("Cannot find a child reference to shape tree " + this.shapeTree.getId() + " to remove from parent data instance: " + this.getUrl()); }
+        if (reference == null) { throw new SaiException("Cannot find a child reference to shape tree " + this.shapeTree.getId() + " to remove from parent data instance: " + this.getUrl()); }
         // Get the property use from the shape tree reference
         Property property = getPropertyFromReference(reference);
         if (property == null) { throw new SaiException("Unable to find a property to remove child instance from parent instance with: " + this.getUrl()); }
