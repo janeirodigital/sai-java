@@ -338,15 +338,15 @@ class HttpHelperTests {
     void confirmManageLinkRelationHttpHeaders() {
 
         // Add to an empty list of headers
-        Headers relations = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.BASIC_CONTAINER.getURI());
-        relations = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.CONTAINER.getURI(), relations);
+        Headers relations = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.LDP_BASIC_CONTAINER.getURI());
+        relations = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.LDP_CONTAINER.getURI(), relations);
         relations = addLinkRelationHeader(LinkRelation.ACL, "https://some.pod.example/resource.acl", relations);
         assertEquals(3, relations.size());
 
         Map<String, List<String>> headerMap = relations.toMultimap();
         List<String> linkHeaders = headerMap.get(HttpHeader.LINK.getValue());
-        assertTrue(linkHeaders.contains(getLinkRelationString(LinkRelation.TYPE, LdpVocabulary.BASIC_CONTAINER.getURI())));
-        assertTrue(linkHeaders.contains(getLinkRelationString(LinkRelation.TYPE, LdpVocabulary.CONTAINER.getURI())));
+        assertTrue(linkHeaders.contains(getLinkRelationString(LinkRelation.TYPE, LdpVocabulary.LDP_BASIC_CONTAINER.getURI())));
+        assertTrue(linkHeaders.contains(getLinkRelationString(LinkRelation.TYPE, LdpVocabulary.LDP_CONTAINER.getURI())));
         assertTrue(linkHeaders.contains(getLinkRelationString(LinkRelation.ACL, "https://some.pod.example/resource.acl")));
 
     }

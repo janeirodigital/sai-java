@@ -13,12 +13,14 @@ import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.core.vocabularies.LdpVocabulary.LDP_CONTAINS;
 
 /**
  * Modifiable instantiation of an
@@ -32,6 +34,7 @@ public class DataRegistration extends CRUDResource {
     private final OffsetDateTime registeredAt;
     private final OffsetDateTime updatedAt;
     private final URL registeredShapeTree;
+    private final List<URL> dataInstances;
 
     /**
      * Construct a new {@link DataRegistration}
@@ -41,7 +44,7 @@ public class DataRegistration extends CRUDResource {
      */
     private DataRegistration(URL url, DataFactory dataFactory, Model dataset, Resource resource, ContentType contentType,
                              URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
-                             URL registeredShapeTree) throws SaiException {
+                             URL registeredShapeTree, List<URL> dataInstances) throws SaiException {
         super(url, dataFactory, false);
         this.dataset = dataset;
         this.resource = resource;
@@ -51,6 +54,7 @@ public class DataRegistration extends CRUDResource {
         this.registeredAt = registeredAt;
         this.updatedAt = updatedAt;
         this.registeredShapeTree = registeredShapeTree;
+        this.dataInstances = dataInstances;
     }
 
     /**
@@ -101,6 +105,7 @@ public class DataRegistration extends CRUDResource {
         private OffsetDateTime registeredAt;
         private OffsetDateTime updatedAt;
         private URL registeredShapeTree;
+        private List<URL> dataInstances;
 
         /**
          * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
@@ -198,6 +203,7 @@ public class DataRegistration extends CRUDResource {
                 this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
                 this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
+                this.dataInstances = getUrlObjects(this.resource, LDP_CONTAINS);
             } catch (SaiNotFoundException | SaiException ex) {
                 throw new SaiException("Unable to populate data registration: " + ex.getMessage());
             }
@@ -234,7 +240,7 @@ public class DataRegistration extends CRUDResource {
             if (this.dataset == null) { populateDataset(); }
             return new DataRegistration(this.url, this.dataFactory, this.dataset, this.resource, this.contentType,
                                         this.registeredBy, this.registeredWith, this.registeredAt, this.updatedAt,
-                                        this.registeredShapeTree);
+                                        this.registeredShapeTree, this.dataInstances);
         }
 
 

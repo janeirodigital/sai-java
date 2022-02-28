@@ -87,6 +87,7 @@ public class InteropVocabulary {
     public static final Property INHERITS_FROM_GRANT = model.createProperty(NS + "inheritsFromGrant");
     public static final Property DELEGATION_OF_GRANT = model.createProperty(NS + "delegationOfGrant");
 
+
     // Data Registry
     public static final RDFNode DATA_REGISTRY = model.getResource(NS + "DataRegistry");
 

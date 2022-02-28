@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
@@ -90,10 +91,19 @@ public abstract class ReadableDataGrant extends ReadableResource {
         return get(url, dataFactory, DEFAULT_RDF_CONTENT_TYPE);
     }
 
-    // protected abstract Iterator<DataInstance> getDataInstances();
+    protected abstract DataInstanceList getDataInstances() throws SaiNotFoundException, SaiException;
 
-    // TODO - add method for new data instance
+    protected abstract DataInstance newDataInstance(DataInstance parent) throws SaiException;
 
+    // Static helper called from grant specific new data instance instantiations
+    public static DataInstance newDataInstance(ReadableDataGrant dataGrant, DataInstance parent) throws SaiException {
+        // Get a URL for the data instance to add (built from the data registration)
+        URL instanceUrl = addChildToUrlPath(dataGrant.dataRegistration, UUID.randomUUID().toString());
+        DataInstance.Builder builder = new DataInstance.Builder(instanceUrl, dataGrant.dataFactory, dataGrant.contentType);
+        builder.setDataGrant(dataGrant).setDraft(true);
+        if (parent != null) { builder.setParent(parent); }  // if this is a child instance set the parent
+        return builder.build();
+    }
 
     /**
      * Builder for {@link ReadableDataGrant} instances.
@@ -119,8 +129,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
 
         /**
          * Initialize builder with <code>url</code>, <code>dataFactory</code>, and desired <code>contentType</code>
-         *
-         * @param url         URL of the {@link ReadableDataGrant} to build
+         * @param url URL of the {@link ReadableDataGrant} to build
          * @param dataFactory {@link DataFactory} to assign
          * @param contentType {@link ContentType} to assign
          */

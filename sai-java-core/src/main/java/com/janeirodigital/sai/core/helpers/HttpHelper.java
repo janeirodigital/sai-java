@@ -309,7 +309,7 @@ public class HttpHelper {
      * @throws SaiException
      */
     public static Response putRdfContainer(OkHttpClient httpClient, URL url, Resource resource, ContentType contentType, String jsonLdContext) throws SaiException {
-        Headers headers = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.BASIC_CONTAINER.getURI());
+        Headers headers = addLinkRelationHeader(LinkRelation.TYPE, LdpVocabulary.LDP_BASIC_CONTAINER.getURI());
         return putRdfResource(httpClient, url, resource, contentType, jsonLdContext, headers);
     }
 

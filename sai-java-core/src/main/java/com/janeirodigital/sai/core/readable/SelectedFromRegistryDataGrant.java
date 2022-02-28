@@ -30,4 +30,14 @@ public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
         this.dataInstances = dataInstances;
     }
 
+    @Override
+    public DataInstanceList getDataInstances() {
+        return new DataInstanceList(dataFactory, this, this.dataInstances);
+    }
+
+    @Override
+    public DataInstance newDataInstance(DataInstance instance) throws SaiException {
+        throw new SaiException("Cannot create new data instances for a SelectedFromRegistry grant scope");
+    }
+
 }

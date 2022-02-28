@@ -1,7 +1,9 @@
 package com.janeirodigital.sai.core.readable;
 
+import com.janeirodigital.sai.core.crud.DataRegistration;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.factories.DataFactory;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Model;
@@ -26,6 +28,23 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
                                        URL dataRegistration, URL accessNeed, URL delegationOf) throws SaiException {
         super(url, dataFactory, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
               SCOPE_ALL_FROM_REGISTRY, dataRegistration, accessNeed, delegationOf);
+    }
+
+    @Override
+    public DataInstanceList getDataInstances() throws SaiException {
+        // Get the data registration
+        try {
+            // TODO - change get to call from data factory instead
+            DataRegistration registration = DataRegistration.get(this.getDataRegistration(), this.dataFactory);
+            return new DataInstanceList(dataFactory, this, registration.getDataInstances());
+        } catch (SaiNotFoundException ex) {
+            throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
+        }
+    }
+
+    @Override
+    public DataInstance newDataInstance(DataInstance instance) throws SaiException {
+        return ReadableDataGrant.newDataInstance(this, null);
     }
 
 }

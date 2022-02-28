@@ -56,7 +56,7 @@ public class TestableCRUDResource extends CRUDResource {
     public static TestableCRUDResource get(URL url, DataFactory dataFactory, boolean unprotected) throws SaiNotFoundException, SaiException {
         Objects.requireNonNull(url, "Must provide a URL to get");
         Objects.requireNonNull(dataFactory, "Must provide a data factory to assign");
-        if (unprotected) { return getProtected(url, dataFactory); } else { return getUnprotected(url, dataFactory); }
+        if (!unprotected) { return getProtected(url, dataFactory); } else { return getUnprotected(url, dataFactory); }
     }
 
     private static TestableCRUDResource getProtected(URL url, DataFactory dataFactory) throws SaiException, SaiNotFoundException {
