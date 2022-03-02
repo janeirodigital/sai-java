@@ -130,8 +130,8 @@ class SocialAgentProfileTests {
     private void checkProfile(SocialAgentProfile profile) throws SaiException {
         assertNotNull(profile);
         assertEquals(stringToUrl("https://trusted.example/alice/"), profile.getAuthorizationAgentUrl());
-        assertEquals(stringToUrl("https://alice.example/access/inbox/"), profile.getAccessInboxUrl());
-        assertEquals(stringToUrl("https://alice.example/registry_set"), profile.getRegistrySetUrl());
+        assertEquals(aliceAccessInbox, profile.getAccessInboxUrl());
+        assertEquals(aliceRegistrySet, profile.getRegistrySetUrl());
         assertTrue(profile.getOidcIssuerUrls().contains(stringToUrl("https://idp.alice.example")));
     }
 

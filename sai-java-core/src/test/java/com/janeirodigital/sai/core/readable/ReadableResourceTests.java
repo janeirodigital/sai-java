@@ -93,9 +93,9 @@ class ReadableResourceTests {
 
     @Test
     @DisplayName("Fail to build a protected readable resource - missing fields")
-    void failToGetReadableResourceMissingFields() throws SaiException, SaiNotFoundException {
+    void failToGetReadableResourceMissingFields() {
         URL url = toUrl(server, "/missing-fields/readable/readable-resource#project");
-        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.get(url, saiSession, false));
+        assertThrows(SaiException.class, () -> TestableReadableResource.get(url, saiSession, false));
     }
 
     @Test
@@ -124,7 +124,7 @@ class ReadableResourceTests {
 
     @Test
     @DisplayName("Test readable response check - unsuccessful - resource not found")
-    void testReadableResponseCheckNotFound() throws SaiException {
+    void testReadableResponseCheckNotFound() {
         URL missingUrl = toUrl(server, "/missing/readable/resource");
         assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.get(missingUrl, saiSession, false));
     }

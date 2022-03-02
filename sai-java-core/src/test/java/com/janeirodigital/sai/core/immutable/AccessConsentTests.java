@@ -3,9 +3,9 @@ package com.janeirodigital.sai.core.immutable;
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,7 +21,6 @@ import java.util.List;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPut;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_ALL;
@@ -33,8 +32,6 @@ class AccessConsentTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static RequestMatchingFixtureDispatcher dispatcher;
-
     private static URL ALICE_ID;
     private static URL JARVIS_ID;
     private static URL PROJECTRON_ID;
@@ -51,7 +48,7 @@ class AccessConsentTests {
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
         // Initialize request fixtures for the MockWebServer
-        dispatcher = new RequestMatchingFixtureDispatcher();
+        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET agent registry in Turtle
         mockOnGet(dispatcher, "/consents/access-all", "access/all/access-consent-all-ttl");
         mockOnPut(dispatcher, "/consents/access-all", "http/201");
@@ -96,29 +93,29 @@ class AccessConsentTests {
         URL issueUrl = toUrl(server, "/consents/data-all-issue");
         URL taskUrl = toUrl(server, "/consents/data-all-task");
         
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                                                    .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                                                    .setScopeOfConsent(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        DataConsent.Builder milestoneBuilder = new DataConsent.Builder(milestoneUrl, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+        DataConsent.Builder milestoneBuilder = new DataConsent.Builder(milestoneUrl, saiSession);
         DataConsent milestoneConsent = milestoneBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(MILESTONE_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfConsent(SCOPE_INHERITED).setAccessNeed(PROJECTRON_MILESTONE_NEED).setInheritsFrom(projectConsent.getUrl()).build();
 
-        DataConsent.Builder issueBuilder = new DataConsent.Builder(issueUrl, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+        DataConsent.Builder issueBuilder = new DataConsent.Builder(issueUrl, saiSession);
         DataConsent issueConsent = issueBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(ISSUE_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfConsent(SCOPE_INHERITED).setAccessNeed(PROJECTRON_ISSUE_NEED).setInheritsFrom(milestoneConsent.getUrl()).build();
 
-        DataConsent.Builder taskBuilder = new DataConsent.Builder(taskUrl, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+        DataConsent.Builder taskBuilder = new DataConsent.Builder(taskUrl, saiSession);
         DataConsent taskConsent = taskBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(TASK_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfConsent(SCOPE_INHERITED).setAccessNeed(PROJECTRON_TASK_NEED).setInheritsFrom(milestoneConsent.getUrl()).build();
 
         List<DataConsent> dataConsents = Arrays.asList(projectConsent, milestoneConsent, issueConsent, taskConsent);
 
-        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession);
         AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                                                    .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                                                    .setDataConsents(dataConsents).build();

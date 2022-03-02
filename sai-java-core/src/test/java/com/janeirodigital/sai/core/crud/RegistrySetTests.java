@@ -85,6 +85,15 @@ class RegistrySetTests {
     }
 
     @Test
+    @DisplayName("Reload crud registry set")
+    void reloadRegistrySet() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/registries");
+        RegistrySet registrySet = RegistrySet.get(url, saiSession);
+        RegistrySet reloaded = registrySet.reload();
+        checkRegistrySet(reloaded);
+    }
+
+    @Test
     @DisplayName("Fail to read existing crud registry set in turtle - missing required fields")
     void failToReadRegistrySet() {
         URL url = toUrl(server, "/missing-fields/ttl/registries");
@@ -106,7 +115,7 @@ class RegistrySetTests {
     void readRegistrySetJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession, LD_JSON);
-        checkRegistrySet(registrySet);
+        checkRegistrySetJsonLd(registrySet);
     }
 
     @Test
@@ -131,6 +140,13 @@ class RegistrySetTests {
     }
 
     private void checkRegistrySet(RegistrySet registrySet) {
+        assertNotNull(registrySet);
+        assertEquals(aliceAgentRegistry, registrySet.getAgentRegistryUrl());
+        assertEquals(aliceAccessConsentRegistry, registrySet.getAccessConsentRegistryUrl());
+        assertTrue(aliceDataRegistries.containsAll(registrySet.getDataRegistryUrls()));
+    }
+
+    private void checkRegistrySetJsonLd(RegistrySet registrySet) {
         assertNotNull(registrySet);
         assertEquals(aliceAgentRegistryJsonLd, registrySet.getAgentRegistryUrl());
         assertEquals(aliceAccessConsentRegistryJsonLd, registrySet.getAccessConsentRegistryUrl());

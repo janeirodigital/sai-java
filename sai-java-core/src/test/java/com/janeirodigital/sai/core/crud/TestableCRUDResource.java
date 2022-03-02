@@ -1,16 +1,13 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.TestableVocabulary;
-import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
+import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -19,72 +16,50 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.TestableVocabulary.*;
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 
-@Getter
+@Getter @Setter
 public class TestableCRUDResource extends CRUDResource {
 
     private static final String TESTABLE_RDF_TYPE = "https://graph.example/ns/terms#testable";
 
-    private final int id;
-    private final String name;
-    private final OffsetDateTime createdAt;
-    private final URL milestone;
-    private final boolean active;
-    private final List<URL> tags;
-    private final List<String> comments;
+    private int id;
+    private String name;
+    private OffsetDateTime createdAt;
+    private URL milestone;
+    private boolean active;
+    private List<URL> tags;
+    private List<String> comments;
 
-    public TestableCRUDResource(URL resourceUrl, SaiSession saiSession, boolean unprotected, Model dataset,
-                                Resource resource, ContentType contentType, int id, String name, OffsetDateTime createdAt,
-                                URL milestone, boolean active, List<URL> tags, List<String> comments) throws SaiException {
-        super(resourceUrl, saiSession, unprotected);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.id = id;
-        this.name = name;
-        this.createdAt = createdAt;
-        this.milestone = milestone;
-        this.active = active;
-        this.tags = tags;
-        this.comments = comments;
+    public TestableCRUDResource(Builder builder) throws SaiException {
+        super(builder);
+        this.id = builder.id;
+        this.name = builder.name;
+        this.createdAt = builder.createdAt;
+        this.milestone = builder.milestone;
+        this.active = builder.active;
+        this.tags = builder.tags;
+        this.comments = builder.comments;
     }
 
     public static TestableCRUDResource get(URL url, SaiSession saiSession, boolean unprotected) throws SaiNotFoundException, SaiException {
         Objects.requireNonNull(url, "Must provide a URL to get");
         Objects.requireNonNull(saiSession, "Must provide a sai session to assign");
-        if (!unprotected) { return getProtected(url, saiSession); } else { return getUnprotected(url, saiSession); }
-    }
-
-    private static TestableCRUDResource getProtected(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, false, TEXT_TURTLE);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, TEXT_TURTLE.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession);
+        if (unprotected) builder.setUnprotected();
+        try (Response response = read(url, saiSession, TEXT_TURTLE, unprotected)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(TEXT_TURTLE).build();
         }
-        return builder.build();
     }
 
-    private static TestableCRUDResource getUnprotected(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, false, TEXT_TURTLE);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, TEXT_TURTLE.getValue());
-        try (Response response = checkReadableResponse(getRdfResource(saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
-        }
-        return builder.build();
+    public TestableCRUDResource reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.unprotected);
     }
 
-    public static class Builder {
+    public static class Builder extends CRUDResource.Builder<Builder>  {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final boolean unprotected;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         private int id;
         private String name;
         private OffsetDateTime createdAt;
@@ -93,22 +68,20 @@ public class TestableCRUDResource extends CRUDResource {
         private List<URL> tags;
         private List<String> comments;
 
-        public Builder(URL url, SaiSession saiSession, boolean unprotected, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL");
-            Objects.requireNonNull(saiSession, "Must provide a sai session");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.unprotected = unprotected;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.tags = new ArrayList<>();
             this.comments = new ArrayList<>();
         }
 
+        @Override
+        public Builder getThis() { return this; }
+
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -180,8 +153,7 @@ public class TestableCRUDResource extends CRUDResource {
 
         public TestableCRUDResource build() throws SaiException {
             if (this.dataset == null) { populateDataset(); }
-            return new TestableCRUDResource(this.url, this.saiSession, this.unprotected, this.dataset, this.resource,
-                    this.contentType, this.id, this.name, this.createdAt, this.milestone, this.active, this.tags, this.comments);
+            return new TestableCRUDResource(this);
         }
 
     }

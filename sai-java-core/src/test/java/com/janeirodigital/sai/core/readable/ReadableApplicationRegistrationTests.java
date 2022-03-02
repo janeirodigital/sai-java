@@ -26,12 +26,12 @@ class ReadableApplicationRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static URL sa1RegisteredBy;
-    private static URL sa1RegisteredWith;
-    private static OffsetDateTime sa1RegisteredAt;
-    private static OffsetDateTime sa1UpdatedAt;
-    private static URL sa1RegisteredAgent;
-    private static URL sa1AccessGrant;
+    private static URL app1RegisteredBy;
+    private static URL app1RegisteredWith;
+    private static OffsetDateTime app1RegisteredAt;
+    private static OffsetDateTime app1UpdatedAt;
+    private static URL app1RegisteredAgent;
+    private static URL app1AccessGrant;
 
     @BeforeAll
     static void beforeAll() throws SaiException {
@@ -43,26 +43,26 @@ class ReadableApplicationRegistrationTests {
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET social agent registration in Turtle
-        mockOnGet(dispatcher, "/ttl/agents/app-1/", "crud/social-agent-registration-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/app-1/", "crud/application-registration-ttl");
         mockOnPut(dispatcher, "/new/ttl/agents/app-1/", "http/201");  // create new
         mockOnPut(dispatcher, "/ttl/agents/app-1/", "http/204");  // update existing
         mockOnDelete(dispatcher, "/ttl/agents/app-1/", "http/204");  // delete
         // GET crud social agent registration in Turtle with missing fields
         mockOnGet(dispatcher, "/missing-fields/ttl/agents/app-1/", "crud/social-agent-registration-missing-fields-ttl");
         // GET crud social agent registration in JSON-LD
-        mockOnGet(dispatcher, "/jsonld/agents/app-1/", "crud/social-agent-registration-jsonld");
+        mockOnGet(dispatcher, "/jsonld/agents/app-1/", "crud/application-registration-jsonld");
         mockOnPut(dispatcher, "/new/jsonld/agents/app-1/", "http/201");  // create new
         mockOnPut(dispatcher, "/jsonld/agents/app-1/", "http/204");  // update existing or delete
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        sa1RegisteredBy = stringToUrl("https://alice.example/id#me");
-        sa1RegisteredWith = toUrl(server, "https://trusted.example/id#app");
-        sa1RegisteredAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
-        sa1UpdatedAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
-        sa1RegisteredAgent = stringToUrl("https://bob.example/id#me");
-        sa1AccessGrant = toUrl(server, "/ttl/agents/app-1/access-grant");
+        app1RegisteredBy = stringToUrl("https://alice.example/id#me");
+        app1RegisteredWith = toUrl(server, "https://trusted.example/id#app");
+        app1RegisteredAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
+        app1UpdatedAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
+        app1RegisteredAgent = stringToUrl("https://projectron.example/id#app");
+        app1AccessGrant = toUrl(server, "/ttl/agents/app-1/access-grant");
     }
 
     @Test
@@ -101,12 +101,12 @@ class ReadableApplicationRegistrationTests {
 
     private void checkRegistration(ReadableApplicationRegistration registration) {
         assertNotNull(registration);
-        assertEquals(sa1RegisteredBy, registration.getRegisteredBy());
-        assertEquals(sa1RegisteredWith, registration.getRegisteredWith());
-        assertEquals(sa1RegisteredAt, registration.getRegisteredAt());
-        assertEquals(sa1UpdatedAt, registration.getUpdatedAt());
-        assertEquals(sa1RegisteredAgent, registration.getRegisteredAgent());
-        assertEquals(sa1AccessGrant, registration.getAccessGrantUrl());
+        assertEquals(app1RegisteredBy, registration.getRegisteredBy());
+        assertEquals(app1RegisteredWith, registration.getRegisteredWith());
+        assertEquals(app1RegisteredAt, registration.getRegisteredAt());
+        assertEquals(app1UpdatedAt, registration.getUpdatedAt());
+        assertEquals(app1RegisteredAgent, registration.getRegisteredAgent());
+        assertEquals(app1AccessGrant, registration.getAccessGrantUrl());
     }
 
 }

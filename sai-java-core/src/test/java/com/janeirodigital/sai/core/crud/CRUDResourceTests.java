@@ -1,12 +1,11 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,7 +27,6 @@ class CRUDResourceTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
     static void beforeAll() throws SaiException, SaiNotFoundException {
@@ -38,7 +36,7 @@ class CRUDResourceTests {
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
-        dispatcher = new RequestMatchingFixtureDispatcher();
+        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // Get, Update, Delete for an existing CRUD resource
         mockOnGet(dispatcher, "/crud/crud-resource", "crud/crud-resource-ttl");
         mockOnPut(dispatcher, "/crud/crud-resource", "crud/crud-resource-ttl");
@@ -65,36 +63,19 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/new/crud/crud-resource");
         List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, true, ContentType.TEXT_TURTLE);
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
-               .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
+               .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags).setUnprotected()
                .setComments(comments).build();
         assertDoesNotThrow(() -> testable.update());
     }
 
     @Test
     @DisplayName("Update a CRUD resource")
-    void updateCRUDResource() throws SaiException {
+    void updateCRUDResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
-        List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
-        List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, true, ContentType.TEXT_TURTLE);
-        TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
-                .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
-                .setComments(comments).build();
-        assertDoesNotThrow(() -> testable.update());
-    }
-
-    @Test
-    @DisplayName("Update a protected CRUD resource")
-    void updateProtectedCRUDResource() throws SaiException {
-        URL url = toUrl(server, "/crud/crud-resource#project");
-        List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
-        List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, false, ContentType.TEXT_TURTLE);
-        TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
-                .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
-                .setComments(comments).build();
+        TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession,true);
+        testable.setActive(false);
         assertDoesNotThrow(() -> testable.update());
     }
 
@@ -104,7 +85,7 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/crud/missing");
         List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
-        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession, false, ContentType.TEXT_TURTLE);
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
                 .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
                 .setComments(comments).build();
