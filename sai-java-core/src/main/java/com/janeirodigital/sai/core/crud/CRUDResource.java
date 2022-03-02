@@ -1,8 +1,8 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.readable.ReadableResource;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Response;
 
@@ -20,15 +20,11 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 public class CRUDResource extends ReadableResource {
 
     /**
-     * Construct a CRUD resource for <code>resourceUrl</code>. Calls the parent
-     * {@link ReadableResource} constructor which assigns the provided
-     * <code>saiSession</code>, and gets an HTTP client.
-     * @param resourceUrl URL of the CRUD resource
-     * @param saiSession Data factory to assign
-     * @param unprotected When true no authorization credentials will be sent in requests to this resource
+     * Construct a CRUD resource using the provided {@link Builder}.
+     * @param builder {@link Builder} or an instance of an inheriting subclass
      */
-    public CRUDResource(URL resourceUrl, SaiSession saiSession, boolean unprotected) throws SaiException {
-        super(resourceUrl, saiSession, unprotected);
+    public CRUDResource(Builder<?> builder) throws SaiException {
+        super(builder);
         this.exists = false; // assume the resource doesn't exist until it's bootstrapped
     }
 
@@ -39,8 +35,7 @@ public class CRUDResource extends ReadableResource {
      */
     public void update() throws SaiException {
         if (this.isUnprotected()) { this.updateUnprotected(); } else {
-            Response response = putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext);
-            if (!response.isSuccessful()) { throw new SaiException("Failed to update " + this.url + ": " + getResponseFailureMessage(response)); }
+            checkResponse(putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
         }
         this.exists = true;
     }
@@ -51,8 +46,7 @@ public class CRUDResource extends ReadableResource {
      */
     public void delete() throws SaiException {
         if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-            Response response = deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url);
-            if (!response.isSuccessful()) { throw new SaiException("Failed to delete " + this.url + ": " + getResponseFailureMessage(response)); }
+            checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
         }
         this.exists = false;
     }
@@ -63,7 +57,7 @@ public class CRUDResource extends ReadableResource {
      * @throws SaiException
      */
     private void updateUnprotected() throws SaiException {
-        putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext);
+        checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
     }
 
     /**
@@ -72,7 +66,41 @@ public class CRUDResource extends ReadableResource {
      * @throws SaiException
      */
     private void deleteUnprotected() throws SaiException {
-        deleteResource(this.httpClient, this.url);
+        checkResponse(deleteResource(this.httpClient, this.url));
     }
 
+    /**
+     * Ensure the response to a CRUD operation is successful
+     * @param response OkHttp Response to check
+     * @return Response
+     * @throws SaiException
+     */
+    private Response checkResponse(Response response) throws SaiException {
+        if (!response.isSuccessful()) { throw new SaiException("Failed to " + response.request().method() + " " + this.url + ": " + getResponseFailureMessage(response)); }
+        return response;
+    }
+
+    /**
+     * Generic builder which is extended by CRUD resource builders. Extends and incorporates the
+     * {@link ReadableResource.Builder} as a base.
+     * @param <T> Parameterized type of an inheriting builder
+     */
+    protected abstract static class Builder<T extends ReadableResource.Builder<T>> extends ReadableResource.Builder<T> {
+
+        /**
+         * Base builder for CRUD resource types. Use setters for all further configuration
+         * @param url URL of the resource to build
+         * @param saiSession {@link SaiSession} to use
+         */
+        protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+
+        /**
+         * Builder for a {@link CRUDResource}
+         * @return {@link CRUDResource}
+         * @throws SaiException
+         */
+        public CRUDResource build() throws SaiException {
+            return new CRUDResource(this);
+        }
+    }
 }

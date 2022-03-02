@@ -1,23 +1,21 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
+import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.LdpVocabulary.LDP_CONTAINS;
@@ -26,35 +24,29 @@ import static com.janeirodigital.sai.core.vocabularies.LdpVocabulary.LDP_CONTAIN
  * Modifiable instantiation of an
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-registration">Data Registration</a>
  */
-@Getter
+@Getter @Setter
 public class DataRegistration extends CRUDResource {
 
-    private final URL registeredBy;
-    private final URL registeredWith;
-    private final OffsetDateTime registeredAt;
-    private final OffsetDateTime updatedAt;
-    private final URL registeredShapeTree;
-    private final List<URL> dataInstances;
+    private URL registeredBy;
+    private URL registeredWith;
+    private OffsetDateTime registeredAt;
+    private OffsetDateTime updatedAt;
+    private URL registeredShapeTree;
+    private List<URL> dataInstances;
 
     /**
-     * Construct a new {@link DataRegistration}
-     * @param url URL of the {@link DataRegistration}
-     * @param saiSession {@link SaiSession} to assign
+     * Construct a {@link DataRegistration} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private DataRegistration(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                             URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
-                             URL registeredShapeTree, List<URL> dataInstances) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.registeredBy = registeredBy;
-        this.registeredWith = registeredWith;
-        this.registeredAt = registeredAt;
-        this.updatedAt = updatedAt;
-        this.registeredShapeTree = registeredShapeTree;
-        this.dataInstances = dataInstances;
+    private DataRegistration(Builder builder) throws SaiException {
+        super(builder);
+        this.registeredBy = builder.registeredBy;
+        this.registeredWith = builder.registeredWith;
+        this.registeredAt = builder.registeredAt;
+        this.updatedAt = builder.updatedAt;
+        this.registeredShapeTree = builder.registeredShapeTree;
+        this.dataInstances = builder.dataInstances;
     }
 
     /**
@@ -67,15 +59,10 @@ public class DataRegistration extends CRUDResource {
      * @throws SaiNotFoundException
      */
     public static DataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiNotFoundException, SaiException {
-        Objects.requireNonNull(url, "Must provide the URL of the data registration to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the data registration");
-        Objects.requireNonNull(contentType, "Must provide a content type for the data registration");
-        Builder builder = new Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        DataRegistration.Builder builder = new DataRegistration.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        return builder.build();
     }
 
     /**
@@ -91,15 +78,20 @@ public class DataRegistration extends CRUDResource {
     }
 
     /**
+     * Reload a new instance of {@link DataRegistration} using the attributes of the current instance
+     * @return Reloaded {@link DataRegistration}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public DataRegistration reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
      * Builder for {@link DataRegistration} instances.
      */
-    public static class Builder {
+    public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         private URL registeredBy;
         private URL registeredWith;
         private OffsetDateTime registeredAt;
@@ -108,32 +100,31 @@ public class DataRegistration extends CRUDResource {
         private List<URL> dataInstances;
 
         /**
-         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link DataRegistration} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the data registration builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the data registration builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the data registration builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
-        }
+        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the data registration builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -226,8 +217,7 @@ public class DataRegistration extends CRUDResource {
         /**
          * Build the {@link DataRegistration} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
-         * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
-         * Builder will be populated from it.
+         * {@link #populateDataset()}.
          * @return {@link DataRegistration}
          * @throws SaiException
          */
@@ -238,12 +228,8 @@ public class DataRegistration extends CRUDResource {
             Objects.requireNonNull(updatedAt, "Must provide the time the data registration was updated");
             Objects.requireNonNull(registeredShapeTree, "Must provide the registered shape tree for the data registration");
             if (this.dataset == null) { populateDataset(); }
-            return new DataRegistration(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
-                                        this.registeredBy, this.registeredWith, this.registeredAt, this.updatedAt,
-                                        this.registeredShapeTree, this.dataInstances);
+            return new DataRegistration(this);
         }
-
-
     }
 
 }

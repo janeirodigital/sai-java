@@ -1,23 +1,21 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
+import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
@@ -25,45 +23,39 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
  * Modifiable instantiation of a
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#datamodel-registry-set">Registry Set</a>
  */
-@Getter
+@Getter @Setter
 public class RegistrySet extends CRUDResource {
 
-    private final URL agentRegistryUrl;
-    private final URL accessConsentRegistryUrl;
-    private final List<URL> dataRegistryUrls;
+    private URL agentRegistryUrl;
+    private URL accessConsentRegistryUrl;
+    private List<URL> dataRegistryUrls;
 
     /**
-     * Construct a new {@link RegistrySet}. Should only be called from {@link Builder}
+     * Construct a {@link RegistrySet} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
+     * @throws SaiException
      */
-    private RegistrySet(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                        URL agentRegistryUrl, URL accessConsentRegistryUrl, List<URL> dataRegistryUrls) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.agentRegistryUrl = agentRegistryUrl;
-        this.accessConsentRegistryUrl = accessConsentRegistryUrl;
-        this.dataRegistryUrls = dataRegistryUrls;
+    private RegistrySet(Builder builder) throws SaiException {
+        super(builder);
+        this.agentRegistryUrl = builder.agentRegistryUrl;
+        this.accessConsentRegistryUrl = builder.accessConsentRegistryUrl;
+        this.dataRegistryUrls = builder.dataRegistryUrls;
     }
 
     /**
      * Get a {@link RegistrySet} at the provided <code>url</code>
      * @param url URL of the {@link RegistrySet} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param contentType {@link ContentType} to use
      * @return Retrieved {@link RegistrySet}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
     public static RegistrySet get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the registry set to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the registry set");
-        Objects.requireNonNull(contentType, "Must provide a content type for the registry set");
-        RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        return builder.build();
     }
 
     /**
@@ -77,15 +69,20 @@ public class RegistrySet extends CRUDResource {
     }
 
     /**
+     * Reload a new instance of {@link RegistrySet} using the attributes of the current instance
+     * @return Reloaded {@link RegistrySet}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public RegistrySet reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
      * Builder for {@link RegistrySet} instances.
      */
-    public static class Builder {
+    public static class Builder extends CRUDResource.Builder<Builder> {
         
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         private URL agentRegistryUrl;
         private URL accessConsentRegistryUrl;
         private List<URL> dataRegistryUrls;
@@ -94,30 +91,31 @@ public class RegistrySet extends CRUDResource {
          * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link RegistrySet} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the registry set builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the registry set builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the registry set builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.dataRegistryUrls = new ArrayList<>();
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the registry set builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -170,9 +168,8 @@ public class RegistrySet extends CRUDResource {
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
-        private void populateDataset() throws SaiException {
+        private void populateDataset() {
             this.resource = getNewResourceForType(this.url, REGISTRY_SET);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, HAS_AGENT_REGISTRY, agentRegistryUrl);
@@ -183,8 +180,7 @@ public class RegistrySet extends CRUDResource {
         /**
          * Build the {@link RegistrySet} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
-         * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
-         * Builder will be populated from it.
+         * {@link #populateDataset()}.
          * @return {@link RegistrySet}
          * @throws SaiException
          */
@@ -193,8 +189,7 @@ public class RegistrySet extends CRUDResource {
             Objects.requireNonNull(this.accessConsentRegistryUrl, "Must provide the URL of an access consent registry to the registry set builder");
             Objects.requireNonNull(this.dataRegistryUrls, "Must provide the URLs of associated data registries to the registry set builder");
             if (this.dataset == null) { populateDataset(); }
-            return new RegistrySet(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
-                                   this.agentRegistryUrl, this.accessConsentRegistryUrl, this.dataRegistryUrls);
+            return new RegistrySet(this);
         }
     }
 

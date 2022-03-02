@@ -1,14 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -19,10 +17,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getNewResourceForType;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getResourceFromModel;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**
@@ -36,40 +33,30 @@ public class AgentRegistry extends CRUDResource {
     private final ApplicationRegistrationList<ApplicationRegistration> applicationRegistrations;
 
     /**
-     * Construct a new {@link AgentRegistry}
-     * @param url URL of the {@link AgentRegistry}
-     * @param saiSession {@link SaiSession} to assign
+     * Construct an {@link AgentRegistry} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    public AgentRegistry(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                         SocialAgentRegistrationList<SocialAgentRegistration> socialAgentRegistrations,
-                         ApplicationRegistrationList<ApplicationRegistration> applicationRegistrations) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.socialAgentRegistrations = socialAgentRegistrations;
-        this.applicationRegistrations = applicationRegistrations;
+    public AgentRegistry(Builder builder) throws SaiException {
+        super(builder);
+        this.socialAgentRegistrations = builder.socialAgentRegistrations;
+        this.applicationRegistrations = builder.applicationRegistrations;
     }
 
     /**
-     * Get a {@link AgentRegistry} at the provided <code>url</code>
+     * Get an {@link AgentRegistry} at the provided <code>url</code>
      * @param url URL of the {@link AgentRegistry} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param contentType {@link ContentType} to use
      * @return Retrieved {@link AgentRegistry}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
     public static AgentRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the agent registry to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the agent registry");
-        Objects.requireNonNull(contentType, "Must provide a content type for the agent registry");
-        AgentRegistry.Builder builder = new AgentRegistry.Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        AgentRegistry.Builder builder = new AgentRegistry.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        return builder.build();
     }
 
     /**
@@ -81,16 +68,22 @@ public class AgentRegistry extends CRUDResource {
     public static AgentRegistry get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
-    
+
+    /**
+     * Reload a new instance of {@link AgentRegistry} using the attributes of the current instance
+     * @return Reloaded {@link AgentRegistry}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public AgentRegistry reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
     /**
      * Builder for {@link AgentRegistry} instances.
      */
-    public static class Builder {
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
+    public static class Builder extends CRUDResource.Builder<Builder> {
+
         private SocialAgentRegistrationList<SocialAgentRegistration> socialAgentRegistrations;
         private ApplicationRegistrationList<ApplicationRegistration> applicationRegistrations;
         private List<URL> socialAgentRegistrationUrls;
@@ -98,35 +91,34 @@ public class AgentRegistry extends CRUDResource {
 
         /**
          * Initialize builder with <code>url</code> and <code>saiSession</code>
-         *
          * @param url URL of the {@link AgentRegistry} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the agent registry builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the agent registry builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the agent registry builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.socialAgentRegistrationUrls = new ArrayList<>();
             this.applicationRegistrationUrls = new ArrayList<>();
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         *
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the agent registry builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -135,7 +127,7 @@ public class AgentRegistry extends CRUDResource {
          * @param socialAgentRegistrationUrls List of URLs to {@link SocialAgentRegistration} instances
          * @return {@link Builder}
          */
-        public Builder setSocialAgentRegistrationUrls(List<URL> socialAgentRegistrationUrls) throws SaiAlreadyExistsException {
+        public Builder setSocialAgentRegistrationUrls(List<URL> socialAgentRegistrationUrls) {
             Objects.requireNonNull(socialAgentRegistrationUrls, "Must provide a list of social agent registration urls to the agent registry builder");
             this.socialAgentRegistrationUrls.addAll(socialAgentRegistrationUrls);
             return this;
@@ -146,7 +138,7 @@ public class AgentRegistry extends CRUDResource {
          * @param applicationRegistrationUrls List of URLs to {@link ApplicationRegistration} instances
          * @return {@link Builder}
          */
-        public Builder setApplicationRegistrationUrls(List<URL> applicationRegistrationUrls) throws SaiAlreadyExistsException {
+        public Builder setApplicationRegistrationUrls(List<URL> applicationRegistrationUrls) {
             Objects.requireNonNull(applicationRegistrationUrls, "Must provide a list of application registration urls to the agent registry builder");
             this.applicationRegistrationUrls.addAll(applicationRegistrationUrls);
             return this;
@@ -184,15 +176,13 @@ public class AgentRegistry extends CRUDResource {
         /**
          * Build the {@link AgentRegistry} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
-         * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
-         * Builder will be populated from it.
+         * {@link #populateDataset()}.
          * @return {@link AgentRegistry}
          * @throws SaiException
          */
         public AgentRegistry build() throws SaiException {
             if (this.dataset == null) { populateDataset(); }
-            return new AgentRegistry(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
-                                     this.socialAgentRegistrations, this.applicationRegistrations);
+            return new AgentRegistry(this);
         }
     }
 
@@ -202,7 +192,15 @@ public class AgentRegistry extends CRUDResource {
      * types are built and returned by the iterator.
      */
     public static class SocialAgentRegistrationList<T> extends RegistrationList<T> {
+
         public SocialAgentRegistrationList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_SOCIAL_AGENT_REGISTRATION); }
+
+        /**
+         * Override the default find in {@link RegistrationList} to lookup based on the registeredAgent of
+         * the {@link SocialAgentRegistration}
+         * @param agentUrl URL of the registered agent
+         * @return {@link SocialAgentRegistration}
+         */
         @Override
         public T find(URL agentUrl) {
             for (T registration : this) {
@@ -211,10 +209,25 @@ public class AgentRegistry extends CRUDResource {
             }
             return null;
         }
+
+        /**
+         * Return an iterator for {@link SocialAgentRegistration} instances
+         * @return {@link SocialAgentRegistration} Iterator
+         */
         @Override
         public Iterator<T> iterator() { return new SocialAgentRegistrationListIterator<>(this.getSaiSession(), this.getRegistrationUrls()); }
+
+        /**
+         * Custom iterator that iterates over {@link SocialAgentRegistration} URLs and gets actual instances of them
+         */
         private class SocialAgentRegistrationListIterator<T> extends RegistrationListIterator<T> {
+
             public SocialAgentRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
+
+            /**
+             * Get the {@link SocialAgentRegistration} for the next URL in the iterator
+             * @return {@link SocialAgentRegistration}
+             */
             @SneakyThrows
             @Override
             public T next() {
@@ -230,7 +243,15 @@ public class AgentRegistry extends CRUDResource {
      * types are built and returned by the iterator.
      */
     public static class ApplicationRegistrationList<T> extends RegistrationList<T> {
+
         public ApplicationRegistrationList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_APPLICATION_REGISTRATION); }
+
+        /**
+         * Override the default find in {@link RegistrationList} to lookup based on the registeredAgent of
+         * the {@link ApplicationRegistration}
+         * @param agentUrl URL of the registered agent
+         * @return {@link ApplicationRegistration}
+         */
         @Override
         public T find(URL agentUrl) {
             for (T registration : this) {
@@ -239,10 +260,25 @@ public class AgentRegistry extends CRUDResource {
             }
             return null;
         }
+
+        /**
+         * Return an iterator for {@link ApplicationRegistration} instances
+         * @return {@link ApplicationRegistration} Iterator
+         */
         @Override
         public Iterator<T> iterator() { return new ApplicationRegistrationListIterator<>(this.getSaiSession(), this.getRegistrationUrls()); }
+
+        /**
+         * Custom iterator that iterates over {@link ApplicationRegistration} URLs and gets actual instances of them
+         */
         private class ApplicationRegistrationListIterator<T> extends RegistrationListIterator<T> {
+
             public ApplicationRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
+
+            /**
+             * Get the {@link ApplicationRegistration} for the next URL in the iterator
+             * @return {@link ApplicationRegistration}
+             */
             @SneakyThrows
             @Override
             public T next() {
@@ -251,5 +287,4 @@ public class AgentRegistry extends CRUDResource {
             }
         }
     }
-
 }

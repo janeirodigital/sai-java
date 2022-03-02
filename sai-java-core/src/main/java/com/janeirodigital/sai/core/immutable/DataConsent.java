@@ -2,21 +2,17 @@ package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.crud.*;
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.*;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
@@ -44,49 +40,39 @@ public class DataConsent extends ImmutableResource {
     private final List<DataConsent> inheritingConsents;
 
     /**
-     * Construct a new {@link DataConsent}
-     * @param url URL of the {@link DataConsent}
-     * @param saiSession {@link SaiSession} to assign
+     * Construct a {@link DataConsent} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private DataConsent(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                        URL dataOwner, URL grantedBy, URL grantee, URL registeredShapeTree, List<RDFNode> accessModes,
-                        List<RDFNode> creatorAccessModes, RDFNode scopeOfConsent, URL dataRegistration,
-                        List<URL> dataInstances, URL accessNeed, URL inheritsFrom) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.dataOwner = dataOwner;
-        this.grantedBy = grantedBy;
-        this.grantee = grantee;
-        this.registeredShapeTree = registeredShapeTree;
-        this.accessModes = accessModes;
-        this.creatorAccessModes = creatorAccessModes;
-        this.scopeOfConsent = scopeOfConsent;
-        this.dataRegistration = dataRegistration;
-        this.dataInstances = dataInstances;
-        this.accessNeed = accessNeed;
-        this.inheritsFrom = inheritsFrom;
+    private DataConsent(Builder builder) throws SaiException {
+        super(builder);
+        this.dataOwner = builder.dataOwner;
+        this.grantedBy = builder.grantedBy;
+        this.grantee = builder.grantee;
+        this.registeredShapeTree = builder.registeredShapeTree;
+        this.accessModes = builder.accessModes;
+        this.creatorAccessModes = builder.creatorAccessModes;
+        this.scopeOfConsent = builder.scopeOfConsent;
+        this.dataRegistration = builder.dataRegistration;
+        this.dataInstances = builder.dataInstances;
+        this.accessNeed = builder.accessNeed;
+        this.inheritsFrom = builder.inheritsFrom;
         this.inheritingConsents = new ArrayList<>();
     }
 
     /**
-     * Get an {@link DataConsent} at the provided <code>url</code>
+     * Get a {@link DataConsent} at the provided <code>url</code>
      * @param url URL of the {@link DataConsent} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param contentType {@link ContentType} to use
      * @return Retrieved {@link DataConsent}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
     public static DataConsent get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the data consent to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the data consent");
-        Objects.requireNonNull(contentType, "Must provide a content type for the data consent");
-        Builder builder = new Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        DataConsent.Builder builder = new DataConsent.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType);
         }
         DataConsent dataConsent = builder.build();
         dataConsent.validate();
@@ -105,6 +91,16 @@ public class DataConsent extends ImmutableResource {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
+    /**
+     * Reload a new instance of {@link DataConsent} using the attributes of the current instance
+     * @return Reloaded {@link DataConsent}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public DataConsent reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+    
     /**
      * Generate one or more {@link DataGrant}s for this {@link DataConsent}.
      * @return List of generated {@link DataGrant}s
@@ -131,6 +127,17 @@ public class DataConsent extends ImmutableResource {
         return dataGrants;
     }
 
+    /**
+     * Generate grants for a {@link DataConsent} where the data owner is sharing data they own directly.
+     * <br>Applies to scopes: All, AllFromRegistry, SelectedFromRegistry
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
+     * @param accessConsent {@link AccessConsent} that this {@link DataConsent} is associated with
+     * @param granteeRegistration {@link AgentRegistration} of the grantee in data owner's {@link AgentRegistry}
+     * @param agentRegistry {@link AgentRegistry} of the data owner
+     * @param dataRegistries List of {@link DataRegistry} instances of the data owner
+     * @return List of generated {@link DataGrant}s
+     * @throws SaiException
+     */
     private List<DataGrant> generateSourceGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
                                                  AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException {
 
@@ -149,7 +156,7 @@ public class DataConsent extends ImmutableResource {
             Map.Entry<DataRegistration,DataRegistry> filtered = dataRegistrations.entrySet().stream()
                                                          .filter(e -> this.dataRegistration.equals(e.getKey().getUrl()))
                                                          .findAny().orElse(null);
-            if (filtered == null) { throw new SaiException("Data registration " + this.dataRegistration + "not found in data registries: " + dataRegistries.toString()); }
+            if (filtered == null) { throw new SaiException("Data registration " + this.dataRegistration + "not found in data registries: " + dataRegistries); }
             dataRegistrations.clear();
             dataRegistrations.put(filtered.getKey(), filtered.getValue());
         }
@@ -157,7 +164,7 @@ public class DataConsent extends ImmutableResource {
         List<DataGrant> dataGrants = new ArrayList<>();
         for (Map.Entry<DataRegistration, DataRegistry> entry : dataRegistrations.entrySet()) {
             URL dataGrantUrl = granteeRegistration.generateContainedUrl();
-            DataGrant.Builder grantBuilder = new DataGrant.Builder(dataGrantUrl, this.saiSession, this.contentType);
+            DataGrant.Builder grantBuilder = new DataGrant.Builder(dataGrantUrl, this.saiSession);
             // create children if needed (generate child source grants)
             List<DataGrant> childDataGrants = generateChildSourceGrants(accessConsent, dataGrantUrl, entry.getKey(), entry.getValue(), granteeRegistration);
             // build the data grant
@@ -178,6 +185,19 @@ public class DataConsent extends ImmutableResource {
         return dataGrants;
     }
 
+    /**
+     * Generate inherited "child" grants for a parent {@link DataGrant}, where the data being granted is
+     * being shared by the data owner directly. Called from {@link #generateSourceGrants(AccessConsent, AgentRegistration, AgentRegistry, List)}.
+     * <br>Applies to scopes: Inherited
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
+     * @param accessConsent {@link AccessConsent} that the {@link DataConsent} is associated with
+     * @param dataGrantUrl URL of the parent {@link DataGrant} being inherited from
+     * @param dataRegistration {@link DataRegistration} the data resides in
+     * @param dataRegistry {@link DataRegistry} the <code>dataRegistration</code> belongs to
+     * @param granteeRegistration {@link AgentRegistration} of the grantee in data owner's {@link AgentRegistry}
+     * @return List of generated {@link DataGrant}s
+     * @throws SaiException
+     */
     private List<DataGrant> generateChildSourceGrants(AccessConsent accessConsent, URL dataGrantUrl, DataRegistration dataRegistration,
                                                       DataRegistry dataRegistry, AgentRegistration granteeRegistration) throws SaiException {
         List<DataGrant> childDataGrants = new ArrayList<>();
@@ -188,7 +208,7 @@ public class DataConsent extends ImmutableResource {
                 // find the data registration for the child data consent (must be same registry as parent)
                 DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(this.registeredShapeTree);
                 if (childRegistration == null) { throw new SaiException("Could not find data registration " + dataRegistration.getUrl() + " in registry " + dataRegistry.getUrl()); }
-                DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession, this.contentType);
+                DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession);
                 childBuilder.setDataOwner(childConsent.dataOwner);
                 childBuilder.setRegisteredShapeTree(childConsent.registeredShapeTree);
                 childBuilder.setDataRegistration(childRegistration.getUrl());
@@ -208,8 +228,10 @@ public class DataConsent extends ImmutableResource {
      * of the original grant. A simple example of delegation is a social agent who was
      * given access to another social agent's data "delegating" access to an application
      * that they would like to use to access that data.
+     * <br>Applies to scopes: All, AllFromAgent
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#delegated-data-grant">Delegated Data Grant</a>
-     * @param accessConsent Associated {@link AccessConsent}
+     * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
+     * @param accessConsent {@link AccessConsent} that the {@link DataConsent} is associated with
      * @param granteeRegistration {@link AgentRegistration} of the grantee receiving delegated permissions
      * @param agentRegistry {@link AgentRegistry} of the social agent delegating permission
      * @param dataRegistries {@link DataRegistry} list of the social agent delegating permission
@@ -241,7 +263,7 @@ public class DataConsent extends ImmutableResource {
                 if (this.getDataRegistration() != null) { if (!remoteDataGrant.getDataRegistration().equals(this.dataRegistration)) { continue; } }
                 // Build the delegated data grant based on this data consent and the remote data grant
                 URL grantUrl = granteeRegistration.generateContainedUrl();
-                DataGrant.Builder grantBuilder = new DataGrant.Builder(grantUrl, this.saiSession, this.contentType);
+                DataGrant.Builder grantBuilder = new DataGrant.Builder(grantUrl, this.saiSession);
                 // generate child delegated data grants if necessary
                 List<DataGrant> childDataGrants = generateChildDelegatedGrants(grantUrl, remoteDataGrant, granteeRegistration);
                 // build the delegated data grant
@@ -263,6 +285,15 @@ public class DataConsent extends ImmutableResource {
         return delegatedGrants;
     }
 
+    /**
+     * Generate inherited "child" delegated {@link DataGrant} for a parent delegated {@link DataGrant}.
+     * <br>Applies to scopes: Inherited
+     * @param dataGrantUrl URL of the parent delegated {@link DataGrant}
+     * @param remoteDataGrant URL of the remote {@link DataGrant} that is being delegated
+     * @param granteeRegistration {@link AgentRegistration} of the grantee
+     * @return List of child delegated {@link DataGrant}s
+     * @throws SaiException
+     */
     private List<DataGrant> generateChildDelegatedGrants(URL dataGrantUrl, DataGrant remoteDataGrant, AgentRegistration granteeRegistration) throws SaiException {
         List<DataGrant> childDataGrants = new ArrayList<>();
         for (DataConsent childConsent : this.getInheritingConsents()) {
@@ -270,7 +301,7 @@ public class DataConsent extends ImmutableResource {
                 // continue if the remote inheriting grant isn't the same shape tree as the child consent
                 if (!remoteChildGrant.getRegisteredShapeTree().equals(childConsent.getRegisteredShapeTree())) { continue; }
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();
-                DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession, this.contentType);
+                DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession);
                 childBuilder.setDataOwner(remoteChildGrant.getDataOwner());
                 childBuilder.setRegisteredShapeTree(remoteChildGrant.getRegisteredShapeTree());
                 childBuilder.setScopeOfGrant(SCOPE_INHERITED);
@@ -383,13 +414,8 @@ public class DataConsent extends ImmutableResource {
     /**
      * Builder for {@link DataConsent} instances.
      */
-    public static class Builder {
+    public static class Builder extends ImmutableResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         private URL dataOwner;
         private URL grantedBy;
         private URL grantee;
@@ -403,35 +429,36 @@ public class DataConsent extends ImmutableResource {
         private URL inheritsFrom;
 
         /**
-         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
-         * @param url URL of the {@link DataGrant} to build
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
+         * @param url URL of the {@link AccessConsent} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the data consent builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the data consent builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the data consent builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.accessModes = new ArrayList<>();
             this.creatorAccessModes = new ArrayList<>();
             this.dataInstances = new ArrayList<>();
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the data consent builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -553,12 +580,7 @@ public class DataConsent extends ImmutableResource {
             Objects.requireNonNull(this.scopeOfConsent, "Must provide a scope of consent for the data consent");
             Objects.requireNonNull(this.accessNeed, "Must provide a URL for the access need associated with the data consent");
             if (this.dataset == null) { populateDataset(); }
-            return new DataConsent(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
-                                   this.grantee, this.grantedBy, this.registeredShapeTree, this.accessModes, this.creatorAccessModes,
-                                   this.scopeOfConsent, this.dataRegistration, this.dataInstances, this.accessNeed,
-                                   this.inheritsFrom);
+            return new DataConsent(this);
         }
-
     }
-
 }

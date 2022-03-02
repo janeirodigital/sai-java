@@ -3,9 +3,9 @@ package com.janeirodigital.sai.core.crud;
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +16,6 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
-import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
@@ -27,8 +26,6 @@ class CRUDApplicationRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static RequestMatchingFixtureDispatcher dispatcher;
-
     private static URL app1RegisteredBy;
     private static URL app1RegisteredWith;
     private static OffsetDateTime app1RegisteredAt;
@@ -37,14 +34,14 @@ class CRUDApplicationRegistrationTests {
     private static URL app1AccessGrant;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
-        dispatcher = new RequestMatchingFixtureDispatcher();
+        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET application registration in Turtle
         mockOnGet(dispatcher, "/ttl/agents/app-1/", "crud/application-registration-ttl");
         mockOnPut(dispatcher, "/new/ttl/agents/app-1/", "http/201");  // create new
@@ -69,10 +66,10 @@ class CRUDApplicationRegistrationTests {
     }
 
     @Test
-    @DisplayName("Create new crud application registration in turtle")
-    void createNewCrudApplicationRegistration() throws SaiException, SaiNotFoundException {
+    @DisplayName("Create new crud application registration")
+    void createNewCrudApplicationRegistration() throws SaiException {
         URL url = toUrl(server, "/new/ttl/agents/app-1/");
-        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession, TEXT_TURTLE);
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession);
         ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
                                                       .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
                                                       .setRegisteredAgent(app1RegisteredAgent)
@@ -82,34 +79,36 @@ class CRUDApplicationRegistrationTests {
     }
 
     @Test
-    @DisplayName("Read existing crud application registration in turtle")
+    @DisplayName("Read crud application registration")
     void readApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
-        assertNotNull(registration);
-        assertEquals(app1RegisteredBy, registration.getRegisteredBy());
-        assertEquals(app1RegisteredWith, registration.getRegisteredWith());
-        assertEquals(app1RegisteredAt, registration.getRegisteredAt());
-        assertEquals(app1UpdatedAt, registration.getUpdatedAt());
-        assertEquals(app1RegisteredAgent, registration.getRegisteredAgent());
-        assertEquals(app1AccessGrant, registration.getAccessGrantUrl());
+        checkRegistration(registration);
+    }
+
+    @Test
+    @DisplayName("Reload crud application registration")
+    void reloadApplicationRegistration() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/agents/app-1/");
+        ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
+        ApplicationRegistration reloaded = registration.reload();
+        checkRegistration(reloaded);
     }
 
     @Test
     @DisplayName("Fail to read existing crud application registration in turtle - missing required fields")
-    void failToReadApplicationRegistration() throws SaiException {
+    void failToReadApplicationRegistration() {
         URL url = toUrl(server, "/missing-fields/ttl/agents/app-1/");
         assertThrows(SaiException.class, () -> ApplicationRegistration.get(url, saiSession));
     }
 
     @Test
-    @DisplayName("Update existing crud application registration in turtle")
+    @DisplayName("Update crud application registration")
     void updateApplicationRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
-        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession, TEXT_TURTLE);
-        ApplicationRegistration updated = builder.setDataset(registration.getDataset()).setAccessGrant(toUrl(server, "/ttl/agents/app-1/access-granted")).build();
-        assertDoesNotThrow(() -> updated.update());
+        registration.setAccessGrantUrl(toUrl(server, "/ttl/agents/app-1/access-granted"));
+        assertDoesNotThrow(() -> registration.update());
     }
 
     @Test
@@ -117,24 +116,19 @@ class CRUDApplicationRegistrationTests {
     void readApplicationRegistrationJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession, LD_JSON);
-        assertNotNull(registration);
-        assertEquals(app1RegisteredBy, registration.getRegisteredBy());
-        assertEquals(app1RegisteredWith, registration.getRegisteredWith());
-        assertEquals(app1RegisteredAt, registration.getRegisteredAt());
-        assertEquals(app1UpdatedAt, registration.getUpdatedAt());
-        assertEquals(app1RegisteredAgent, registration.getRegisteredAgent());
-        assertEquals(app1AccessGrant, registration.getAccessGrantUrl());
+        checkRegistration(registration);
     }
 
     @Test
     @DisplayName("Create new crud application registration in JSON-LD")
     void createNewCrudApplicationRegistrationJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/agents/app-1/");
-        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession, LD_JSON);
-        ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
-                .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
-                .setRegisteredAgent(app1RegisteredAgent)
-                .setAccessGrant(app1AccessGrant).build();
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession);
+        ApplicationRegistration registration = builder.setContentType(LD_JSON).setRegisteredBy(app1RegisteredBy)
+                                                      .setRegisteredWith(app1RegisteredWith)
+                                                      .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
+                                                      .setRegisteredAgent(app1RegisteredAgent)
+                                                      .setAccessGrant(app1AccessGrant).build();
         assertDoesNotThrow(() -> registration.update());
     }
 
@@ -145,6 +139,16 @@ class CRUDApplicationRegistrationTests {
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         assertDoesNotThrow(() -> registration.delete());
         assertFalse(registration.isExists());
+    }
+
+    private void checkRegistration(ApplicationRegistration registration) {
+        assertNotNull(registration);
+        assertEquals(app1RegisteredBy, registration.getRegisteredBy());
+        assertEquals(app1RegisteredWith, registration.getRegisteredWith());
+        assertEquals(app1RegisteredAt, registration.getRegisteredAt());
+        assertEquals(app1UpdatedAt, registration.getUpdatedAt());
+        assertEquals(app1RegisteredAgent, registration.getRegisteredAgent());
+        assertEquals(app1AccessGrant, registration.getAccessGrantUrl());
     }
 
 }

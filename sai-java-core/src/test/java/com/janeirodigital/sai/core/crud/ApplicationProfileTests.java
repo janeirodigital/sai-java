@@ -25,8 +25,6 @@ class ApplicationProfileTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static RequestMatchingFixtureDispatcher dispatcher;
-
     private static final String PROJECTRON_NAME = "Projectron";
     private static final String PROJECTRON_DESCRIPTION = "Project management done right";
     private static final List<String> PROJECTRON_SCOPES = Arrays.asList("openid", "offline_access", "profile");
@@ -42,14 +40,14 @@ class ApplicationProfileTests {
     private static final boolean PROJECTRON_REQUIRE_AUTH_TIME = true;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
-        dispatcher = new RequestMatchingFixtureDispatcher();
+        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         mockOnGet(dispatcher, "/contexts/interop", "crud/interop-context-jsonld");
         // Get, Update, Delete for an existing CRUD resource
         mockOnGet(dispatcher, "/crud/application", "crud/application-profile-jsonld");
@@ -74,7 +72,7 @@ class ApplicationProfileTests {
 
     @Test
     @DisplayName("Create new crud application profile")
-    void createNewCrudApplicationProfile() throws SaiException, SaiNotFoundException {
+    void createNewCrudApplicationProfile() throws SaiException {
         URL url = toUrl(server, "/new/crud/application");
 
         ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);

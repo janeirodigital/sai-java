@@ -1,23 +1,20 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.getRequiredDateTimeObject;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.getRequiredUrlObject;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**
@@ -32,43 +29,34 @@ public class ReadableDataRegistration extends ReadableResource {
     private final OffsetDateTime registeredAt;
     private final OffsetDateTime updatedAt;
     private final URL registeredShapeTree;
+
     /**
-     * Construct a {@link ReadableDataRegistration} instance from the provided <code>url</code>.
-     * @param url URL to generate the {@link ReadableDataRegistration} from
-     * @param saiSession {@link SaiSession} to assign
+     * Construct a {@link ReadableDataRegistration} instance from the provided {@link Builder}.
+     * @param builder {@link ReadableAccessGrant.Builder} to construct with
      * @throws SaiException
      */
-    private ReadableDataRegistration(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                                     URL registeredBy, URL registeredWith, OffsetDateTime registeredAt, OffsetDateTime updatedAt,
-                                     URL registeredShapeTree) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.registeredBy = registeredBy;
-        this.registeredWith = registeredWith;
-        this.registeredAt = registeredAt;
-        this.updatedAt = updatedAt;
-        this.registeredShapeTree = registeredShapeTree;
+    private ReadableDataRegistration(Builder builder) throws SaiException {
+        super(builder);
+        this.registeredBy = builder.registeredBy;
+        this.registeredWith = builder.registeredWith;
+        this.registeredAt = builder.registeredAt;
+        this.updatedAt = builder.updatedAt;
+        this.registeredShapeTree = builder.registeredShapeTree;
     }
 
     /**
-     * Primary mechanism used to construct and bootstrap a {@link ReadableDataRegistration} from
-     * the provided <code>url</code>.
-     * @param url URL to generate the {@link ReadableDataRegistration} from
+     * Get a {@link ReadableDataRegistration} at the provided <code>url</code>
+     * @param url URL of the {@link ReadableDataRegistration} to get
      * @param saiSession {@link SaiSession} to assign
-     * @param contentType {@link ContentType} to use for retrieval
-     * @return {@link ReadableDataRegistration}
+     * @param contentType {@link ContentType} to use
+     * @return Retrieved {@link ReadableDataRegistration}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
     public static ReadableDataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the readable data registration to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable data registration");
-        Objects.requireNonNull(contentType, "Must provide a content type to assign to the readable data registration");
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            return new ReadableDataRegistration.Builder(url, saiSession, contentType, getRdfModelFromResponse(response)).build();
+        ReadableDataRegistration.Builder builder = new ReadableDataRegistration.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
     }
 
@@ -85,15 +73,20 @@ public class ReadableDataRegistration extends ReadableResource {
     }
 
     /**
+     * Reload a new instance of {@link ReadableDataRegistration} using the attributes of the current instance
+     * @return Reloaded {@link ReadableDataRegistration}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public ReadableDataRegistration reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
      * Builder for {@link ReadableDataRegistration} instances.
      */
-    private static class Builder {
+    private static class Builder extends ReadableResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private final Model dataset;
-        private final Resource resource;
         private URL registeredBy;
         private URL registeredWith;
         private OffsetDateTime registeredAt;
@@ -104,32 +97,45 @@ public class ReadableDataRegistration extends ReadableResource {
          * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link ReadableApplicationProfile} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
-         * @param dataset Jena model to populate the readable social agent profile with
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType, Model dataset) throws SaiException, SaiNotFoundException {
-            Objects.requireNonNull(url, "Must provide a URL for the readable data registration builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the readable data registration builder");
-            Objects.requireNonNull(contentType, "Must provide a content type to use for retrieval of readable data registration ");
-            Objects.requireNonNull(dataset, "Must provide a dateset to use to populate the readable data registration ");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+
+        /**
+         * Ensures that don't get an unchecked cast warning when returning from setters
+         * @return {@link Builder}
+         */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
+        public Builder setDataset(Model dataset) throws SaiException {
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
+            return this;
         }
 
         /**
-         * Populates the fields of the {@link ReadableDataRegistration} based on the associated Jena resource.
+         * Populates the fields of the {@link Builder} based on the associated Jena resource.
          * @throws SaiException
          */
-        private void populateFromDataset() throws SaiException, SaiNotFoundException {
-            this.registeredBy = getRequiredUrlObject(this.resource, REGISTERED_BY);
-            this.registeredWith = getRequiredUrlObject(this.resource, REGISTERED_WITH);
-            this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
-            this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
-            this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
+        private void populateFromDataset() throws SaiException {
+            try {
+                this.registeredBy = getRequiredUrlObject(this.resource, REGISTERED_BY);
+                this.registeredWith = getRequiredUrlObject(this.resource, REGISTERED_WITH);
+                this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
+                this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
+                this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
+            } catch (SaiNotFoundException ex) {
+                throw new SaiException("Unable to populate readable data registration resource: " + ex.getMessage());
+            }
         }
 
         /**
@@ -138,9 +144,7 @@ public class ReadableDataRegistration extends ReadableResource {
          * @throws SaiException
          */
         public ReadableDataRegistration build() throws SaiException {
-            return new ReadableDataRegistration(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
-                                                this.registeredBy, this.registeredWith, this.registeredAt, this.updatedAt,
-                                                this.registeredShapeTree);
+            return new ReadableDataRegistration(this);
         }
     }
 }

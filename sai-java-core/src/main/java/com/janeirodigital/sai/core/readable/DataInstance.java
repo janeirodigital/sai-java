@@ -2,7 +2,6 @@ package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.crud.CRUDResource;
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
@@ -10,11 +9,9 @@ import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import com.janeirodigital.shapetrees.core.validation.ShapeTree;
 import com.janeirodigital.shapetrees.core.validation.ShapeTreeFactory;
 import com.janeirodigital.shapetrees.core.validation.ShapeTreeReference;
-import okhttp3.Headers;
+import lombok.Getter;
 import okhttp3.Response;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 
 import java.net.URL;
@@ -22,14 +19,15 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 
 /**
  * General instantiation of a
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-instance">Data Instance</a>
  */
+@Getter
 public class DataInstance extends CRUDResource {
 
     private final ReadableDataGrant dataGrant;
@@ -38,67 +36,56 @@ public class DataInstance extends CRUDResource {
     private boolean draft;
 
 
-    private DataInstance(URL url, SaiSession saiSession, boolean unprotected, Model dataset, Resource resource, ContentType contentType,
-                         ReadableDataGrant dataGrant, DataInstance parent, ShapeTree shapeTree, boolean draft) throws SaiException {
-        super(url, saiSession, unprotected);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.dataGrant = dataGrant;
-        this.parent = parent;
-        this.shapeTree = shapeTree;
-        this.draft = draft;
+    private DataInstance(Builder builder) throws SaiException {
+        super(builder);
+        this.dataGrant = builder.dataGrant;
+        this.parent = builder.parent;
+        this.shapeTree = builder.shapeTree;
+        this.draft = builder.draft;
     }
 
     /**
      * Get a {@link DataInstance} at the provided <code>url</code>
      * @param url URL of the {@link DataInstance} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param contentType {@link ContentType} to use
+     * @param unprotected when true no credentials are sent in subsequent requests
+     * @param dataGrant {@link ReadableDataGrant} furnishing instance access
      * @return Retrieved {@link DataInstance}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static DataInstance get(URL url, SaiSession saiSession, boolean unprotected, ContentType contentType, ReadableDataGrant dataGrant) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the readable data instance to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable data instance");
-        Objects.requireNonNull(contentType, "Must provide a content type for the readable data instance");
-        DataInstance.Builder builder = new DataInstance.Builder(url, saiSession, contentType);
-        if (!unprotected) { return getProtected(url, saiSession, contentType, dataGrant, builder); } else { return getUnprotected(url, saiSession, contentType, dataGrant, builder); }
+    public static DataInstance get(URL url, SaiSession saiSession, ContentType contentType, boolean unprotected, ReadableDataGrant dataGrant) throws SaiException, SaiNotFoundException {
+        DataInstance.Builder builder = new DataInstance.Builder(url, saiSession);
+        if (unprotected) builder.setUnprotected();
+        try (Response response = read(url, saiSession, contentType, unprotected)) {
+            builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType);
+        }
+        return builder.setDataGrant(dataGrant).build();
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, boolean, ContentType, ReadableDataGrant)}
+     * Call {@link #get(URL, SaiSession, ContentType, boolean, ReadableDataGrant)}
      * without specifying a desired content type for retrieval
      * @param url URL of the {@link DataInstance} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param unprotected when true no credentials are sent in subsequent requests
      * @param dataGrant {@link ReadableDataGrant} associated with {@link DataInstance} access
      * @return Retrieved {@link DataInstance}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static DataInstance get(URL url, SaiSession saiSession, ReadableDataGrant dataGrant) throws SaiNotFoundException, SaiException {
-        return get(url, saiSession, false, DEFAULT_RDF_CONTENT_TYPE, dataGrant);
-    }
-    
-    private static DataInstance getProtected(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance.Builder builder) throws SaiException, SaiNotFoundException {
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
-        }
-        builder.setDataGrant(dataGrant);
-        return builder.build();
+    public static DataInstance get(URL url, SaiSession saiSession, boolean unprotected, ReadableDataGrant dataGrant) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE, unprotected, dataGrant);
     }
 
-    private static DataInstance getUnprotected(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance.Builder builder) throws SaiException, SaiNotFoundException {
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getRdfResource(saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
-        }
-        builder.setDataGrant(dataGrant);
-        builder.setUnprotected();
-        return builder.build();
-    }
-
+    /**
+     * Update the corresponding {@link DataInstance} resource over HTTP with the current
+     * contents of the <code>dataset</code>. In the event that an inherited instance is
+     * being created, the parent instance is updated to add a reference to the
+     * created child instance.
+     * @throws SaiException
+     */
     @Override
     public void update() throws SaiException {
         if (this.parent != null && this.draft) { this.parent.addChildReference(this); }
@@ -106,6 +93,12 @@ public class DataInstance extends CRUDResource {
         this.draft = false;
     }
 
+    /**
+     * Delete the corresponding {@link DataInstance} resource over HTTP . In the
+     * event that an inherited instance is being deleted, the parent instance
+     * is updated to remove the reference to the deleted child instance.
+     * @throws SaiException
+     */
     @Override
     public void delete() throws SaiException {
         if (!this.draft) {
@@ -210,45 +203,30 @@ public class DataInstance extends CRUDResource {
     /**
      * Builder for {@link DataInstance} instances.
      */
-    public static class Builder {
+    public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         private ReadableDataGrant dataGrant;
         private DataInstance parent;
         private ShapeTree shapeTree;
-        private boolean unprotected;
         private boolean draft;
 
-
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the data instance builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the data instance builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the data instance builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        /**
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
+         * @param url URL of the {@link DataInstance} to build
+         * @param saiSession {@link SaiSession} to assign
+         */
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.unprotected = false;
             this.draft = true;
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         *
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
-        public Builder setDataset(Model dataset) {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the data instance builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
-            return this;
-        }
+        @Override
+        public Builder getThis() { return this; }
 
         public Builder setDataGrant(ReadableDataGrant dataGrant) throws SaiException {
             Objects.requireNonNull(dataGrant, "Must provide a data grant for the data instance builder");
@@ -265,11 +243,6 @@ public class DataInstance extends CRUDResource {
             return this;
         }
 
-        public Builder setUnprotected() {
-            this.unprotected = true;
-            return this;
-        }
-
         public Builder setDraft(boolean status) {
             this.draft = status;
             return this;
@@ -283,10 +256,7 @@ public class DataInstance extends CRUDResource {
                 this.resource = getNewResource(this.url);
                 this.dataset = this.resource.getModel();
             }
-            return new DataInstance(this.url, this.saiSession, this.unprotected, this.dataset, this.resource,
-                                    this.contentType, this.dataGrant, this.parent, this.shapeTree, this.draft);
+            return new DataInstance(this);
         }
-
     }
-
 }

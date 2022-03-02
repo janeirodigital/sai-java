@@ -1,15 +1,13 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.immutable.AccessConsent;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -19,9 +17,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.getNewResourceForType;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.updateUrlObjects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.ACCESS_CONSENT_REGISTRY;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_ACCESS_CONSENT;
 
@@ -35,36 +34,29 @@ public class AccessConsentRegistry extends CRUDResource {
     private final AccessConsentList<AccessConsent> accessConsents;
 
     /**
-     * Construct a new {@link AccessConsentRegistry}
+     * Construct an {@link AccessConsentRegistry} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private AccessConsentRegistry(URL url, SaiSession saiSession, Model dataset, Resource resource,
-                                  ContentType contentType, AccessConsentList<AccessConsent> accessConsents) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.accessConsents = accessConsents;
+    private AccessConsentRegistry(Builder builder) throws SaiException {
+        super(builder);
+        this.accessConsents = builder.accessConsents;
     }
 
     /**
      * Get a {@link AccessConsentRegistry} at the provided <code>url</code>
      * @param url URL of the {@link AccessConsentRegistry} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param contentType {@link ContentType} to use
      * @return Retrieved {@link AccessConsentRegistry}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
     public static AccessConsentRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the access consent registry to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the access consent registry");
-        Objects.requireNonNull(contentType, "Must provide a content type for the access consent registry");
-        AccessConsentRegistry.Builder builder = new AccessConsentRegistry.Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        AccessConsentRegistry.Builder builder = new AccessConsentRegistry.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        return builder.build();
     }
 
     /**
@@ -78,45 +70,51 @@ public class AccessConsentRegistry extends CRUDResource {
     }
 
     /**
+     * Reload a new instance of {@link AccessConsentRegistry} using the attributes of the current instance
+     * @return Reloaded {@link AccessConsentRegistry}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public AccessConsentRegistry reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
      * Builder for {@link AccessConsentRegistry} instances.
      */
-    public static class Builder {
+    public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         private AccessConsentList<AccessConsent> accessConsents;
 
         /**
          * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link AccessConsentRegistry} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the access consent registry builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the access consent registry builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the access consent registry builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.accessConsents = new AccessConsentList<>(this.saiSession, this.resource);
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the access consent registry builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -147,7 +145,7 @@ public class AccessConsentRegistry extends CRUDResource {
          * Populates the Jena dataset graph with the attributes from the Builder
          * @throws SaiException
          */
-        private void populateDataset() throws SaiException {
+        private void populateDataset() {
             this.resource = getNewResourceForType(this.url, ACCESS_CONSENT_REGISTRY);
             this.dataset = this.resource.getModel();
             // Note that access consent URLs added via setDataRegistrationUrls are automatically added to the
@@ -157,16 +155,14 @@ public class AccessConsentRegistry extends CRUDResource {
         /**
          * Build the {@link AccessConsentRegistry} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
-         * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
-         * Builder will be populated from it.
+         * {@link #populateDataset()}.
          * @return {@link AccessConsentRegistry}
          * @throws SaiException
          */
         public AccessConsentRegistry build() throws SaiException {
             if (this.dataset == null) { populateDataset(); }
-            return new AccessConsentRegistry(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.accessConsents);
+            return new AccessConsentRegistry(this);
         }
-
     }
 
     /**
@@ -178,6 +174,11 @@ public class AccessConsentRegistry extends CRUDResource {
 
         public AccessConsentList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_ACCESS_CONSENT); }
 
+        /**
+         * Add an {@link AccessConsent} to the {@link AccessConsentRegistry}
+         * @param consentUrl URL of {@link AccessConsent} to add
+         * @throws SaiException
+         */
         @Override
         public void add(URL consentUrl) throws SaiException {
             Objects.requireNonNull(consentUrl, "Must provide the URL of the access consent to add to registry");
@@ -197,6 +198,11 @@ public class AccessConsentRegistry extends CRUDResource {
             updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
         }
 
+        /**
+         * Override the default find in {@link RegistrationList} to lookup based on the grantee of an {@link AccessConsent}
+         * @param granteeUrl URL of the grantee to find
+         * @return {@link SocialAgentRegistration}
+         */
         @Override
         public T find(URL granteeUrl) {
             for (T registration : this) {
@@ -206,11 +212,24 @@ public class AccessConsentRegistry extends CRUDResource {
             return null;
         }
 
+        /**
+         * Return an iterator for {@link AccessConsent} instances
+         * @return {@link AccessConsent} Iterator
+         */
         @Override
         public Iterator<T> iterator() { return new AccessConsentListIterator(this.getSaiSession(), this.getRegistrationUrls()); }
 
+        /**
+         * Custom iterator that iterates over {@link AccessConsent} URLs and gets actual instances of them
+         */
         private class AccessConsentListIterator<T> extends RegistrationListIterator<T> {
+
             public AccessConsentListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
+
+            /**
+             * Get the {@link AccessConsent} for the next URL in the iterator
+             * @return {@link AccessConsent}
+             */
             @SneakyThrows
             @Override
             public T next() {

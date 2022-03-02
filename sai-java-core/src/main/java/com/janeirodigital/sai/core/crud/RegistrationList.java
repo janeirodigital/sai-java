@@ -54,7 +54,7 @@ public abstract class RegistrationList<T> implements Iterable<T> {
     }
 
     /**
-     * Add a registration to the internal list of registration URLs, and add to the graph of the registry
+     * Add a registration URL to the internal list of registration URLs, and add to the graph of the registry
      * @param registrationUrl URL of the registration to add
      * @throws SaiAlreadyExistsException if the registration already exists
      */
@@ -66,6 +66,11 @@ public abstract class RegistrationList<T> implements Iterable<T> {
         updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
     }
 
+    /**
+     * Add a list of registration URLs to the internal list, and add to the graph of the registry
+     * @param registrationUrls List of registration URLs to add
+     * @throws SaiAlreadyExistsException if any of the registration URLs already exist
+     */
     public void addAll(List<URL> registrationUrls) throws SaiAlreadyExistsException {
         Objects.requireNonNull(registrationUrls, "Must provide a list of URLs of the registrations to add to registry");
         for (URL registrationUrl: registrationUrls) {
@@ -76,8 +81,17 @@ public abstract class RegistrationList<T> implements Iterable<T> {
         updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
     }
 
+    /**
+     * Check if the registration list is empty
+     * @return true if empty
+     */
     public boolean isEmpty() { return this.registrationUrls.isEmpty(); }
 
+    /**
+     * Abstract find method implemented by sub-classes
+     * @param targetUrl Target URL to find with
+     * @return found type
+     */
     public abstract T find(URL targetUrl);
 
     /**
@@ -106,7 +120,6 @@ public abstract class RegistrationList<T> implements Iterable<T> {
         public Iterator<URL> current;
         public SaiSession saiSession;
         public RegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) {
-
             this.saiSession = saiSession;
             this.current = registrationUrls.iterator();
         }

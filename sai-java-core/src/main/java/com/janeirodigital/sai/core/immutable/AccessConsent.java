@@ -4,15 +4,12 @@ import com.janeirodigital.sai.core.crud.AgentRegistration;
 import com.janeirodigital.sai.core.crud.AgentRegistry;
 import com.janeirodigital.sai.core.crud.DataRegistry;
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -20,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
@@ -41,25 +38,19 @@ public class AccessConsent extends ImmutableResource {
     private final List<DataConsent> dataConsents;
 
     /**
-     * Construct a new {@link AccessConsent}
-     * @param url URL of the {@link AccessConsent}
-     * @param saiSession {@link SaiSession} to assign
+     * Construct an {@link AccessConsent} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private AccessConsent(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                          URL grantedBy, URL grantedWith, OffsetDateTime grantedAt, URL grantee, URL accessNeedGroup,
-                          URL replaces, List<DataConsent> dataConsents) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.grantedBy = grantedBy;
-        this.grantedWith = grantedWith;
-        this.grantedAt = grantedAt;
-        this.grantee = grantee;
-        this.accessNeedGroup = accessNeedGroup;
-        this.replaces = replaces;
-        this.dataConsents = dataConsents;
+    private AccessConsent(Builder builder) throws SaiException {
+        super(builder);
+        this.grantedBy = builder.grantedBy;
+        this.grantedWith = builder.grantedWith;
+        this.grantedAt = builder.grantedAt;
+        this.grantee = builder.grantee;
+        this.accessNeedGroup = builder.accessNeedGroup;
+        this.replaces = builder.replaces;
+        this.dataConsents = builder.dataConsents;
     }
 
     /**
@@ -72,15 +63,10 @@ public class AccessConsent extends ImmutableResource {
      * @throws SaiNotFoundException
      */
     public static AccessConsent get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the access consent to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the access consent");
-        Objects.requireNonNull(contentType, "Must provide a content type for the access consent");
-        Builder builder = new Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        AccessConsent.Builder builder = new AccessConsent.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        return builder.build();
     }
 
     /**
@@ -96,6 +82,16 @@ public class AccessConsent extends ImmutableResource {
     }
 
     /**
+     * Reload a new instance of {@link AccessConsent} using the attributes of the current instance
+     * @return Reloaded {@link AccessConsent}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public AccessConsent reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
      * Generate an {@link AccessGrant} and its associated {@link DataGrant}s based on this {@link AccessConsent}.
      * @param granteeRegistration {@link AgentRegistration} for the grantee
      * @param agentRegistry {@link AgentRegistry} for the social agent performing the grant
@@ -108,14 +104,14 @@ public class AccessConsent extends ImmutableResource {
         Objects.requireNonNull(agentRegistry, "Must provide an agent registry to generate an access grant");
         Objects.requireNonNull(dataRegistries, "Must provide data registries to generate an access grant");
         List<DataConsent> primaryDataConsents = new ArrayList<>();
-        this.dataConsents.forEach((dataConsent) -> {
+        this.dataConsents.forEach(dataConsent -> {
             if (!dataConsent.getScopeOfConsent().equals(SCOPE_INHERITED)) { primaryDataConsents.add(dataConsent); }
         });
         List<DataGrant> dataGrants = new ArrayList<>();
         for (DataConsent dataConsent : primaryDataConsents) { dataGrants.addAll(dataConsent.generateGrants(this, granteeRegistration, agentRegistry, dataRegistries)); }
         // TODO - If there was a prior access grant, look at reusing some data grants
         URL accessGrantUrl = granteeRegistration.generateContainedUrl();
-        AccessGrant.Builder grantBuilder = new AccessGrant.Builder(accessGrantUrl, this.saiSession, DEFAULT_RDF_CONTENT_TYPE);
+        AccessGrant.Builder grantBuilder = new AccessGrant.Builder(accessGrantUrl, this.saiSession);
         return grantBuilder.setGrantedBy(this.grantedBy).setGrantedAt(this.grantedAt).setGrantee(this.grantee)
                            .setAccessNeedGroup(this.accessNeedGroup).setDataGrants(dataGrants).build();
     }
@@ -123,12 +119,8 @@ public class AccessConsent extends ImmutableResource {
     /**
      * Builder for {@link AccessConsent} instances.
      */
-    public static class Builder {
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
+    public static class Builder extends ImmutableResource.Builder<Builder> {
+
         private URL grantedBy;
         private URL grantedWith;
         private OffsetDateTime grantedAt;
@@ -138,33 +130,34 @@ public class AccessConsent extends ImmutableResource {
         private List<DataConsent> dataConsents;
 
         /**
-         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link AccessConsent} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the access consent builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the access consent builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the access consent builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.dataConsents = new ArrayList<>();
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the access consent builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -252,7 +245,6 @@ public class AccessConsent extends ImmutableResource {
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
         private void populateDataset() {
             this.resource = getNewResourceForType(this.url, ACCESS_CONSENT);
@@ -271,8 +263,7 @@ public class AccessConsent extends ImmutableResource {
         /**
          * Build the {@link AccessConsent} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
-         * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
-         * Builder will be populated from it.
+         * {@link #populateDataset()}.
          * @return {@link AccessConsent}
          * @throws SaiException
          */
@@ -284,11 +275,8 @@ public class AccessConsent extends ImmutableResource {
             Objects.requireNonNull(this.accessNeedGroup, "Must provide a URL for the access need group of the access consent");
             Objects.requireNonNull(this.dataConsents, "Must provide a list of data consents for the access consent");
             if (this.dataset == null) { populateDataset(); }
-            return new AccessConsent(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.grantedBy,
-                                    this.grantedWith, this.grantedAt, this.grantee, this.accessNeedGroup,
-                                    this.replaces, this.dataConsents);
+            return new AccessConsent(this);
         }
-
     }
 
 }

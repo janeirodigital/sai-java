@@ -1,22 +1,20 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
+import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLID_OIDC_ISSUER;
@@ -26,50 +24,41 @@ import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLI
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agents">Social Agent</a>
  * profile, which is also cross-pollinated with other terms from the Solid ecosystem.
  */
-@Getter
+@Getter @Setter
 public class SocialAgentProfile extends CRUDResource {
 
-    private final URL registrySetUrl;
-    private final URL authorizationAgentUrl;
-    private final URL accessInboxUrl;
-    private final List<URL> oidcIssuerUrls;
+    private URL registrySetUrl;
+    private URL authorizationAgentUrl;
+    private URL accessInboxUrl;
+    private List<URL> oidcIssuerUrls;
 
     /**
-     * Construct a new {@link SocialAgentProfile}
-     * @param url URL of the {@link SocialAgentProfile}
-     * @param saiSession {@link SaiSession} to assign
+     * Construct a {@link SocialAgentProfile} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    public SocialAgentProfile(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                              URL registrySetUrl, URL authorizationAgentUrl, URL accessInboxUrl, List<URL> oidcIssuerUrls) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.registrySetUrl = registrySetUrl;
-        this.authorizationAgentUrl = authorizationAgentUrl;
-        this.accessInboxUrl = accessInboxUrl;
-        this.oidcIssuerUrls = oidcIssuerUrls;
+    private SocialAgentProfile(Builder builder) throws SaiException {
+        super(builder);
+        this.registrySetUrl = builder.registrySetUrl;
+        this.authorizationAgentUrl = builder.authorizationAgentUrl;
+        this.accessInboxUrl = builder.accessInboxUrl;
+        this.oidcIssuerUrls = builder.oidcIssuerUrls;
     }
 
     /**
      * Get a {@link SocialAgentProfile} at the provided <code>url</code>
      * @param url URL of the {@link SocialAgentProfile} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param contentType {@link ContentType} to use
      * @return Retrieved {@link SocialAgentProfile}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
     public static SocialAgentProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the social agent profile to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the social agent profile");
-        Objects.requireNonNull(contentType, "Must provide a content type for the social agent profile");
-        SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        return builder.build();
     }
 
     /**
@@ -81,17 +70,22 @@ public class SocialAgentProfile extends CRUDResource {
     public static SocialAgentProfile get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
-    
+
+    /**
+     * Reload a new instance of {@link SocialAgentProfile} using the attributes of the current instance
+     * @return Reloaded {@link SocialAgentProfile}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public SocialAgentProfile reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
     /**
      * Builder for {@link SocialAgentProfile} instances.
      */
-    public static class Builder {
+    public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         URL registrySetUrl;
         URL authorizationAgentUrl;
         URL accessInboxUrl;
@@ -102,26 +96,27 @@ public class SocialAgentProfile extends CRUDResource {
          * @param url URL of the {@link SocialAgentProfile} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the social agent profile builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the social agent profile builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
-        }
+        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the social agent profile builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -189,9 +184,8 @@ public class SocialAgentProfile extends CRUDResource {
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
-        private void populateDataset() throws SaiException {
+        private void populateDataset() {
             this.resource = getNewResourceForType(this.url, SOCIAL_AGENT);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, HAS_REGISTRY_SET, registrySetUrl);
@@ -201,11 +195,10 @@ public class SocialAgentProfile extends CRUDResource {
         }
 
         /**
-         * Build the {@link ApplicationProfile} using attributes from the Builder. If no Jena dataset has been
+         * Build the {@link SocialAgentProfile} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
-         * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
-         * Builder will be populated from it.
-         * @return {@link ApplicationProfile}
+         * {@link #populateDataset()}.
+         * @return {@link SocialAgentProfile}
          * @throws SaiException
          */
         public SocialAgentProfile build() throws SaiException {
@@ -214,8 +207,7 @@ public class SocialAgentProfile extends CRUDResource {
             Objects.requireNonNull(accessInboxUrl, "Must provide an access inbox for the social agent");
             Objects.requireNonNull(oidcIssuerUrls, "Must provide oidc issuer urls for the social agent");
             if (this.dataset == null) { populateDataset(); }
-            return new SocialAgentProfile(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
-                                          this.registrySetUrl, this.authorizationAgentUrl, this.accessInboxUrl, this.oidcIssuerUrls);                   
+            return new SocialAgentProfile(this);
         }
 
     }

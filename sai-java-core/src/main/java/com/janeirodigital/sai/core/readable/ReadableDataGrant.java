@@ -1,24 +1,19 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -40,22 +35,22 @@ public abstract class ReadableDataGrant extends ReadableResource {
     private final URL accessNeed;
     private final URL delegationOf;
 
-    protected ReadableDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
-                                URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
-                                RDFNode scopeOfGrant, URL dataRegistration, URL accessNeed, URL delegationOf) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.dataOwner = dataOwner;
-        this.grantee = grantee;
-        this.registeredShapeTree = registeredShapeTree;
-        this.accessModes = accessModes;
-        this.creatorAccessModes = creatorAccessModes;
-        this.scopeOfGrant = scopeOfGrant;
-        this.dataRegistration = dataRegistration;
-        this.accessNeed = accessNeed;
-        this.delegationOf = delegationOf;
+    /**
+     * Construct a {@link ReadableDataGrant} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
+     * @throws SaiException
+     */
+    protected ReadableDataGrant(Builder builder) throws SaiException {
+        super(builder);
+        this.dataOwner = builder.dataOwner;
+        this.grantee = builder.grantee;
+        this.registeredShapeTree = builder.registeredShapeTree;
+        this.accessModes = builder.accessModes;
+        this.creatorAccessModes = builder.creatorAccessModes;
+        this.scopeOfGrant = builder.scopeOfGrant;
+        this.dataRegistration = builder.dataRegistration;
+        this.accessNeed = builder.accessNeed;
+        this.delegationOf = builder.delegationOf;
     }
 
     /**
@@ -67,16 +62,10 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * @throws SaiNotFoundException
      */
     public static ReadableDataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the readable data grant to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable data grant");
-        Objects.requireNonNull(contentType, "Must provide a content type for the readable data grant");
-        ReadableDataGrant.Builder builder = new ReadableDataGrant.Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        ReadableDataGrant.Builder builder = new ReadableDataGrant.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        ReadableDataGrant dataGrant = builder.build();
-        return dataGrant;
     }
 
     /**
@@ -91,15 +80,46 @@ public abstract class ReadableDataGrant extends ReadableResource {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
+    /**
+     * Reload a new instance of {@link ReadableDataGrant} using the attributes of the current instance
+     * @return Reloaded {@link ReadableDataGrant}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public ReadableDataGrant reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
+     * Abstract method implemented by specific types of data grants, that allow the {@link DataInstance}s
+     * permitted by that grant to be iterated.
+     * @return {@link DataInstanceList} of permitted {@link DataInstance}s
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
     protected abstract DataInstanceList getDataInstances() throws SaiNotFoundException, SaiException;
 
+    /**
+     * Abstract method implemented by specific types of data grants that aid in the creation of
+     * new {@link DataInstance}s within the scope of that {@link com.janeirodigital.sai.core.immutable.DataGrant}
+     * @param parent Parent {@link DataInstance}
+     * @return
+     * @throws SaiException
+     */
     protected abstract DataInstance newDataInstance(DataInstance parent) throws SaiException;
 
-    // Static helper called from grant specific new data instance instantiations
+    /**
+     * Static helper used to create a new {@link DataInstance} for the provided <code>dataGrant</code>.
+     * Called from grant specific new data instance instantiations.
+     * @param dataGrant {@link com.janeirodigital.sai.core.immutable.DataGrant} to create new {@link DataInstance} for
+     * @param parent Optional parent {@link DataInstance} of the data instance being created
+     * @return New {@link DataInstance}
+     * @throws SaiException
+     */
     public static DataInstance newDataInstance(ReadableDataGrant dataGrant, DataInstance parent) throws SaiException {
         // Get a URL for the data instance to add (built from the data registration)
         URL instanceUrl = addChildToUrlPath(dataGrant.dataRegistration, UUID.randomUUID().toString());
-        DataInstance.Builder builder = new DataInstance.Builder(instanceUrl, dataGrant.saiSession, dataGrant.contentType);
+        DataInstance.Builder builder = new DataInstance.Builder(instanceUrl, dataGrant.saiSession);
         builder.setDataGrant(dataGrant).setDraft(true);
         if (parent != null) { builder.setParent(parent); }  // if this is a child instance set the parent
         return builder.build();
@@ -108,56 +128,51 @@ public abstract class ReadableDataGrant extends ReadableResource {
     /**
      * Builder for {@link ReadableDataGrant} instances.
      */
-    public static class Builder {
+    public static class Builder extends ReadableResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
-        private URL dataOwner;
-        private URL grantee;
-        private URL registeredShapeTree;
-        private List<RDFNode> accessModes;
-        private List<RDFNode> creatorAccessModes;
-        private RDFNode scopeOfGrant;
-        private URL dataRegistration;
-        private List<URL> dataInstances;
-        private URL accessNeed;
-        private URL inheritsFrom;
-        private URL delegationOf;
+        protected URL dataOwner;
+        protected URL grantee;
+        protected URL registeredShapeTree;
+        protected List<RDFNode> accessModes;
+        protected List<RDFNode> creatorAccessModes;
+        protected RDFNode scopeOfGrant;
+        protected URL dataRegistration;
+        protected List<URL> dataInstances;
+        protected URL accessNeed;
+        protected URL inheritsFrom;
+        protected URL delegationOf;
 
         /**
-         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
+         * Initialize builder with <code>url</code and <code>saiSession</code>
          * @param url URL of the {@link ReadableDataGrant} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the data grant builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the data grant builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the data grant builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.accessModes = new ArrayList<>();
             this.creatorAccessModes = new ArrayList<>();
             this.dataInstances = new ArrayList<>();
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         *
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the data grant builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -184,23 +199,19 @@ public abstract class ReadableDataGrant extends ReadableResource {
         }
 
         /**
-         * Build the {@link ReadableDataGrant} using attributes from the Builder, populated by {@link #populateFromDataset()}
+         * Build the {@link ReadableDataGrant} using attributes from the Builder. This builder returns
+         * type-specific sub-classes representing the three distinct types of data grants.
+         * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
          * @return {@link ReadableDataGrant}
          * @throws SaiException
          */
         public ReadableDataGrant build() throws SaiException {
             if (this.scopeOfGrant.equals(SCOPE_ALL_FROM_REGISTRY)) {
-                return new AllFromRegistryDataGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
-                        this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes,
-                        this.dataRegistration, this.accessNeed, this.delegationOf);
+                return new AllFromRegistryDataGrant(this);
             } else if (this.scopeOfGrant.equals(SCOPE_SELECTED_FROM_REGISTRY)) {
-                return new SelectedFromRegistryDataGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
-                        this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes, this.dataRegistration,
-                        this.dataInstances, this.accessNeed, this.delegationOf);
+                return new SelectedFromRegistryDataGrant(this);
             } else if (this.scopeOfGrant.equals(SCOPE_INHERITED)) {
-                return new InheritedDataGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.dataOwner,
-                        this.grantee, this.registeredShapeTree, this.accessModes, this.creatorAccessModes,
-                        this.dataRegistration, this.accessNeed, this.inheritsFrom, this.delegationOf);
+                return new InheritedDataGrant(this);
             }
             throw new SaiException("Invalid scope for readable data grant: " + this.scopeOfGrant);
         }

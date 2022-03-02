@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
@@ -22,12 +22,10 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-class CRUDSocialAgentRegistrationTests {
+class ReadableSocialAgentRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static RequestMatchingFixtureDispatcher dispatcher;
-
     private static URL sa1RegisteredBy;
     private static URL sa1RegisteredWith;
     private static OffsetDateTime sa1RegisteredAt;
@@ -44,7 +42,7 @@ class CRUDSocialAgentRegistrationTests {
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
-        dispatcher = new RequestMatchingFixtureDispatcher();
+        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET social agent registration in Turtle
         mockOnGet(dispatcher, "/ttl/agents/sa-1/", "crud/social-agent-registration-ttl");
         mockOnPut(dispatcher, "/new/ttl/agents/sa-1/", "http/201");  // create new
@@ -70,84 +68,40 @@ class CRUDSocialAgentRegistrationTests {
     }
 
     @Test
-    @DisplayName("Create new crud social agent registration")
-    void createNewCrudSocialAgentRegistration() throws SaiException {
-        URL url = toUrl(server, "/new/ttl/agents/sa-1/");
-        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
-        SocialAgentRegistration registration = builder.setRegisteredBy(sa1RegisteredBy).setRegisteredWith(sa1RegisteredWith)
-                .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
-                .setRegisteredAgent(sa1RegisteredAgent)
-                .setAccessGrant(sa1AccessGrant).setReciprocalRegistration(sa1ReciprocalRegistration).build();
-        assertDoesNotThrow(() -> registration.update());
-        assertNotNull(registration);
-    }
-    
-    @Test
-    @DisplayName("Read crud social agent registration")
+    @DisplayName("Get readable social agent registration")
     void readSocialAgentRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
-        SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
+        ReadableSocialAgentRegistration registration = ReadableSocialAgentRegistration.get(url, saiSession);
         checkRegistration(registration);
     }
 
     @Test
-    @DisplayName("Reload crud social agent registration")
+    @DisplayName("Reload readable social agent registration")
     void reloadSocialAgentRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
-        SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
-        SocialAgentRegistration reloaded = registration.reload();
+        ReadableSocialAgentRegistration registration = ReadableSocialAgentRegistration.get(url, saiSession);
+        ReadableSocialAgentRegistration reloaded = registration.reload();
+        assertNotEquals(registration, reloaded);
+        checkRegistration(registration);
         checkRegistration(reloaded);
     }
 
     @Test
-    @DisplayName("Fail to read existing crud social agent registration - missing required fields")
+    @DisplayName("Fail to get readable social agent registration - missing required fields")
     void failToReadSocialAgentRegistration() {
         URL url = toUrl(server, "/missing-fields/ttl/agents/sa-1/");
-        assertThrows(SaiException.class, () -> SocialAgentRegistration.get(url, saiSession));
-    }
-
-    @Test
-    @DisplayName("Update existing crud social agent registration")
-    void updateSocialAgentRegistration() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
-
-        SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
-        registration.setReciprocalRegistration(stringToUrl("https://bob.example/agents/sa-222/"));
-        assertDoesNotThrow(() -> registration.update());
+        assertThrows(SaiException.class, () -> ReadableSocialAgentRegistration.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Read existing social agent registration in JSON-LD")
     void readSocialAgentRegistrationJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/sa-1/");
-        SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession, LD_JSON);
+        ReadableSocialAgentRegistration registration = ReadableSocialAgentRegistration.get(url, saiSession, LD_JSON);
         checkRegistration(registration);
     }
 
-    @Test
-    @DisplayName("Create new crud social agent registration in JSON-LD")
-    void createNewCrudSocialAgentRegistrationJsonLd() throws SaiException {
-        URL url = toUrl(server, "/new/jsonld/agents/sa-1/");
-        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
-        SocialAgentRegistration registration = builder.setContentType(LD_JSON).setRegisteredBy(sa1RegisteredBy)
-                                                      .setRegisteredWith(sa1RegisteredWith)
-                                                      .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
-                                                      .setRegisteredAgent(sa1RegisteredAgent)
-                                                      .setAccessGrant(sa1AccessGrant)
-                                                      .setReciprocalRegistration(sa1ReciprocalRegistration).build();
-        assertDoesNotThrow(() -> registration.update());
-    }
-
-    @Test
-    @DisplayName("Delete crud social agent registration")
-    void deleteSocialAgentRegistration() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
-        SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
-        assertDoesNotThrow(() -> registration.delete());
-        assertFalse(registration.isExists());
-    }
-
-    private void checkRegistration(SocialAgentRegistration registration) {
+    private void checkRegistration(ReadableSocialAgentRegistration registration) {
         assertNotNull(registration);
         assertEquals(sa1RegisteredBy, registration.getRegisteredBy());
         assertEquals(sa1RegisteredWith, registration.getRegisteredWith());

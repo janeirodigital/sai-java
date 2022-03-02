@@ -1,15 +1,12 @@
 package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -17,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
@@ -36,22 +33,17 @@ public class AccessGrant extends ImmutableResource {
     private final List<DataGrant> dataGrants;
 
     /**
-     * Construct a new {@link AccessGrant}
-     * @param url URL of the {@link AccessGrant}
-     * @param saiSession {@link SaiSession} to assign
+     * Construct an {@link AccessGrant} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private AccessGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL grantedBy,
-                        OffsetDateTime grantedAt, URL grantee, URL accessNeedGroup, List<DataGrant> dataGrants) throws SaiException {
-        super(url, saiSession, false);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.grantedBy = grantedBy;
-        this.grantedAt = grantedAt;
-        this.grantee = grantee;
-        this.accessNeedGroup = accessNeedGroup;
-        this.dataGrants = dataGrants;
+    private AccessGrant(Builder builder) throws SaiException {
+        super(builder);
+        this.grantedBy = builder.grantedBy;
+        this.grantedAt = builder.grantedAt;
+        this.grantee = builder.grantee;
+        this.accessNeedGroup = builder.accessNeedGroup;
+        this.dataGrants = builder.dataGrants;
     }
 
     /**
@@ -64,15 +56,10 @@ public class AccessGrant extends ImmutableResource {
      * @throws SaiNotFoundException
      */
     public static AccessGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the access grants to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the access grants");
-        Objects.requireNonNull(contentType, "Must provide a content type for the access grant");
-        Builder builder = new Builder(url, saiSession, contentType);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+        AccessGrant.Builder builder = new AccessGrant.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        return builder.build();
     }
 
     /**
@@ -88,14 +75,20 @@ public class AccessGrant extends ImmutableResource {
     }
 
     /**
+     * Reload a new instance of {@link AccessGrant} using the attributes of the current instance
+     * @return Reloaded {@link AccessGrant}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public AccessGrant reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
      * Builder for {@link AccessGrant} instances.
      */
-    public static class Builder {
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
+    public static class Builder extends ImmutableResource.Builder<Builder> {
+
         private URL grantedBy;
         private OffsetDateTime grantedAt;
         private URL grantee;
@@ -103,33 +96,34 @@ public class AccessGrant extends ImmutableResource {
         private List<DataGrant> dataGrants;
 
         /**
-         * Initialize builder with <code>url</code>, <code>saiSession</code>, and desired <code>contentType</code>
-         * @param url URL of the {@link AccessGrant} to build
+         * Initialize builder with <code>url</code> and <code>saiSession</code>
+         * @param url URL of the {@link AccessConsent} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType) {
-            Objects.requireNonNull(url, "Must provide a URL for the access grant builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the access grant builder");
-            Objects.requireNonNull(contentType, "Must provide a content type for the access grant builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
             this.dataGrants = new ArrayList<>();
         }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
-         * @param dataset Jena model to populate the Builder attributes with
+         * Ensures that don't get an unchecked cast warning when returning from setters
          * @return {@link Builder}
          */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the access grant builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -216,8 +210,7 @@ public class AccessGrant extends ImmutableResource {
             Objects.requireNonNull(this.accessNeedGroup, "Must provide a URL for the access need group of the access grant");
             Objects.requireNonNull(this.dataGrants, "Must provide a list of data consents for the access grant");
             if (this.dataset == null) { populateDataset(); }
-            return new AccessGrant(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.grantedBy,
-                                   this.grantedAt, this.grantee, this.accessNeedGroup, this.dataGrants);
+            return new AccessGrant(this);
         }
     }
 

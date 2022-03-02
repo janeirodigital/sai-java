@@ -1,17 +1,10 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.List;
-
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_SELECTED_FROM_REGISTRY;
 
 /**
  * Readable instantiation of a
@@ -22,19 +15,32 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_S
 public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
 
     List<URL> dataInstances;
-    protected SelectedFromRegistryDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
-                                            URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
-                                            URL dataRegistration, List<URL> dataInstances, URL accessNeed, URL delegationOf) throws SaiException {
-        super(url, saiSession, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
-              SCOPE_SELECTED_FROM_REGISTRY, dataRegistration, accessNeed, delegationOf);
-        this.dataInstances = dataInstances;
+
+    /**
+     * Construct a {@link SelectedFromRegistryDataGrant} from the provided {@link ReadableDataGrant.Builder}.
+     * @param builder {@link ReadableDataGrant.Builder} to construct with
+     * @throws SaiException
+     */
+    protected SelectedFromRegistryDataGrant(ReadableDataGrant.Builder builder) throws SaiException {
+        super(builder);
+        this.dataInstances = builder.dataInstances;
     }
 
+    /**
+     * Returns a {@link DataInstanceList} that iterates over the list of {@link DataInstance}s
+     * specifically selected as part of the SelectedFromRegistry data access scope
+     * @return {@link DataInstanceList}
+     */
     @Override
     public DataInstanceList getDataInstances() {
         return new DataInstanceList(saiSession, this, this.dataInstances);
     }
 
+    /**
+     * Unsupported operation since new data instances cannot be created from for a SelectedFromRegistry
+     * data access scope
+     * @throws SaiException
+     */
     @Override
     public DataInstance newDataInstance(DataInstance instance) throws SaiException {
         throw new SaiException("Cannot create new data instances for a SelectedFromRegistry grant scope");

@@ -1,19 +1,9 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.crud.DataRegistration;
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-
-import java.net.URL;
-import java.util.List;
-
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_ALL_FROM_REGISTRY;
 
 /**
  * Readable instantiation of a
@@ -23,16 +13,23 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_A
 @Getter
 public class AllFromRegistryDataGrant extends InheritableDataGrant {
 
-    protected AllFromRegistryDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
-                                       URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
-                                       URL dataRegistration, URL accessNeed, URL delegationOf) throws SaiException {
-        super(url, saiSession, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
-              SCOPE_ALL_FROM_REGISTRY, dataRegistration, accessNeed, delegationOf);
+    /**
+     * Construct an {@link AllFromRegistryDataGrant} from the provided {@link ReadableDataGrant.Builder}.
+     * @param builder {@link ReadableDataGrant.Builder} to construct with
+     * @throws SaiException
+     */
+    protected AllFromRegistryDataGrant(ReadableDataGrant.Builder builder) throws SaiException {
+        super(builder);
     }
 
+    /**
+     * Returns a {@link DataInstanceList} that iterates over all of the {@link DataInstance}s
+     * for a given shape tree type in the {@link DataRegistration}
+     * specified in this data grant
+     * @return {@link DataInstanceList}
+     */
     @Override
     public DataInstanceList getDataInstances() throws SaiException {
-        // Get the data registration
         try {
             DataRegistration registration = DataRegistration.get(this.getDataRegistration(), this.saiSession);
             return new DataInstanceList(saiSession, this, registration.getDataInstances());
@@ -41,8 +38,14 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
         }
     }
 
+    /**
+     * Create a new {@link DataInstance} in the {@link DataRegistration} specified in this data grant
+     * @param parent not applicable in this scope
+     * @return New {@link DataInstance}
+     * @throws SaiException
+     */
     @Override
-    public DataInstance newDataInstance(DataInstance instance) throws SaiException {
+    public DataInstance newDataInstance(DataInstance parent) throws SaiException {
         return ReadableDataGrant.newDataInstance(this, null);
     }
 

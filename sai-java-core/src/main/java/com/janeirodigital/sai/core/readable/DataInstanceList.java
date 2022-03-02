@@ -50,7 +50,7 @@ public class DataInstanceList implements Iterable<DataInstance> {
         @SneakyThrows
         public DataInstance next() {
             URL instanceUrl = current.next();
-            return DataInstance.get(instanceUrl, saiSession, dataGrant);
+            return DataInstance.get(instanceUrl, saiSession, false, dataGrant);
         }
     }
 

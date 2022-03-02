@@ -1,19 +1,12 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_INHERITED;
 
 /**
  * Readable instantiation of a
@@ -22,15 +15,25 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_I
  */
 @Getter
 public class InheritedDataGrant extends ReadableDataGrant {
+
     private final URL inheritsFrom;  // TODO - Should this be a URL or a DataGrant?
-    protected InheritedDataGrant(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType, URL dataOwner,
-                                 URL grantee, URL registeredShapeTree, List<RDFNode> accessModes, List<RDFNode> creatorAccessModes,
-                                 URL dataRegistration, URL accessNeed, URL inheritsFrom, URL delegationOf) throws SaiException {
-        super(url, saiSession, dataset, resource, contentType, dataOwner, grantee, registeredShapeTree, accessModes, creatorAccessModes,
-                SCOPE_INHERITED, dataRegistration, accessNeed, delegationOf);
-        this.inheritsFrom = inheritsFrom;
+
+    /**
+     * Construct an {@link InheritedDataGrant} from the provided {@link ReadableDataGrant.Builder}.
+     * @param builder {@link ReadableDataGrant.Builder} to construct with
+     * @throws SaiException
+     */
+    protected InheritedDataGrant(ReadableDataGrant.Builder builder) throws SaiException {
+        super(builder);
+        this.inheritsFrom = builder.inheritsFrom;
     }
 
+    /**
+     * Returns a {@link DataInstanceList} that iterates over the list of {@link DataInstance}s
+     * inherited from the {@link DataInstance}s associated with the parent {@link ReadableDataGrant}
+     * that this grant inherits from.
+     * @return {@link DataInstanceList}
+     */
     @Override
     public DataInstanceList getDataInstances() throws SaiException {
         try {
@@ -45,6 +48,13 @@ public class InheritedDataGrant extends ReadableDataGrant {
         }
     }
 
+    /**
+     * Create a new {@link DataInstance} in the {@link com.janeirodigital.sai.core.crud.DataRegistration}
+     * specified in this data grant, for the parent instance of this inherited grant.
+     * @param parent {@link DataInstance} for a {@link ReadableDataGrant} that this grant inherits from
+     * @return New {@link DataInstance}
+     * @throws SaiException
+     */
     @Override
     public DataInstance newDataInstance(DataInstance parent) throws SaiException {
         return ReadableDataGrant.newDataInstance(this, parent);

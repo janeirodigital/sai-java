@@ -1,15 +1,13 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
+import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -17,11 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.addHttpHeader;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
@@ -34,85 +30,88 @@ import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.*;
  * <a href="https://solid.github.io/solid-oidc/#clientids-document">Client Identifier Document</a>
  * from Solid-OIDC.
  */
-@Getter
+@Getter @Setter
 public class ApplicationProfile extends CRUDResource {
 
     private static final List<String> contexts = Arrays.asList(SOLID_OIDC_CONTEXT, INTEROP_CONTEXT);
 
-    private final String name;
-    private final String description;
-    private final URL authorUrl;
-    private final URL logoUrl;
-    private final List<URL> accessNeedGroupUrls;
+    private String name;
+    private String description;
+    private URL authorUrl;
+    private URL logoUrl;
+    private List<URL> accessNeedGroupUrls;
     // Solid-OIDC specific
-    private final List<URL> redirectUrls;
-    private final URL clientUrl;
-    private final URL tosUrl;
-    private final List<String> scopes;
-    private final List<String> grantTypes;
-    private final List<String> responseTypes;
-    private final Integer defaultMaxAge;
+    private List<URL> redirectUrls;
+    private URL clientUrl;
+    private URL tosUrl;
+    private List<String> scopes;
+    private List<String> grantTypes;
+    private List<String> responseTypes;
+    private Integer defaultMaxAge;
     private boolean requireAuthTime;
 
     /**
-     * Construct a new {@link ApplicationProfile}
-     * @param url URL of the {@link ApplicationProfile}
-     * @param saiSession {@link SaiSession} to assign
+     * Construct an {@link ApplicationProfile} instance from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private ApplicationProfile(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                               String name, String description, URL authorUrl, URL logoUrl, List<URL>accessNeedGroupUrls,
-                               List<URL> redirectUrls, URL clientUrl, URL tosUrl, List<String> scopes, List<String> grantTypes,
-                               List<String> responseTypes, int defaultMaxAge, boolean requireAuthTime) throws SaiException {
-        super(url, saiSession, false);
-        // By default the application profile document is JSON-LD
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.jsonLdContext = buildRemoteJsonLdContexts(contexts);
-        this.name = name;
-        this.description = description;
-        this.authorUrl = authorUrl;
-        this.logoUrl = logoUrl;
-        this.accessNeedGroupUrls = accessNeedGroupUrls;
-        this.redirectUrls = redirectUrls;
-        this.clientUrl = clientUrl;
-        this.tosUrl = tosUrl;
-        this.scopes = scopes;
-        this.grantTypes = grantTypes;
-        this.responseTypes = responseTypes;
-        this.defaultMaxAge = defaultMaxAge;
-        this.requireAuthTime = requireAuthTime;
+    private ApplicationProfile(Builder builder) throws SaiException {
+        super(builder);
+        this.name = builder.name;
+        this.description = builder.description;
+        this.authorUrl = builder.authorUrl;
+        this.logoUrl = builder.logoUrl;
+        this.accessNeedGroupUrls = builder.accessNeedGroupUrls;
+        this.redirectUrls = builder.redirectUrls;
+        this.clientUrl = builder.clientUrl;
+        this.tosUrl = builder.tosUrl;
+        this.scopes = builder.scopes;
+        this.grantTypes = builder.grantTypes;
+        this.responseTypes = builder.responseTypes;
+        this.defaultMaxAge = builder.defaultMaxAge;
+        this.requireAuthTime = builder.requireAuthTime;
     }
 
     /**
      * Get a {@link ApplicationProfile} from the provided <code>url</code>
      * @param url URL of the {@link RegistrySet} to get
      * @param saiSession {@link SaiSession} to assign
+     * @param contentType {@link ContentType} to use
      * @return Retrieved {@link ApplicationProfile}
      * @throws SaiException
      */
-    public static ApplicationProfile get(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the data grant to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the data grant");
-        Builder builder = new Builder(url, saiSession);
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, LD_JSON.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            builder.setDataset(getRdfModelFromResponse(response));
+    public static ApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, false)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(LD_JSON).build();
         }
-        return builder.build();
+    }
+
+    /**
+     * Call {@link #get(URL, SaiSession, ContentType)} using the application profile default content-type of JSON-LD
+     * @param url URL of the {@link ApplicationProfile}
+     * @param saiSession {@link SaiSession} to assign
+     * @return
+     */
+    public static ApplicationProfile get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, LD_JSON);
+    }
+
+    /**
+     * Reload a new instance of {@link ApplicationProfile} using the attributes of the current instance
+     * @return Reloaded {@link ApplicationProfile}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public ApplicationProfile reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
     }
 
     /**
      * Builder for {@link ApplicationProfile} instances.
      */
-    public static class Builder {
+    public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private Model dataset;
-        private Resource resource;
         private String name;
         private String description;
         private URL authorUrl;
@@ -133,26 +132,27 @@ public class ApplicationProfile extends CRUDResource {
          * @param url URL of the {@link ApplicationProfile} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) {
-            Objects.requireNonNull(url, "Must provide a URL for the application profile builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the application profile builder");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = LD_JSON; // Client Identifier documents are JSON-LD
-        }
+        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
 
         /**
-         * Optional Jena Model that will initialize the attributes of the Builder rather than set
-         * them manually. Typically used in read scenarios when populating the Builder from
-         * the contents of a remote resource.
+         * Ensures that don't get an unchecked cast warning when returning from setters
+         * @return {@link RegistrySet.Builder}
+         */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
          * @param dataset Jena model to populate the Builder attributes with
          * @return {@link Builder}
+         * @throws SaiException
          */
+        @Override
         public Builder setDataset(Model dataset) throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model for the application profile builder");
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            super.setDataset(dataset);
             populateFromDataset();
+            this.exists = true;
             return this;
         }
 
@@ -284,7 +284,6 @@ public class ApplicationProfile extends CRUDResource {
          * @param defaultMaxAge Default max age
          */
         public Builder setDefaultMaxAge(int defaultMaxAge) {
-            Objects.requireNonNull(defaultMaxAge, "Must provide a default max age for solid-oidc");
             this.defaultMaxAge = defaultMaxAge;
             return this;
         }
@@ -295,7 +294,6 @@ public class ApplicationProfile extends CRUDResource {
          * @param requireAuthTime Require auth time
          */
         public Builder setRequireAuthTime(boolean requireAuthTime) {
-            Objects.requireNonNull(requireAuthTime, "Must provide an auth time requirement for solid-oidc");
             this.requireAuthTime = requireAuthTime;
             return this;
         }
@@ -328,9 +326,8 @@ public class ApplicationProfile extends CRUDResource {
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
-        private void populateDataset() throws SaiException {
+        private void populateDataset() {
             this.resource = getNewResourceForType(this.url, APPLICATION);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, SOLID_OIDC_CLIENT_NAME, this.name);
@@ -351,8 +348,7 @@ public class ApplicationProfile extends CRUDResource {
         /**
          * Build the {@link ApplicationProfile} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
-         * {@link #populateDataset()}. Conversely, if a dataset was provided, the attributes of the
-         * Builder will be populated from it.
+         * {@link #populateDataset()}.
          * @return {@link ApplicationProfile}
          * @throws SaiException
          */
@@ -367,10 +363,7 @@ public class ApplicationProfile extends CRUDResource {
             Objects.requireNonNull(grantTypes, "Must provide grant types for solid-oidc");
             Objects.requireNonNull(responseTypes, "Must provide response types for solid-oidc");
             if (this.dataset == null) { populateDataset(); }
-            return new ApplicationProfile(this.url, this.saiSession, this.dataset, this.resource, this.contentType,
-                                          this.name, this.description, this.authorUrl, this.logoUrl, this.accessNeedGroupUrls,
-                                          this.redirectUrls, this.clientUrl, this.tosUrl, this.scopes, this.grantTypes,
-                                          this.responseTypes, this.defaultMaxAge, this.requireAuthTime);
+            return new ApplicationProfile(this);
         }
         
     }

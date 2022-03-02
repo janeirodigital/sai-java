@@ -1,23 +1,20 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import okhttp3.Headers;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.*;
@@ -48,50 +45,40 @@ public class ReadableApplicationProfile extends ReadableResource {
     private final boolean requireAuthTime;
 
     /**
-     * Construct a {@link ReadableApplicationProfile}. Should only be called from {@link Builder}.
+     * Construct a {@link ReadableApplicationProfile} from the provided {@link Builder}.
+     * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private ReadableApplicationProfile(URL url, SaiSession saiSession, Model dataset, Resource resource, ContentType contentType,
-                                       String name, String description, URL authorUrl, URL logoUrl, List<URL> accessNeedGroupUrls,
-                                       List<URL> redirectUrls, URL clientUrl, URL tosUrl, List<String> scopes,
-                                       List<String> grantTypes, List<String> responseTypes, Integer defaultMaxAge,
-                                       boolean requireAuthTime) throws SaiException {
-        super(url, saiSession, true);
-        this.dataset = dataset;
-        this.resource = resource;
-        this.contentType = contentType;
-        this.name = name;
-        this.description = description;
-        this.authorUrl = authorUrl;
-        this.logoUrl = logoUrl;
-        this.accessNeedGroupUrls = accessNeedGroupUrls;
-        this.redirectUrls = redirectUrls;
-        this.clientUrl = clientUrl;
-        this.tosUrl = tosUrl;
-        this.scopes = scopes;
-        this.grantTypes = grantTypes;
-        this.responseTypes = responseTypes;
-        this.defaultMaxAge = defaultMaxAge;
-        this.requireAuthTime = requireAuthTime;
+    private ReadableApplicationProfile(Builder builder) throws SaiException {
+        super(builder);
+        this.name = builder.name;
+        this.description = builder.description;
+        this.authorUrl = builder.authorUrl;
+        this.logoUrl = builder.logoUrl;
+        this.accessNeedGroupUrls = builder.accessNeedGroupUrls;
+        this.redirectUrls = builder.redirectUrls;
+        this.clientUrl = builder.clientUrl;
+        this.tosUrl = builder.tosUrl;
+        this.scopes = builder.scopes;
+        this.grantTypes = builder.grantTypes;
+        this.responseTypes = builder.responseTypes;
+        this.defaultMaxAge = builder.defaultMaxAge;
+        this.requireAuthTime = builder.requireAuthTime;
     }
 
     /**
-     * Primary mechanism used to construct and bootstrap a {@link ReadableApplicationProfile} from
-     * the provided <code>url</code>.
-     * @param url URL to generate the {@link ReadableApplicationProfile} from
-     * @param saiSession {@link SaiSession} to assign
+     * Get a {@link ReadableApplicationProfile} from the provided <code>url</code>.
+     * @param url URL to get the {@link ReadableApplicationProfile} from
+     * @param saiSession {@link SaiSession} to use
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link ReadableApplicationProfile}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
     public static ReadableApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the readable application profile to get");
-        Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable application profile");
-        Objects.requireNonNull(contentType, "Must provide a content type to assign to the readable application profile");
-        Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
-        try (Response response = checkReadableResponse(getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers))) {
-            return new ReadableApplicationProfile.Builder(url, saiSession, contentType, getRdfModelFromResponse(response)).build();
+        ReadableApplicationProfile.Builder builder = new ReadableApplicationProfile.Builder(url, saiSession);
+        try (Response response = read(url, saiSession, contentType, true)) {
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).setUnprotected().build();
         }
     }
 
@@ -106,18 +93,23 @@ public class ReadableApplicationProfile extends ReadableResource {
     public static ReadableApplicationProfile get(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
-    
+
+    /**
+     * Reload a new instance of {@link ReadableApplicationProfile} using the attributes of the
+     * current instance
+     * @return Reloaded {@link ReadableApplicationProfile}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public ReadableApplicationProfile reload() throws SaiNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.contentType);
+    }
 
     /**
      * Builder for {@link ReadableApplicationProfile} instances.
      */
-    private static class Builder {
+    private static class Builder extends ReadableResource.Builder<Builder> {
 
-        private final URL url;
-        private final SaiSession saiSession;
-        private final ContentType contentType;
-        private final Model dataset;
-        private final Resource resource;
         private String name;
         private String description;
         private URL authorUrl;
@@ -137,22 +129,34 @@ public class ReadableApplicationProfile extends ReadableResource {
          * Initialize builder with <code>url</code> and <code>saiSession</code>
          * @param url URL of the {@link ReadableApplicationProfile} to build
          * @param saiSession {@link SaiSession} to assign
-         * @param contentType {@link ContentType} to assign
-         * @param dataset Jena model to populate the readable application profile with                                       
          */
-        public Builder(URL url, SaiSession saiSession, ContentType contentType, Model dataset) throws SaiException {
-            Objects.requireNonNull(url, "Must provide a URL for the readable application profile builder");
-            Objects.requireNonNull(saiSession, "Must provide a sai session for the readable application profile builder");
-            Objects.requireNonNull(contentType, "Must provide a content type to use for retrieval of readable application profile ");
-            Objects.requireNonNull(dataset, "Must provide a dateset to use to populate the readable application profile ");
-            this.url = url;
-            this.saiSession = saiSession;
-            this.contentType = contentType;
-            this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
-            populateFromDataset();
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
+            this.contentType = LD_JSON;  // Solid Application Profile documents are always JSON-LD
         }
-        
+
+        /**
+         * Ensures that don't get an unchecked cast warning when returning from setters
+         * @return {@link Builder}
+         */
+        @Override
+        public Builder getThis() { return this; }
+
+        /**
+         * Set the Jena model and use it to populate attributes of the {@link Builder}. Assumption
+         * is made that the corresponding resource exists.
+         * @param dataset Jena model to populate the Builder attributes with
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        @Override
+        public Builder setDataset(Model dataset) throws SaiException {
+            super.setDataset(dataset);
+            populateFromDataset();
+            this.exists = true;
+            return this;
+        }
+
         /**
          * Populates the fields of the {@link ReadableApplicationProfile} based on the associated Jena resource.
          * @throws SaiException
@@ -184,10 +188,7 @@ public class ReadableApplicationProfile extends ReadableResource {
          * @throws SaiException
          */
         public ReadableApplicationProfile build() throws SaiException {
-            return new ReadableApplicationProfile(this.url, this.saiSession, this.dataset, this.resource, this.contentType, this.name,
-                                                  this.description, this.authorUrl, this.logoUrl, this.accessNeedGroupUrls,
-                                                  this.redirectUrls, this.clientUrl, this.tosUrl, this.scopes, this.grantTypes,
-                                                  this.responseTypes, this.defaultMaxAge, this.requireAuthTime);             
+            return new ReadableApplicationProfile(this);             
         }
         
     }
