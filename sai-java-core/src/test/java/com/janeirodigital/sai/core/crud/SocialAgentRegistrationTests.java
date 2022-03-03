@@ -22,7 +22,7 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-class CRUDSocialAgentRegistrationTests {
+class SocialAgentRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
@@ -47,6 +47,7 @@ class CRUDSocialAgentRegistrationTests {
         dispatcher = new RequestMatchingFixtureDispatcher();
         // GET social agent registration in Turtle
         mockOnGet(dispatcher, "/ttl/agents/sa-1/", "crud/social-agent-registration-ttl");
+        mockOnGet(dispatcher, "/ttl/required/agents/sa-1/", "crud/social-agent-registration-required-ttl");
         mockOnPut(dispatcher, "/new/ttl/agents/sa-1/", "http/201");  // create new
         mockOnPut(dispatcher, "/ttl/agents/sa-1/", "http/204");  // update existing
         mockOnDelete(dispatcher, "/ttl/agents/sa-1/", "http/204");  // delete
@@ -81,13 +82,33 @@ class CRUDSocialAgentRegistrationTests {
         assertDoesNotThrow(() -> registration.update());
         assertNotNull(registration);
     }
+
+    @Test
+    @DisplayName("Create new crud social agent registration - only required fields")
+    void createNewCrudSocialAgentRegistrationRequired() throws SaiException {
+        URL url = toUrl(server, "/new/ttl/agents/sa-1/");
+        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
+        SocialAgentRegistration registration = builder.setRegisteredBy(sa1RegisteredBy).setRegisteredWith(sa1RegisteredWith)
+                .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
+                .setRegisteredAgent(sa1RegisteredAgent).build();
+        assertDoesNotThrow(() -> registration.update());
+        assertNotNull(registration);
+    }
     
     @Test
     @DisplayName("Read crud social agent registration")
     void readSocialAgentRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
-        checkRegistration(registration);
+        checkRegistration(registration, false);
+    }
+
+    @Test
+    @DisplayName("Read crud social agent registration - only required fields")
+    void readSocialAgentRegistrationRequired() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/required/agents/sa-1/");
+        SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
+        checkRegistration(registration, true);
     }
 
     @Test
@@ -96,7 +117,7 @@ class CRUDSocialAgentRegistrationTests {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
         SocialAgentRegistration reloaded = registration.reload();
-        checkRegistration(reloaded);
+        checkRegistration(registration, false);
     }
 
     @Test
@@ -121,7 +142,7 @@ class CRUDSocialAgentRegistrationTests {
     void readSocialAgentRegistrationJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession, LD_JSON);
-        checkRegistration(registration);
+        checkRegistration(registration, false);
     }
 
     @Test
@@ -147,15 +168,17 @@ class CRUDSocialAgentRegistrationTests {
         assertFalse(registration.isExists());
     }
 
-    private void checkRegistration(SocialAgentRegistration registration) {
+    private void checkRegistration(SocialAgentRegistration registration, boolean required) {
         assertNotNull(registration);
         assertEquals(sa1RegisteredBy, registration.getRegisteredBy());
         assertEquals(sa1RegisteredWith, registration.getRegisteredWith());
         assertEquals(sa1RegisteredAt, registration.getRegisteredAt());
         assertEquals(sa1UpdatedAt, registration.getUpdatedAt());
         assertEquals(sa1RegisteredAgent, registration.getRegisteredAgent());
-        assertEquals(sa1ReciprocalRegistration, registration.getReciprocalRegistration());
-        assertEquals(sa1AccessGrant, registration.getAccessGrantUrl());
+        if (!required) {
+            assertEquals(sa1ReciprocalRegistration, registration.getReciprocalRegistration());
+            assertEquals(sa1AccessGrant, registration.getAccessGrantUrl());
+        }
     }
 
 }

@@ -181,16 +181,6 @@ public class ReadableResource {
             return getThis();
         }
 
-        /**
-         * Builder for a {@link ReadableResource}
-         * @return {@link ReadableResource}
-         * @throws SaiException
-         */
-        public ReadableResource build() throws SaiException {
-            Objects.requireNonNull(dataset, "Must provide a Jena model to the resource builder");
-            return new ReadableResource(this);
-        }
-
     }
 
 }

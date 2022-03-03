@@ -22,7 +22,7 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-class CRUDApplicationRegistrationTests {
+class ApplicationRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;

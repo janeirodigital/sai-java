@@ -48,7 +48,7 @@ public class ApplicationProfile extends CRUDResource {
     private List<String> grantTypes;
     private List<String> responseTypes;
     private Integer defaultMaxAge;
-    private boolean requireAuthTime;
+    private Boolean requireAuthTime;
 
     /**
      * Construct an {@link ApplicationProfile} instance from the provided {@link Builder}.

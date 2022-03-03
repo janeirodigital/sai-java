@@ -82,6 +82,15 @@ class SocialAgentProfileTests {
     }
 
     @Test
+    @DisplayName("Reload crud social agent profile")
+    void reloadSocialAgentProfile() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/id");
+        SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
+        SocialAgentProfile reloaded = profile.reload();
+        checkProfile(reloaded);
+    }
+
+    @Test
     @DisplayName("Fail to read existing crud social agent profile in turtle - missing required fields")
     void failToReadSocialAgentProfile() {
         URL url = toUrl(server, "/missing-fields/ttl/id");

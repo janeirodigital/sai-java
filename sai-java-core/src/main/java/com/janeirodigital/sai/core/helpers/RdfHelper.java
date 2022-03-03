@@ -465,18 +465,17 @@ public class RdfHelper {
 
     /**
      * Returns a single literal value as Boolean from the object of the statement matching
-     * the provided <code>property</code> in the provided <code>resource</code>. Returns an exception
-     * when no match is found. <i>Note: This method and the corresponding getRequiredBooleanObject
-     * both throw SaiNotFoundException when no data is found.</i>
+     * the provided <code>property</code> in the provided <code>resource</code>. Returns null
+     * when no match is found, which requires a Boxed boolean value to be returned.
      * @param resource Jena resource to navigate
      * @param property Jena property to search for
      * @return Literal object value as Boolean
      * @throws SaiException
      * @throws SaiNotFoundException when nothing is found
      */
-    public static boolean getBooleanObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
+    public static Boolean getBooleanObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
         RDFNode object = getObject(resource, property);
-        if (object == null) { throw new SaiNotFoundException(msgNothingFound(resource, property, XSDboolean)); }
+        if (object == null) { return null; }
         if (!object.isLiteral()) { throw new SaiException(msgInvalidDataType(resource, property, XSDboolean)); }
         if (!object.asLiteral().getDatatype().equals(XSDboolean)) { throw new SaiException(msgInvalidDataType(resource, property, XSDboolean)); }
         return object.asLiteral().getBoolean();
@@ -493,7 +492,9 @@ public class RdfHelper {
      * @throws SaiNotFoundException when nothing is found
      */
     public static Boolean getRequiredBooleanObject(Resource resource, Property property) throws SaiException, SaiNotFoundException {
-        return getBooleanObject(resource, property);
+        Boolean booleanValue = getBooleanObject(resource, property);
+        if (booleanValue == null) { throw new SaiNotFoundException(msgNothingFound(resource, property, XSDboolean)); }
+        return booleanValue;
     }
 
     /**

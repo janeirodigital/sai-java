@@ -51,6 +51,7 @@ class ApplicationProfileTests {
         mockOnGet(dispatcher, "/contexts/interop", "crud/interop-context-jsonld");
         // Get, Update, Delete for an existing CRUD resource
         mockOnGet(dispatcher, "/crud/application", "crud/application-profile-jsonld");
+        mockOnGet(dispatcher, "/crud/required/application", "crud/application-profile-required-jsonld");
         mockOnPut(dispatcher, "/crud/application", "http/204");
         mockOnDelete(dispatcher, "/crud/application", "http/204");
         // Build a CRUD resource that doesn't exist and create it
@@ -88,34 +89,52 @@ class ApplicationProfileTests {
     }
 
     @Test
-    @DisplayName("Read existing crud application profile")
-    void readCrudApplicationProfile() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
-        assertEquals(PROJECTRON_NAME, profile.getName());
-        assertEquals(PROJECTRON_LOGO, profile.getLogoUrl());
-        assertEquals(PROJECTRON_DESCRIPTION, profile.getDescription());
-        assertEquals(PROJECTRON_AUTHOR, profile.getAuthorUrl());
-        for (URL groupUrl : profile.getAccessNeedGroupUrls()) { assertTrue(PROJECTRON_NEED_GROUPS.contains(groupUrl)); }
-        assertEquals(PROJECTRON_CLIENT_URL, profile.getClientUrl());
-        for (URL redirectUrl : profile.getRedirectUrls()) { assertTrue(PROJECTRON_REDIRECTS.contains(redirectUrl)); }
-        assertEquals(PROJECTRON_TOS, profile.getTosUrl());
-        for (String scope : profile.getScopes()) { assertTrue(PROJECTRON_SCOPES.contains(scope)); }
-        for (String grantType : profile.getGrantTypes()) { assertTrue(PROJECTRON_GRANT_TYPES.contains(grantType)); }
-        for (String responseType : profile.getResponseTypes()) { assertTrue(PROJECTRON_RESPONSE_TYPES.contains(responseType)); }
-        assertEquals(PROJECTRON_MAX_AGE, profile.getDefaultMaxAge());
-        assertEquals(PROJECTRON_REQUIRE_AUTH_TIME, profile.isRequireAuthTime());
+    @DisplayName("Create new crud application profile - only required fields")
+    void createNewCrudApplicationProfileRequired() throws SaiException {
+        URL url = toUrl(server, "/new/crud/application");
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
+        ApplicationProfile profile = builder.setName(PROJECTRON_NAME).setDescription(PROJECTRON_DESCRIPTION)
+                .setAuthorUrl(PROJECTRON_AUTHOR).setAccessNeedGroupUrls(PROJECTRON_NEED_GROUPS)
+                .setRedirectUrls(PROJECTRON_REDIRECTS).setLogoUrl(PROJECTRON_LOGO).setScopes(PROJECTRON_SCOPES)
+                .setGrantType(PROJECTRON_GRANT_TYPES).setResponseTypes(PROJECTRON_RESPONSE_TYPES).build();
+        assertDoesNotThrow(() -> profile.update());
+        assertNotNull(profile);
     }
 
     @Test
-    @DisplayName("Fail to read existing crud application profile - missing required fields")
+    @DisplayName("Read crud application profile")
+    void readCrudApplicationProfile() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/crud/application");
+        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        checkProfile(profile, false);
+    }
+
+    @Test
+    @DisplayName("Read crud application profile - only required fields")
+    void readCrudApplicationProfileRequired() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/crud/required/application");
+        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        checkProfile(profile, true);
+    }
+
+    @Test
+    @DisplayName("Reload crud application profile")
+    void reloadCrudApplicationProfile() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/crud/application");
+        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        ApplicationProfile reloaded = profile.reload();
+        checkProfile(reloaded, false);
+    }
+
+    @Test
+    @DisplayName("Fail to read crud application profile - missing required fields")
     void failToReadCrudApplicationProfileMissingFields() {
         URL url = toUrl(server, "/missing-fields/crud/application");
         assertThrows(SaiException.class, () -> ApplicationProfile.get(url, saiSession));
     }
 
     @Test
-    @DisplayName("Update existing crud application profile")
+    @DisplayName("Update crud application profile")
     void updateCrudApplicationProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/application");
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
@@ -126,7 +145,7 @@ class ApplicationProfileTests {
     }
 
     @Test
-    @DisplayName("Delete existing crud application profile")
+    @DisplayName("Delete crud application profile")
     void deleteCrudApplicationProfile() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/crud/application");
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
@@ -134,4 +153,21 @@ class ApplicationProfileTests {
         assertFalse(profile.isExists());
     }
 
+    void checkProfile(ApplicationProfile profile, boolean requiredOnly) {
+        assertEquals(PROJECTRON_NAME, profile.getName());
+        assertEquals(PROJECTRON_LOGO, profile.getLogoUrl());
+        assertEquals(PROJECTRON_DESCRIPTION, profile.getDescription());
+        assertEquals(PROJECTRON_AUTHOR, profile.getAuthorUrl());
+        for (URL groupUrl : profile.getAccessNeedGroupUrls()) { assertTrue(PROJECTRON_NEED_GROUPS.contains(groupUrl)); }
+        for (URL redirectUrl : profile.getRedirectUrls()) { assertTrue(PROJECTRON_REDIRECTS.contains(redirectUrl)); }
+        for (String scope : profile.getScopes()) { assertTrue(PROJECTRON_SCOPES.contains(scope)); }
+        for (String grantType : profile.getGrantTypes()) { assertTrue(PROJECTRON_GRANT_TYPES.contains(grantType)); }
+        for (String responseType : profile.getResponseTypes()) { assertTrue(PROJECTRON_RESPONSE_TYPES.contains(responseType)); }
+        if (!requiredOnly) {
+            assertEquals(PROJECTRON_MAX_AGE, profile.getDefaultMaxAge());
+            assertEquals(PROJECTRON_REQUIRE_AUTH_TIME, profile.getRequireAuthTime());
+            assertEquals(PROJECTRON_CLIENT_URL, profile.getClientUrl());
+            assertEquals(PROJECTRON_TOS, profile.getTosUrl());
+        }
+    }
 }

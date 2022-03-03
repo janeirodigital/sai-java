@@ -94,13 +94,5 @@ public class CRUDResource extends ReadableResource {
          */
         protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
 
-        /**
-         * Builder for a {@link CRUDResource}
-         * @return {@link CRUDResource}
-         * @throws SaiException
-         */
-        public CRUDResource build() throws SaiException {
-            return new CRUDResource(this);
-        }
     }
 }

@@ -458,9 +458,7 @@ class RdfHelperTests {
             getBooleanObject(readableResource, TestableVocabulary.TESTABLE_HAS_MILESTONE);
         });
 
-        assertThrows(SaiNotFoundException.class, () -> {
-            getBooleanObject(readableResource, TestableVocabulary.TESTABLE_MISSING);
-        });
+        assertNull(getBooleanObject(readableResource, TestableVocabulary.TESTABLE_MISSING));
     }
 
     @Test

@@ -96,13 +96,5 @@ public class ImmutableResource extends ReadableResource {
          */
         protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
 
-        /**
-         * Builder for a {@link ImmutableResource}
-         * @return {@link ImmutableResource}
-         * @throws SaiException
-         */
-        public ImmutableResource build() throws SaiException {
-            return new ImmutableResource(this);
-        }
     }
 }
