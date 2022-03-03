@@ -1,0 +1,15 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:application/ld+json'
+body: >
+
+  {
+    "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
+    "id" : "${SERVER_BASE}/jsonld/data/dr-1/",
+    "registeredBy" : "https://alice.example/id#me",
+    "registeredWith" : "https://trusted.example/id#app",
+    "registeredAt" : "2021-04-04T20:15:47.000Z",
+    "updatedAt" : "2021-04-04T20:15:47.000Z",
+    "registeredShapeTree" : "http://data.example/shapetrees/pm#ProjectTree"
+  }
