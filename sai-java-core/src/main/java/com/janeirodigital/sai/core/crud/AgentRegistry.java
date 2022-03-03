@@ -1,21 +1,18 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
@@ -86,8 +83,6 @@ public class AgentRegistry extends CRUDResource {
 
         private SocialAgentRegistrationList<SocialAgentRegistration> socialAgentRegistrations;
         private ApplicationRegistrationList<ApplicationRegistration> applicationRegistrations;
-        private List<URL> socialAgentRegistrationUrls;
-        private List<URL> applicationRegistrationUrls;
 
         /**
          * Initialize builder with <code>url</code> and <code>saiSession</code>
@@ -96,8 +91,6 @@ public class AgentRegistry extends CRUDResource {
          */
         public Builder(URL url, SaiSession saiSession) {
             super(url, saiSession);
-            this.socialAgentRegistrationUrls = new ArrayList<>();
-            this.applicationRegistrationUrls = new ArrayList<>();
         }
 
         /**
@@ -123,28 +116,6 @@ public class AgentRegistry extends CRUDResource {
         }
 
         /**
-         * Set the URLs of social agent registrations in the Agent Registry (which must have already been created)
-         * @param socialAgentRegistrationUrls List of URLs to {@link SocialAgentRegistration} instances
-         * @return {@link Builder}
-         */
-        public Builder setSocialAgentRegistrationUrls(List<URL> socialAgentRegistrationUrls) {
-            Objects.requireNonNull(socialAgentRegistrationUrls, "Must provide a list of social agent registration urls to the agent registry builder");
-            this.socialAgentRegistrationUrls.addAll(socialAgentRegistrationUrls);
-            return this;
-        }
-
-        /**
-         * Set the URLs of social agent registrations in the Agent Registry (which must have already been created)
-         * @param applicationRegistrationUrls List of URLs to {@link ApplicationRegistration} instances
-         * @return {@link Builder}
-         */
-        public Builder setApplicationRegistrationUrls(List<URL> applicationRegistrationUrls) {
-            Objects.requireNonNull(applicationRegistrationUrls, "Must provide a list of application registration urls to the agent registry builder");
-            this.applicationRegistrationUrls.addAll(applicationRegistrationUrls);
-            return this;
-        }
-
-        /**
          * Populates the fields of the {@link AgentRegistry} based on the associated Jena resource.
          * @throws SaiException
          */
@@ -152,11 +123,9 @@ public class AgentRegistry extends CRUDResource {
             try {
                 this.socialAgentRegistrations = new SocialAgentRegistrationList<>(this.saiSession, this.resource);
                 this.applicationRegistrations = new ApplicationRegistrationList<>(this.saiSession, this.resource);
-                if (!socialAgentRegistrationUrls.isEmpty()) { this.socialAgentRegistrations.addAll(socialAgentRegistrationUrls); }
-                if (!applicationRegistrationUrls.isEmpty()) { this.applicationRegistrations.addAll(applicationRegistrationUrls); }
                 this.socialAgentRegistrations.populate();
                 this.applicationRegistrations.populate();
-            } catch (SaiException | SaiAlreadyExistsException ex) {
+            } catch (SaiException ex) {
                 throw new SaiException("Failed to load data registry " + this.url + ": " + ex.getMessage());
             }
         }
@@ -165,7 +134,7 @@ public class AgentRegistry extends CRUDResource {
          * Populates the Jena dataset graph with the attributes from the Builder
          * @throws SaiException
          */
-        private void populateDataset() throws SaiException {
+        private void populateDataset() {
             this.resource = getNewResourceForType(this.url, AGENT_REGISTRY);
             this.dataset = this.resource.getModel();
             // Note that agent registration URLs added via setSocialAgentRegistrationUrl or
@@ -228,11 +197,14 @@ public class AgentRegistry extends CRUDResource {
              * Get the {@link SocialAgentRegistration} for the next URL in the iterator
              * @return {@link SocialAgentRegistration}
              */
-            @SneakyThrows
             @Override
             public T next() {
-                URL registrationUrl = current.next();
-                return (T) SocialAgentRegistration.get(registrationUrl, saiSession);
+                try {
+                    URL registrationUrl = current.next();
+                    return (T) SocialAgentRegistration.get(registrationUrl, saiSession);
+                } catch (SaiException|SaiNotFoundException ex) {
+                    throw new SaiRuntimeException("Failed to get social agent registration while iterating list: " + ex.getMessage());
+                }
             }
         }
     }
@@ -279,11 +251,14 @@ public class AgentRegistry extends CRUDResource {
              * Get the {@link ApplicationRegistration} for the next URL in the iterator
              * @return {@link ApplicationRegistration}
              */
-            @SneakyThrows
             @Override
             public T next() {
-                URL registrationUrl = current.next();
-                return (T) ApplicationRegistration.get(registrationUrl, saiSession);
+                try {
+                    URL registrationUrl = current.next();
+                    return (T) ApplicationRegistration.get(registrationUrl, saiSession);
+                } catch (SaiException|SaiNotFoundException ex) {
+                    throw new SaiRuntimeException("Failed to get application registration while iterating list: " + ex.getMessage());
+                }
             }
         }
     }

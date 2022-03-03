@@ -4,6 +4,7 @@ import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
@@ -14,11 +15,13 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -40,6 +43,7 @@ class AgentRegistryTests {
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET agent registry in Turtle
         mockOnGet(dispatcher, "/ttl/agents/", "crud/agent-registry-ttl");
+        mockOnGet(dispatcher, "/ttl/empty/agents/", "crud/agent-registry-empty-ttl");
         mockOnGet(dispatcher, "/ttl/agents/sa-1/", "crud/social-agent-registration-1-ttl");
         mockOnGet(dispatcher, "/ttl/agents/sa-2/", "crud/social-agent-registration-2-ttl");
         mockOnGet(dispatcher, "/ttl/agents/sa-3/", "crud/social-agent-registration-3-ttl");
@@ -50,8 +54,10 @@ class AgentRegistryTests {
         mockOnPut(dispatcher, "/new/ttl/agents/", "http/201");  // create new
         mockOnPut(dispatcher, "/ttl/agents/", "http/204");  // update existing
         mockOnDelete(dispatcher, "/ttl/agents/", "http/204");  // delete
-        // GET agent registry in Turtle with missing fields
-        mockOnGet(dispatcher, "/missing-fields/ttl/agents/", "crud/agent-registry-missing-fields-ttl");
+        // GET agent registry in Turtle with invalid fields
+        mockOnGet(dispatcher, "/invalid-fields/ttl/agents/", "crud/agent-registry-invalid-ttl");
+        // GET agent registry in Turtle with links to registrations that don't exist
+        mockOnGet(dispatcher, "/missing-registrations/ttl/agents/", "crud/agent-registry-missing-registrations-ttl");
         // GET agent registry in JSON-LD
         mockOnGet(dispatcher, "/jsonld/agents/", "crud/agent-registry-jsonld");
         mockOnPut(dispatcher, "/new/jsonld/agents/", "http/201");  // create new
@@ -70,13 +76,10 @@ class AgentRegistryTests {
     }
 
     @Test
-    @DisplayName("Create new agent registry")
+    @DisplayName("Create an agent registry")
     void createNewAgentRegistry() throws SaiException {
         URL url = toUrl(server, "/new/ttl/agents/");
-        AgentRegistry.Builder builder = new AgentRegistry.Builder(url, saiSession);
-        AgentRegistry agentRegistry = builder.setSocialAgentRegistrationUrls(aliceSocialAgents)
-                                             .setApplicationRegistrationUrls(aliceApplications)
-                                             .build();
+        AgentRegistry agentRegistry = new AgentRegistry.Builder(url, saiSession).build();
         assertDoesNotThrow(() -> agentRegistry.update());
         assertNotNull(agentRegistry);
     }
@@ -86,7 +89,22 @@ class AgentRegistryTests {
     void readAgentRegistry() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
-        checkRegistry(agentRegistry);
+        checkRegistry(agentRegistry, false);
+    }
+
+    @Test
+    @DisplayName("Get an empty agent registry")
+    void readEmptyAgentRegistry() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/empty/agents/");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+        checkRegistry(agentRegistry, true);
+    }
+
+    @Test
+    @DisplayName("Fail to get agent registry - invalid fields")
+    void failToGetAgentRegistry() {
+        URL url = toUrl(server, "/invalid-fields/ttl/agents/");
+        assertThrows(SaiException.class, () -> AgentRegistry.get(url, saiSession));
     }
 
     @Test
@@ -95,7 +113,51 @@ class AgentRegistryTests {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         AgentRegistry reloaded = agentRegistry.reload();
-        checkRegistry(reloaded);
+        checkRegistry(reloaded, false);
+    }
+
+    @Test
+    @DisplayName("Find a social agent registration")
+    void findSocialAgentRegistration() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/agents/");
+        URL toFind = stringToUrl("https://bob.example/id#me");
+        URL toFail = stringToUrl("https://who.example/id#nobody");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+        SocialAgentRegistration found = agentRegistry.getSocialAgentRegistrations().find(toFind);
+        assertEquals(toFind, found.getRegisteredAgent());
+        SocialAgentRegistration fail = agentRegistry.getSocialAgentRegistrations().find(toFail);
+        assertNull(fail);
+    }
+
+    @Test
+    @DisplayName("Fail to iterate social agent registrations - missing registration")
+    void failToFindSocialAgentRegistrationMissing() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/missing-registrations/ttl/agents/");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+        Iterator<SocialAgentRegistration> iterator = agentRegistry.getSocialAgentRegistrations().iterator();
+        assertThrows(SaiRuntimeException.class, () -> iterator.next());
+    }
+
+    @Test
+    @DisplayName("Find an application registration")
+    void findApplicationRegistration() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/agents/");
+        URL toFind = stringToUrl("https://projectron.example/id#app");
+        URL toFail = stringToUrl("https://app.example/id#nothing");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+        ApplicationRegistration found = agentRegistry.getApplicationRegistrations().find(toFind);
+        assertEquals(toFind, found.getRegisteredAgent());
+        ApplicationRegistration fail = agentRegistry.getApplicationRegistrations().find(toFail);
+        assertNull(fail);
+    }
+
+    @Test
+    @DisplayName("Fail to iterate application registrations - missing registration")
+    void failToFindApplicationRegistrationMissing() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/missing-registrations/ttl/agents/");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+        Iterator<ApplicationRegistration> iterator = agentRegistry.getApplicationRegistrations().iterator();
+        assertThrows(SaiRuntimeException.class, () -> iterator.next());
     }
     
     @Test
@@ -115,18 +177,14 @@ class AgentRegistryTests {
     void readAgentRegistryJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession, LD_JSON);
-        checkRegistry(agentRegistry);
+        checkRegistry(agentRegistry, false);
     }
 
     @Test
     @DisplayName("Create new crud agent registry in JSON-LD")
     void createNewAgentRegistryJsonLd() throws SaiException {
         URL url = toUrl(server, "/new/jsonld/agents/");
-        AgentRegistry.Builder builder = new AgentRegistry.Builder(url, saiSession);
-        AgentRegistry agentRegistry = builder.setContentType(LD_JSON)
-                                             .setSocialAgentRegistrationUrls(aliceSocialAgents)
-                                             .setApplicationRegistrationUrls(aliceApplications)
-                                             .build();
+        AgentRegistry agentRegistry = new AgentRegistry.Builder(url, saiSession).setContentType(LD_JSON).build();
         assertDoesNotThrow(() -> agentRegistry.update());
         assertNotNull(agentRegistry);
     }
@@ -140,12 +198,17 @@ class AgentRegistryTests {
         assertFalse(agentRegistry.isExists());
     }
 
-    private void checkRegistry(AgentRegistry agentRegistry) {
+    private void checkRegistry(AgentRegistry agentRegistry, boolean requiredOnly) {
         assertNotNull(agentRegistry);
         assertTrue(aliceSocialAgents.containsAll(agentRegistry.getSocialAgentRegistrations().getRegistrationUrls()));
         assertTrue(aliceApplications.containsAll(agentRegistry.getApplicationRegistrations().getRegistrationUrls()));
-        for (SocialAgentRegistration registration : agentRegistry.getSocialAgentRegistrations()) { assertTrue(aliceSocialAgents.contains(registration.getUrl())); }
-        for (ApplicationRegistration registration : agentRegistry.getApplicationRegistrations()) { assertTrue(aliceApplications.contains(registration.getUrl())); }
-
+        if (!requiredOnly) {
+            for (SocialAgentRegistration registration : agentRegistry.getSocialAgentRegistrations()) {
+                assertTrue(aliceSocialAgents.contains(registration.getUrl()));
+            }
+            for (ApplicationRegistration registration : agentRegistry.getApplicationRegistrations()) {
+                assertTrue(aliceApplications.contains(registration.getUrl()));
+            }
+        }
     }
 }
