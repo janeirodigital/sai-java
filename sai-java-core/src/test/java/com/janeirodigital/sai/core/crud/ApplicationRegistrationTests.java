@@ -75,7 +75,19 @@ class ApplicationRegistrationTests {
                                                       .setRegisteredAgent(app1RegisteredAgent)
                                                       .setAccessGrant(app1AccessGrant).build();
         assertDoesNotThrow(() -> registration.update());
-        assertNotNull(registration);
+        assertTrue(registration.hasAccessGrant());
+    }
+
+    @Test
+    @DisplayName("Create new crud application registration - only required fields")
+    void createNewCrudApplicationRegistrationRequired() throws SaiException {
+        URL url = toUrl(server, "/new/ttl/agents/app-1/");
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession);
+        ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
+                .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
+                .setRegisteredAgent(app1RegisteredAgent).build();
+        assertDoesNotThrow(() -> registration.update());
+        assertFalse(registration.hasAccessGrant());
     }
 
     @Test
@@ -139,6 +151,14 @@ class ApplicationRegistrationTests {
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         assertDoesNotThrow(() -> registration.delete());
         assertFalse(registration.isExists());
+    }
+
+    @Test
+    @DisplayName("Generate URL for contained resource")
+    void generateUrlForContained() throws SaiNotFoundException, SaiException {
+        URL url = toUrl(server, "/ttl/agents/app-1/");
+        ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
+        assertDoesNotThrow(() -> registration.generateContainedUrl());
     }
 
     private void checkRegistration(ApplicationRegistration registration) {

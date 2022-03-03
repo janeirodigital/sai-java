@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.crud;
 
+import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
@@ -35,7 +36,7 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      * @param resource Jena resource for the associated registry
      * @param linkedVia Jena property that links the registry to the registry set
      */
-    public RegistrationList(SaiSession saiSession, Resource resource, Property linkedVia) {
+    protected RegistrationList(SaiSession saiSession, Resource resource, Property linkedVia) {
         Objects.requireNonNull(saiSession, "Must provide a sai session for the registration list");
         Objects.requireNonNull(resource, "Must provide a Jena resource for the registry the registration list is associated with");
         Objects.requireNonNull(linkedVia, "Must provide a property to link the registration to the registry");
@@ -60,8 +61,9 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      */
     public void add(URL registrationUrl) throws SaiException, SaiAlreadyExistsException {
         Objects.requireNonNull(registrationUrl, "Must provide the URL of the registration to add to registry");
-        T found = find(registrationUrl); // Check first to see if it already exists
-        if (found != null) { throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists"); }
+        if (this.isPresent(registrationUrl)) {
+            throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists");
+        }
         this.registrationUrls.add(registrationUrl);
         updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
     }
@@ -74,11 +76,22 @@ public abstract class RegistrationList<T> implements Iterable<T> {
     public void addAll(List<URL> registrationUrls) throws SaiAlreadyExistsException {
         Objects.requireNonNull(registrationUrls, "Must provide a list of URLs of the registrations to add to registry");
         for (URL registrationUrl: registrationUrls) {
-            T found = find(registrationUrl); // Check first to see if it already exists
-            if (found != null) { throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists"); }
+            if (this.isPresent(registrationUrl)) {
+                throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists");
+            }
         }
         this.registrationUrls.addAll(registrationUrls);
         updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
+    }
+
+    /**
+     * Check to see if the provided URL <code>checkUrl</code> is already part of the registration list
+     * @param checkUrl true if <code>checkUrl</code> is already part of the list
+     * @return
+     */
+    public boolean isPresent(URL checkUrl) {
+        Objects.requireNonNull(checkUrl, "Must provide the URL of the registration to check for");
+        return this.registrationUrls.contains(checkUrl);
     }
 
     /**
@@ -108,22 +121,24 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      * Return an iterator for the {@link RegistrationList}
      * @return
      */
+    @ExcludeFromGeneratedCoverage
     public Iterator<T> iterator() {
-        return new RegistrationListIterator<T>(this.saiSession, this.registrationUrls);
+        return new RegistrationListIterator<>(this.saiSession, this.registrationUrls);
     }
 
     /**
      * Custom iterator for the {@link RegistrationList}. Will not function unless {@link #hasNext()}
      * is overriden.
      */
-    public class RegistrationListIterator<T> implements Iterator<T> {
-        public Iterator<URL> current;
-        public SaiSession saiSession;
+    public static class RegistrationListIterator<T> implements Iterator<T> {
+        protected Iterator<URL> current;
+        protected SaiSession saiSession;
         public RegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) {
             this.saiSession = saiSession;
             this.current = registrationUrls.iterator();
         }
         public boolean hasNext() { return current.hasNext(); }
+        @ExcludeFromGeneratedCoverage
         public T next() { throw new UnsupportedOperationException("Must override registration list iterator"); }
     }
 

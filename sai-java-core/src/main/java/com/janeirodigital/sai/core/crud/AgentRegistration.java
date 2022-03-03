@@ -60,7 +60,7 @@ public abstract class AgentRegistration extends CRUDResource {
      * @return true when there is an access grant
      */
     public boolean hasAccessGrant() {
-        return this.accessGrantUrl == null;
+        return this.accessGrantUrl != null;
     }
 
     /**
@@ -146,7 +146,7 @@ public abstract class AgentRegistration extends CRUDResource {
          */
         public T setAccessGrant(URL accessGrantUrl) {
             Objects.requireNonNull(accessGrantUrl, "Must provide the access grant for the agent registration");
-            this.registeredAgent = accessGrantUrl;
+            this.accessGrantUrl = accessGrantUrl;
             return getThis();
         }
 

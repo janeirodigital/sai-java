@@ -26,8 +26,6 @@ class SocialAgentRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static RequestMatchingFixtureDispatcher dispatcher;
-
     private static URL sa1RegisteredBy;
     private static URL sa1RegisteredWith;
     private static OffsetDateTime sa1RegisteredAt;
@@ -44,7 +42,7 @@ class SocialAgentRegistrationTests {
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 
         // Initialize request fixtures for the MockWebServer
-        dispatcher = new RequestMatchingFixtureDispatcher();
+        RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET social agent registration in Turtle
         mockOnGet(dispatcher, "/ttl/agents/sa-1/", "crud/social-agent-registration-ttl");
         mockOnGet(dispatcher, "/ttl/required/agents/sa-1/", "crud/social-agent-registration-required-ttl");
@@ -80,7 +78,7 @@ class SocialAgentRegistrationTests {
                 .setRegisteredAgent(sa1RegisteredAgent)
                 .setAccessGrant(sa1AccessGrant).setReciprocalRegistration(sa1ReciprocalRegistration).build();
         assertDoesNotThrow(() -> registration.update());
-        assertNotNull(registration);
+        assertTrue(registration.hasAccessGrant());
     }
 
     @Test
@@ -92,7 +90,7 @@ class SocialAgentRegistrationTests {
                 .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
                 .setRegisteredAgent(sa1RegisteredAgent).build();
         assertDoesNotThrow(() -> registration.update());
-        assertNotNull(registration);
+        assertFalse(registration.hasAccessGrant());
     }
     
     @Test
@@ -117,7 +115,7 @@ class SocialAgentRegistrationTests {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
         SocialAgentRegistration reloaded = registration.reload();
-        checkRegistration(registration, false);
+        checkRegistration(reloaded, false);
     }
 
     @Test
@@ -168,6 +166,14 @@ class SocialAgentRegistrationTests {
         assertFalse(registration.isExists());
     }
 
+    @Test
+    @DisplayName("Generate URL for contained resource")
+    void generateUrlForContained() throws SaiNotFoundException, SaiException {
+        URL url = toUrl(server, "/ttl/agents/sa-1/");
+        SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
+        assertDoesNotThrow(() -> registration.generateContainedUrl());
+    }
+
     private void checkRegistration(SocialAgentRegistration registration, boolean required) {
         assertNotNull(registration);
         assertEquals(sa1RegisteredBy, registration.getRegisteredBy());
@@ -177,6 +183,7 @@ class SocialAgentRegistrationTests {
         assertEquals(sa1RegisteredAgent, registration.getRegisteredAgent());
         if (!required) {
             assertEquals(sa1ReciprocalRegistration, registration.getReciprocalRegistration());
+            assertTrue(registration.hasAccessGrant());
             assertEquals(sa1AccessGrant, registration.getAccessGrantUrl());
         }
     }

@@ -1,6 +1,7 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.enums.ContentType;
+import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
@@ -13,6 +14,7 @@ import org.apache.jena.rdf.model.Resource;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
@@ -74,6 +76,62 @@ public class AgentRegistry extends CRUDResource {
      */
     public AgentRegistry reload() throws SaiNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
+     * Indicate whether the {@link AgentRegistry} has any registrations
+     * @return true if there are not registrations
+     */
+    public boolean isEmpty() {
+        return socialAgentRegistrations.isEmpty() && applicationRegistrations.isEmpty();
+    }
+
+    /**
+     * Add a {@link SocialAgentRegistration} or {@link ApplicationRegistration} to the {@link AgentRegistry}
+     * @param registration {@link AgentRegistration} to add
+     * @throws SaiException
+     * @throws SaiAlreadyExistsException
+     */
+    public void add(AgentRegistration registration) throws SaiException, SaiAlreadyExistsException {
+        Objects.requireNonNull(registration, "Cannot add a null agent registration to agent registry");
+        if (registration instanceof SocialAgentRegistration) { addSocialAgentRegistration((SocialAgentRegistration) registration); }
+        if (registration instanceof ApplicationRegistration) { addApplicationRegistration((ApplicationRegistration) registration); }
+    }
+
+    /**
+     * Add a {@link SocialAgentRegistration} to the {@link AgentRegistry}. Ensures a registration 
+     * doesn't already exist for the registered agent.
+     * @param registration {@link SocialAgentRegistration} to add
+     * @throws SaiAlreadyExistsException
+     * @throws SaiException
+     */
+    private void addSocialAgentRegistration(SocialAgentRegistration registration) throws SaiAlreadyExistsException, SaiException {
+        SocialAgentRegistration found = this.getSocialAgentRegistrations().find(registration.getRegisteredAgent());
+        if (found != null) { throw new SaiAlreadyExistsException("Social agent registration already exists for " + registration.getRegisteredAgent()); }
+        this.getSocialAgentRegistrations().add(registration.getUrl());
+    }
+
+    /**
+     * Add a {@link ApplicationRegistration} to the {@link AgentRegistry}. Ensures a registration 
+     * doesn't already exist for the registered agent.
+     * @param registration {@link ApplicationRegistration} to add
+     * @throws SaiAlreadyExistsException
+     * @throws SaiException
+     */
+    private void addApplicationRegistration(ApplicationRegistration registration) throws SaiAlreadyExistsException, SaiException {
+        ApplicationRegistration found = this.getApplicationRegistrations().find(registration.getRegisteredAgent());
+        if (found != null) { throw new SaiAlreadyExistsException("Application registration already exists for " + registration.getRegisteredAgent()); }
+        this.getSocialAgentRegistrations().add(registration.getUrl());
+    }
+
+    /**
+     * Remove an {@link AgentRegistration} from the {@link AgentRegistry}
+     * @param registration {@link AgentRegistration} to remove
+     */
+    public void remove(AgentRegistration registration) {
+        Objects.requireNonNull(registration, "Cannot remove a null agent registration to agent registry");
+        if (registration instanceof SocialAgentRegistration) { this.socialAgentRegistrations.remove(registration.getUrl()); }
+        if (registration instanceof ApplicationRegistration) { this.applicationRegistrations.remove(registration.getUrl()); }
     }
 
     /**

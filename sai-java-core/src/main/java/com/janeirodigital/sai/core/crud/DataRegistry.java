@@ -4,9 +4,9 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -76,13 +76,43 @@ public class DataRegistry extends CRUDResource {
     public DataRegistry reload() throws SaiNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
+
+    /**
+     * Indicate whether the {@link DataRegistry} has any {@link DataRegistration}s
+     * @return true if there are no registrations
+     */
+    public boolean isEmpty() {
+        return dataRegistrations.isEmpty();
+    }
+
+    /**
+     * Add a {@link DataRegistration} to the {@link DataRegistry}
+     * @param registration {@link DataRegistration} to add
+     * @throws SaiException
+     * @throws SaiAlreadyExistsException
+     */
+    public void add(DataRegistration registration) throws SaiException, SaiAlreadyExistsException {
+        Objects.requireNonNull(registration, "Cannot add a null data registration to agent registry");
+        DataRegistration found = this.getDataRegistrations().find(registration.getRegisteredShapeTree());
+        if (found != null) { throw new SaiAlreadyExistsException("Data registration already exists for shape tree " + registration.getRegisteredShapeTree() + " at " + found.getUrl()); }
+        this.getDataRegistrations().add(registration.getUrl());
+    }
+
+    /**
+     * Remove a {@link DataRegistration} from the {@link DataRegistry}
+     * @param registration {@link DataRegistration} to remove
+     */
+    public void remove(DataRegistration registration) {
+        Objects.requireNonNull(registration, "Cannot remove a null data registration to agent registry");
+        this.dataRegistrations.remove(registration.getUrl());
+    }
     
     /**
      * Builder for {@link DataRegistry} instances.
      */
     public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private final DataRegistrationList<DataRegistration> dataRegistrations;
+        private DataRegistrationList<DataRegistration> dataRegistrations;
 
         /**
          * Initialize builder with <code>url</code> and <code>saiSession</code>
@@ -91,7 +121,6 @@ public class DataRegistry extends CRUDResource {
          */
         public Builder(URL url, SaiSession saiSession) {
             super(url, saiSession);
-            this.dataRegistrations = new DataRegistrationList<>(this.saiSession, this.resource);
         }
 
         /**
@@ -117,22 +146,12 @@ public class DataRegistry extends CRUDResource {
         }
 
         /**
-         * Set the URLs of data registrations in the Data Registry (which must have already been created)
-         * @param dataRegistrationUrls List of URLs to {@link DataRegistration} instances
-         * @return {@link Builder}
-         */
-        public Builder setDataRegistrationUrls(List<URL> dataRegistrationUrls) throws SaiAlreadyExistsException {
-            Objects.requireNonNull(dataRegistrations, "Must provide a list of data registration urls to the data registry builder");
-            this.dataRegistrations.addAll(dataRegistrationUrls);
-            return this;
-        }
-
-        /**
          * Populates the fields of the {@link DataRegistry} based on the associated Jena resource.
          * @throws SaiException
          */
         private void populateFromDataset() throws SaiException {
             try {
+                this.dataRegistrations = new DataRegistrationList<>(this.saiSession, this.resource);
                 this.dataRegistrations.populate();
             } catch (SaiException ex) {
                 throw new SaiException("Failed to load data registry " + this.url + ": " + ex.getMessage());
@@ -195,17 +214,20 @@ public class DataRegistry extends CRUDResource {
         /**
          * Custom iterator that iterates over {@link DataRegistration} URLs and gets actual instances of them
          */
-        private class DataRegistrationListIterator<T> extends RegistrationListIterator<T> {
+        private static class DataRegistrationListIterator<T> extends RegistrationListIterator<T> {
             public DataRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
             /**
              * Get the {@link DataRegistration} for the next URL in the iterator
              * @return {@link DataRegistration}
              */
-            @SneakyThrows
             @Override
             public T next() {
-                URL registrationUrl = (URL) current.next();
-                return (T) DataRegistration.get(registrationUrl, saiSession);
+                try {
+                    URL registrationUrl = current.next();
+                    return (T) DataRegistration.get(registrationUrl, saiSession);
+                } catch (SaiException|SaiNotFoundException ex) {
+                    throw new SaiRuntimeException("Failed to get data registration while iterating list: " + ex.getMessage());
+                }
             }
         }
 

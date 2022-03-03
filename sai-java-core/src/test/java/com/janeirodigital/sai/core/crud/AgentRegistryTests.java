@@ -24,6 +24,7 @@ import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class AgentRegistryTests {
 
@@ -90,14 +91,18 @@ class AgentRegistryTests {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         checkRegistry(agentRegistry, false);
+        assertFalse(agentRegistry.isEmpty());
     }
 
     @Test
     @DisplayName("Get an empty agent registry")
-    void readEmptyAgentRegistry() throws SaiException, SaiNotFoundException {
+    void readEmptyAgentRegistry() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/ttl/empty/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         checkRegistry(agentRegistry, true);
+        assertTrue(agentRegistry.isEmpty());
+        agentRegistry.getApplicationRegistrations().add(toUrl(server, "/ttl/empty/agents/app-555"));
+        assertFalse(agentRegistry.isEmpty());
     }
 
     @Test
@@ -196,6 +201,65 @@ class AgentRegistryTests {
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         assertDoesNotThrow(() -> agentRegistry.delete());
         assertFalse(agentRegistry.isExists());
+    }
+
+    @Test
+    @DisplayName("Add agent registrations to agent registry")
+    void addAgentRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+        URL url = toUrl(server, "/ttl/agents/");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+
+        URL saUrl = toUrl(server, "/ttl/agents/sa-786/");
+        URL saAgent = stringToUrl("https://peter.example/id#me");
+        SocialAgentRegistration sa = mock(SocialAgentRegistration.class);
+        when(sa.getUrl()).thenReturn(saUrl);
+        when(sa.getRegisteredAgent()).thenReturn(saAgent);
+        agentRegistry.add(sa);
+
+        URL appUrl = toUrl(server, "/ttl/agents/app-776/");
+        URL appAgent = stringToUrl("https://superapp.example/id#app");
+        ApplicationRegistration app = mock(ApplicationRegistration.class);
+        when(app.getUrl()).thenReturn(appUrl);
+        when(app.getRegisteredAgent()).thenReturn(appAgent);
+        agentRegistry.add(app);
+    }
+
+    @Test
+    @DisplayName("Remove agent registrations from agent registry")
+    void removeAgentRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+        URL url = toUrl(server, "/ttl/agents/");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+
+        URL saUrl = toUrl(server, "/ttl/agents/sa-1/");
+        SocialAgentRegistration sa = mock(SocialAgentRegistration.class);
+        when(sa.getUrl()).thenReturn(saUrl);
+        agentRegistry.remove(sa);
+
+        URL appUrl = toUrl(server, "/ttl/agents/app-1/");
+        ApplicationRegistration app = mock(ApplicationRegistration.class);
+        when(app.getUrl()).thenReturn(appUrl);
+        agentRegistry.remove(app);
+    }
+
+    @Test
+    @DisplayName("Fail to add agent registrations to agent registry - already exists")
+    void failToAddSocialAgentRegistration() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/agents/");
+        AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
+
+        URL saUrl = toUrl(server, "/ttl/agents/sa-1/");
+        URL saAgent = stringToUrl("https://bob.example/id#me");
+        SocialAgentRegistration sa = mock(SocialAgentRegistration.class);
+        when(sa.getUrl()).thenReturn(saUrl);
+        when(sa.getRegisteredAgent()).thenReturn(saAgent);
+        assertThrows(SaiAlreadyExistsException.class, () -> agentRegistry.add(sa));
+
+        URL appUrl = toUrl(server, "/ttl/agents/app-1/");
+        URL appAgent = stringToUrl("https://projectron.example/id#app");
+        ApplicationRegistration app = mock(ApplicationRegistration.class);
+        when(app.getUrl()).thenReturn(appUrl);
+        when(app.getRegisteredAgent()).thenReturn(appAgent);
+        assertThrows(SaiAlreadyExistsException.class, () -> agentRegistry.add(app));
     }
 
     private void checkRegistry(AgentRegistry agentRegistry, boolean requiredOnly) {
