@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
@@ -200,6 +201,14 @@ class RdfHelperTests {
     void failToBuildRemoteContexts() throws SaiException {
         List<String> contexts = new ArrayList<>();
         assertThrows(SaiException.class, () -> buildRemoteJsonLdContexts(contexts));
+    }
+
+    @Test
+    @DisplayName("Build remote JSON-LD context - multiple contexts")
+    void buildMultipleRemoteJsonLdContexts() throws SaiException {
+        List<String> contexts = new ArrayList<>();
+        contexts.addAll(Arrays.asList(INTEROP_CONTEXT, SOLID_OIDC_CONTEXT));
+        buildRemoteJsonLdContexts(contexts);
     }
 
     @Test

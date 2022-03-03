@@ -42,7 +42,6 @@ class HttpHelperTests {
 
     private static MockWebServer server;
     private static MockWebServer queuingServer;
-    private static HttpClientFactory clientFactory;
     private static OkHttpClient httpClient;
 
     @BeforeAll
@@ -63,7 +62,7 @@ class HttpHelperTests {
         server.setDispatcher(dispatcher);
         // Initialize another Mock Web Server used specifically for queuing exceptions and assign a queue dispatcher
         // Initialize HTTP client
-        clientFactory = new HttpClientFactory(true, false, false);
+        HttpClientFactory clientFactory = new HttpClientFactory(true, false, false);
         httpClient = clientFactory.get();
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
     }
@@ -193,7 +192,7 @@ class HttpHelperTests {
     @DisplayName("Fail to get a resource and log details")
     void FailToGetResourceAndLog() throws SaiException {
         queuingServer.enqueue(new MockResponse().setResponseCode(404).setBody(""));
-        try(Response response = getResource(httpClient, toUrl(queuingServer, "/http/no-resource"));) {
+        try(Response response = getResource(httpClient, toUrl(queuingServer, "/http/no-resource"))) {
             assertNotNull(getResponseFailureMessage(response));
         }
         queuingServer.enqueue(new MockResponse().setResponseCode(404).setBody(""));
@@ -404,6 +403,21 @@ class HttpHelperTests {
     @DisplayName("Fail to convert URI to URL - malformed URL")
     void failToConvertUriToUrl() {
         assertThrows(SaiException.class, () -> uriToUrl(URI.create("somescheme://what/path")));
+    }
+
+    @Test
+    @DisplayName("Add child to URL Path")
+    void testAddChildToUrlPath() throws SaiException, MalformedURLException {
+        URL base = new URL("http://www.solidproject.org/");
+        URL added = addChildToUrlPath(base, "child");
+        assertEquals("http://www.solidproject.org/child", added.toString());
+    }
+
+    @Test
+    @DisplayName("Fail to add child to URL path - malformed URL")
+    void failToAddChildToUrlPath() throws MalformedURLException {
+        URL base = new URL("http://www.solidproject.org/");
+        assertThrows(SaiException.class, () -> addChildToUrlPath(base, "somescheme://what/"));
     }
 
     private String getHtmlBody() {

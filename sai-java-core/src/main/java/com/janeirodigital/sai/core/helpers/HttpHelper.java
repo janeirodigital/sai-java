@@ -541,6 +541,11 @@ public class HttpHelper {
         }
     }
 
+    /**
+     * Generate a failure message based on an OkHttp Response
+     * @param response OkHttp Response
+     * @return Failure message string
+     */
     public static String getResponseFailureMessage(Response response) {
         return "HTTP " + response.code() + " " + response.message() ;
     }
