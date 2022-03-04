@@ -82,7 +82,7 @@ class ReadableResourceTests {
     }
 
     @Test
-    @DisplayName("Build a protected readable resource")
+    @DisplayName("Get a protected readable resource")
     void bootstrapProtectedReadableResource() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/readable/readable-resource#project");
         TestableReadableResource testable = TestableReadableResource.get(url, saiSession, false);
@@ -92,14 +92,14 @@ class ReadableResourceTests {
     }
 
     @Test
-    @DisplayName("Fail to build a protected readable resource - missing fields")
+    @DisplayName("Fail to get a protected readable resource - missing fields")
     void failToGetReadableResourceMissingFields() {
         URL url = toUrl(server, "/missing-fields/readable/readable-resource#project");
         assertThrows(SaiException.class, () -> TestableReadableResource.get(url, saiSession, false));
     }
 
     @Test
-    @DisplayName("Fail to build a protected readable resource - io failure")
+    @DisplayName("Fail to get a protected readable resource - io failure")
     void failToGetReadableResourceMalformedDocuments() throws SaiException {
         URL url = toUrl(queuingServer, "/io/readable/protected-readable");
         queuingServer.enqueue(new MockResponse()
@@ -111,7 +111,7 @@ class ReadableResourceTests {
     }
 
     @Test
-    @DisplayName("Fail to build unprotected readable resource - io failure")
+    @DisplayName("Fail to get unprotected readable resource - io failure")
     void failToGetReadableResourceIO() throws SaiException {
         URL url = toUrl(queuingServer, "/io/readable/unprotected-readable");
         queuingServer.enqueue(new MockResponse()

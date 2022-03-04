@@ -3,9 +3,9 @@ package com.janeirodigital.sai.core.crud;
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -15,9 +15,13 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
+import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
+import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
+import static com.janeirodigital.sai.core.helpers.RdfHelper.buildRemoteJsonLdContexts;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -34,6 +38,7 @@ class ApplicationProfileTests {
     private static URL PROJECTRON_AUTHOR;
     private static URL PROJECTRON_CLIENT_URL;
     private static URL PROJECTRON_TOS;
+    private static String APPLICATION_CONTEXT;
     private static List<URL> PROJECTRON_NEED_GROUPS;
     private static List<URL> PROJECTRON_REDIRECTS;
     private static final int PROJECTRON_MAX_AGE = 3600;
@@ -69,6 +74,7 @@ class ApplicationProfileTests {
         PROJECTRON_CLIENT_URL = stringToUrl("http://projectron.example/");
         PROJECTRON_REDIRECTS = Arrays.asList(toUrl(server, "/redirect"));
         PROJECTRON_TOS = stringToUrl("http://projectron.example/tos.html");
+        APPLICATION_CONTEXT = buildRemoteJsonLdContexts(Arrays.asList(INTEROP_CONTEXT, SOLID_OIDC_CONTEXT));
     }
 
     @Test
@@ -77,7 +83,9 @@ class ApplicationProfileTests {
         URL url = toUrl(server, "/new/crud/application");
 
         ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
-        ApplicationProfile profile = builder.setName(PROJECTRON_NAME).setDescription(PROJECTRON_DESCRIPTION)
+        // Note - the application profile constructor automatically sets the right contexts but setting it here
+        // explicitly to to test the underlying support of json ld context assignment.
+        ApplicationProfile profile = builder.setContentType(LD_JSON).setJsonLdContext(APPLICATION_CONTEXT).setName(PROJECTRON_NAME).setDescription(PROJECTRON_DESCRIPTION)
                                             .setAuthorUrl(PROJECTRON_AUTHOR).setAccessNeedGroupUrls(PROJECTRON_NEED_GROUPS)
                                             .setClientUrl(PROJECTRON_CLIENT_URL).setRedirectUrls(PROJECTRON_REDIRECTS)
                                             .setTosUrl(PROJECTRON_TOS).setLogoUrl(PROJECTRON_LOGO).setScopes(PROJECTRON_SCOPES)

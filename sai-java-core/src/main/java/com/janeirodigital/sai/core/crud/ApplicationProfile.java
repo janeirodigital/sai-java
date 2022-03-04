@@ -70,6 +70,7 @@ public class ApplicationProfile extends CRUDResource {
         this.responseTypes = builder.responseTypes;
         this.defaultMaxAge = builder.defaultMaxAge;
         this.requireAuthTime = builder.requireAuthTime;
+        this.jsonLdContext = buildRemoteJsonLdContexts(contexts);
     }
 
     /**
