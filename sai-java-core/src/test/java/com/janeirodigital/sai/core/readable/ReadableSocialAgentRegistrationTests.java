@@ -48,8 +48,12 @@ class ReadableSocialAgentRegistrationTests {
         mockOnPut(dispatcher, "/new/ttl/agents/sa-1/", "http/201");  // create new
         mockOnPut(dispatcher, "/ttl/agents/sa-1/", "http/204");  // update existing
         mockOnDelete(dispatcher, "/ttl/agents/sa-1/", "http/204");  // delete
+        // GET crud social agent registration in Turtle with required fields only
+        mockOnGet(dispatcher, "/ttl/required/agents/sa-1/", "crud/social-agent-registration-required-ttl");
         // GET crud social agent registration in Turtle with missing fields
         mockOnGet(dispatcher, "/missing-fields/ttl/agents/sa-1/", "crud/social-agent-registration-missing-fields-ttl");
+        // GET crud social agent registration in Turtle with invalid fields
+        mockOnGet(dispatcher, "/invalid-fields/ttl/agents/sa-1/", "crud/social-agent-registration-invalid-fields-ttl");
         // GET crud social agent registration in JSON-LD
         mockOnGet(dispatcher, "/jsonld/agents/sa-1/", "crud/social-agent-registration-jsonld");
         mockOnPut(dispatcher, "/new/jsonld/agents/sa-1/", "http/201");  // create new
@@ -72,7 +76,17 @@ class ReadableSocialAgentRegistrationTests {
     void readSocialAgentRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/agents/sa-1/");
         ReadableSocialAgentRegistration registration = ReadableSocialAgentRegistration.get(url, saiSession);
-        checkRegistration(registration);
+        checkRegistration(registration, false);
+    }
+
+    @Test
+    @DisplayName("Get readable social agent registration - required fields only")
+    void readSocialAgentRegistrationRequired() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/required/agents/sa-1/");
+        ReadableSocialAgentRegistration registration = ReadableSocialAgentRegistration.get(url, saiSession);
+        checkRegistration(registration, true);
+        assertFalse(registration.hasAccessGrant());
+        assertNull(registration.getReciprocalRegistration());
     }
 
     @Test
@@ -82,8 +96,8 @@ class ReadableSocialAgentRegistrationTests {
         ReadableSocialAgentRegistration registration = ReadableSocialAgentRegistration.get(url, saiSession);
         ReadableSocialAgentRegistration reloaded = registration.reload();
         assertNotEquals(registration, reloaded);
-        checkRegistration(registration);
-        checkRegistration(reloaded);
+        checkRegistration(registration, false);
+        checkRegistration(reloaded, false);
     }
 
     @Test
@@ -94,22 +108,32 @@ class ReadableSocialAgentRegistrationTests {
     }
 
     @Test
+    @DisplayName("Fail to get readable social agent registration - invalid fields")
+    void failToReadSocialAgentRegistrationInvalidFields() {
+        URL url = toUrl(server, "/invalid-fields/ttl/agents/sa-1/");
+        assertThrows(SaiException.class, () -> ReadableSocialAgentRegistration.get(url, saiSession));
+    }
+
+    @Test
     @DisplayName("Read existing social agent registration in JSON-LD")
     void readSocialAgentRegistrationJsonLd() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/sa-1/");
         ReadableSocialAgentRegistration registration = ReadableSocialAgentRegistration.get(url, saiSession, LD_JSON);
-        checkRegistration(registration);
+        checkRegistration(registration, false);
     }
 
-    private void checkRegistration(ReadableSocialAgentRegistration registration) {
+    private void checkRegistration(ReadableSocialAgentRegistration registration, boolean requiredOnly) {
         assertNotNull(registration);
         assertEquals(sa1RegisteredBy, registration.getRegisteredBy());
         assertEquals(sa1RegisteredWith, registration.getRegisteredWith());
         assertEquals(sa1RegisteredAt, registration.getRegisteredAt());
         assertEquals(sa1UpdatedAt, registration.getUpdatedAt());
         assertEquals(sa1RegisteredAgent, registration.getRegisteredAgent());
-        assertEquals(sa1ReciprocalRegistration, registration.getReciprocalRegistration());
-        assertEquals(sa1AccessGrant, registration.getAccessGrantUrl());
+        if (!requiredOnly) {
+            assertEquals(sa1ReciprocalRegistration, registration.getReciprocalRegistration());
+            assertTrue(registration.hasAccessGrant());
+            assertEquals(sa1AccessGrant, registration.getAccessGrantUrl());
+        }
     }
 
 }

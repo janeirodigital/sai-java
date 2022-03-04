@@ -29,6 +29,8 @@ class ReadableSocialAgentProfileTests {
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET Readable social agent profile in Turtle
         mockOnGet(dispatcher, "/ttl/id", "readable/social-agent-profile-ttl");
+        // GET Readable social agent profile in Turtle
+        mockOnGet(dispatcher, "/missing/ttl/id", "readable/social-agent-profile-missing-fields-ttl");
         // GET Readable social agent profile in JSON-LD
         mockOnGet(dispatcher, "/jsonld/id", "readable/social-agent-profile-jsonld");
         server = new MockWebServer();
@@ -43,6 +45,12 @@ class ReadableSocialAgentProfileTests {
     void getReadableSocialAgentProfileTurtle() throws SaiException, SaiNotFoundException {
         ReadableSocialAgentProfile profile = ReadableSocialAgentProfile.get(MockWebServerHelper.toUrl(server, "/ttl/id"), saiSession);
         checkProfile(profile);
+    }
+
+    @Test
+    @DisplayName("Fail to get readable social agent profile document - missing required fields")
+    void failToGetReadableSocialAgentProfileRequired() throws SaiException, SaiNotFoundException {
+        assertThrows(SaiException.class, () -> ReadableSocialAgentProfile.get(MockWebServerHelper.toUrl(server, "/missing/ttl/id"), saiSession));
     }
 
     @Test

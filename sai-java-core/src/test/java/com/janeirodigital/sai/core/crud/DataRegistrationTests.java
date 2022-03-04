@@ -5,6 +5,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.readable.ReadableDataRegistration;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
@@ -92,10 +93,34 @@ class DataRegistrationTests {
     }
 
     @Test
-    @DisplayName("Fail to read existing crud data registration in turtle - missing required fields")
+    @DisplayName("Get readable data registration")
+    void getReadableDataRegistration() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/data/dr-1/");
+        ReadableDataRegistration readable = ReadableDataRegistration.get(url, saiSession);
+        checkReadableRegistration(readable);
+    }
+
+    @Test
+    @DisplayName("Reload readable data registration")
+    void reloadReadableDataRegistration() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/ttl/data/dr-1/");
+        ReadableDataRegistration readable = ReadableDataRegistration.get(url, saiSession);
+        ReadableDataRegistration reloaded = readable.reload();
+        checkReadableRegistration(reloaded);
+    }
+
+    @Test
+    @DisplayName("Fail to get existing crud data registration in turtle - missing required fields")
     void failToReadDataRegistration() {
         URL url = toUrl(server, "/missing-fields/ttl/data/dr-1/");
         assertThrows(SaiException.class, () -> DataRegistration.get(url, saiSession));
+    }
+
+    @Test
+    @DisplayName("Fail to get readable data registration in turtle - missing required fields")
+    void failToGetReadableDataRegistrationRequired() {
+        URL url = toUrl(server, "/missing-fields/ttl/data/dr-1/");
+        assertThrows(SaiException.class, () -> ReadableDataRegistration.get(url, saiSession));
     }
 
     @Test
@@ -137,6 +162,15 @@ class DataRegistrationTests {
     }
 
     private void checkRegistration(DataRegistration registration) {
+        assertNotNull(registration);
+        assertEquals(dr1RegisteredBy, registration.getRegisteredBy());
+        assertEquals(dr1RegisteredWith, registration.getRegisteredWith());
+        assertEquals(dr1RegisteredAt, registration.getRegisteredAt());
+        assertEquals(dr1UpdatedAt, registration.getUpdatedAt());
+        assertEquals(dr1RegisteredShapeTree, registration.getRegisteredShapeTree());
+    }
+
+    private void checkReadableRegistration(ReadableDataRegistration registration) {
         assertNotNull(registration);
         assertEquals(dr1RegisteredBy, registration.getRegisteredBy());
         assertEquals(dr1RegisteredWith, registration.getRegisteredWith());

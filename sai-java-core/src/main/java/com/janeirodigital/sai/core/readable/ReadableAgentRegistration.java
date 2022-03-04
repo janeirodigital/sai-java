@@ -47,7 +47,7 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
      * @return true when there is an access grant
      */
     public boolean hasAccessGrant() {
-        return this.accessGrantUrl == null;
+        return this.accessGrantUrl != null;
     }
 
     /**
