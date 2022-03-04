@@ -87,15 +87,21 @@ public class AccessConsentRegistry extends CRUDResource {
     }
 
     /**
-     * Add an {@link AccessConsent} to the {@link AccessConsentRegistry}
+     * Add an {@link AccessConsent} to the {@link AccessConsentRegistry}. In the event that the
+     * {@link AccessConsent} replaces another, the replaced one will be removed first (as it is
+     * linked by the one that is replacing it).
      * @param accessConsent {@link AccessConsent} to add
      * @throws SaiException
      * @throws SaiAlreadyExistsException
      */
     public void add(AccessConsent accessConsent) throws SaiException, SaiAlreadyExistsException {
         Objects.requireNonNull(accessConsent, "Cannot add a null access consent to access consent registry");
+        if (accessConsent.getReplaces() != null) { this.accessConsents.remove(accessConsent.getReplaces()); }
         AccessConsent found = this.getAccessConsents().find(accessConsent.getGrantee());
-        if (found != null) { throw new SaiAlreadyExistsException("Access Consent already exists for grantee " + accessConsent.getGrantee() + " at " + found.getUrl()); }
+        if (found != null) {
+            throw new SaiAlreadyExistsException("Access Consent already exists for grantee " + accessConsent.getGrantee() +
+                                                " at " + found.getUrl() + " and added consent does not replace it");
+        }
         this.getAccessConsents().add(accessConsent.getUrl());
     }
 

@@ -186,7 +186,7 @@ class AccessConsentRegistryTests {
 
     @Test
     @DisplayName("Add access consent to access consent registry")
-    void addAgentRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void addAccessConsents() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/access/");
         AccessConsentRegistry accessRegistry = AccessConsentRegistry.get(url, saiSession);
 
@@ -197,11 +197,31 @@ class AccessConsentRegistryTests {
         when(consent.getUrl()).thenReturn(consentUrl);
         when(consent.getGrantee()).thenReturn(grantee);
         accessRegistry.add(consent);
+        assertTrue(accessRegistry.getAccessConsents().isPresent(consentUrl));
+    }
+
+    @Test
+    @DisplayName("Replace and remove access consent from access consent registry")
+    void replaceAccessConsent() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+        URL registryUrl = toUrl(server, "/access/");
+        URL originalUrl = toUrl(server, "/access/all-2");
+        URL replacedUrl = toUrl(server, "/access/all-replaced-2");
+
+        AccessConsentRegistry accessRegistry = AccessConsentRegistry.get(registryUrl, saiSession);
+        AccessConsent original = AccessConsent.get(originalUrl, saiSession);
+        AccessConsent.Builder builder = new AccessConsent.Builder(replacedUrl, saiSession);
+        AccessConsent replaced = builder.setGrantedBy(original.getGrantedBy()).setGrantedWith(original.getGrantedWith())
+                                        .setGrantedAt(original.getGrantedAt()).setGrantee(original.getGrantee())
+                                        .setAccessNeedGroup(original.getAccessNeedGroup()).setReplaces(original.getUrl())
+                                        .setDataConsents(original.getDataConsents()).build();
+        accessRegistry.add(replaced);
+        assertTrue(accessRegistry.getAccessConsents().isPresent(replacedUrl));
+        assertFalse(accessRegistry.getAccessConsents().isPresent(originalUrl));
     }
 
     @Test
     @DisplayName("Remove access consents from access consent registry")
-    void removeAgentRegistrations() throws SaiException, SaiNotFoundException {
+    void removeAccessConsents() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/access/");
         AccessConsentRegistry accessRegistry = AccessConsentRegistry.get(url, saiSession);
 
@@ -209,6 +229,7 @@ class AccessConsentRegistryTests {
         AccessConsent consent = mock(AccessConsent.class);
         when(consent.getUrl()).thenReturn(consentUrl);
         accessRegistry.remove(consent);
+        assertFalse(accessRegistry.getAccessConsents().isPresent(consentUrl));
     }
 
     @Test
