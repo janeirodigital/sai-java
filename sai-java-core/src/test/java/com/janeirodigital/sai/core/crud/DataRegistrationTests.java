@@ -76,7 +76,7 @@ class DataRegistrationTests {
     }
     
     @Test
-    @DisplayName("Read crud data registration")
+    @DisplayName("Get crud data registration")
     void readDataRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/data/dr-1/");
         DataRegistration registration = DataRegistration.get(url, saiSession);

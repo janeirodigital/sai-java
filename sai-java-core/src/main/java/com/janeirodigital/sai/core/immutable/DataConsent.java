@@ -72,11 +72,8 @@ public class DataConsent extends ImmutableResource {
     public static DataConsent get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         DataConsent.Builder builder = new DataConsent.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType);
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        DataConsent dataConsent = builder.build();
-        dataConsent.validate();
-        return dataConsent;
     }
 
     /**
@@ -332,81 +329,86 @@ public class DataConsent extends ImmutableResource {
      * Basic structural validations of the {@link DataConsent}
      * @throws SaiException
      */
-    private void validate() throws SaiException {
-        Objects.requireNonNull(this.scopeOfConsent, "Cannot validate an unscoped data consent");
-        validateGeneral();
-        if (this.scopeOfConsent.equals(SCOPE_ALL)) { validateAll(); }
-        else if (this.scopeOfConsent.equals(SCOPE_ALL_FROM_REGISTRY)) { validateAllFromRegistry(); }
-        else if (this.scopeOfConsent.equals(SCOPE_ALL_FROM_AGENT)) { validateAllFromAgent(); }
-        else if (this.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY)) { validateSelectedFromRegistry(); }
-        else if (this.scopeOfConsent.equals(SCOPE_INHERITED)) { validateInherited(); }
-        else if (this.scopeOfConsent.equals(SCOPE_NO_ACCESS)) { validateNoAccess(); }
-        else { throw new SaiException("Unsupported data consent scope: " + this.scopeOfConsent); }
+    private static DataConsent validate(DataConsent dataConsent) throws SaiException {
+        Objects.requireNonNull(dataConsent, "Must provide a data consent to validate");
+        validateGeneral(dataConsent);
+        if (dataConsent.scopeOfConsent.equals(SCOPE_ALL)) { validateAll(dataConsent); }
+        else if (dataConsent.scopeOfConsent.equals(SCOPE_ALL_FROM_REGISTRY)) { validateAllFromRegistry(dataConsent); }
+        else if (dataConsent.scopeOfConsent.equals(SCOPE_ALL_FROM_AGENT)) { validateAllFromAgent(dataConsent); }
+        else if (dataConsent.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY)) { validateSelectedFromRegistry(dataConsent); }
+        else if (dataConsent.scopeOfConsent.equals(SCOPE_INHERITED)) { validateInherited(dataConsent); }
+        else if (dataConsent.scopeOfConsent.equals(SCOPE_NO_ACCESS)) { validateNoAccess(dataConsent); }
+        else { throw new SaiException("Unsupported data consent scope: " + dataConsent.scopeOfConsent); }
+        return dataConsent;
     }
 
     /**
      * Validate the data consent with criteria that isn't specific to a given scope
      * @throws SaiException
      */
-    private void validateGeneral() throws SaiException {
-        if (this.canCreate() && this.creatorAccessModes == null) {
-            throw new SaiException(buildInvalidMessage("Must provide creator access modes when consent includes the ability to create resources"));
+    private static void validateGeneral(DataConsent dataConsent) throws SaiException {
+        if (dataConsent.canCreate() && dataConsent.creatorAccessModes.isEmpty()) {
+            throw new SaiException(buildInvalidMessage(dataConsent, "Must provide creator access modes when consent includes the ability to create resources"));
         }
-        if (!this.scopeOfConsent.equals(SCOPE_INHERITED) && this.inheritsFrom != null) { throw new SaiException(buildInvalidMessage("Cannot inherit from another data consent without a scope of interop:Inherited")); }
-        if (!this.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY) && !this.dataInstances.isEmpty()) { throw new SaiException(buildInvalidMessage("Cannot target specific data instances without a scope of interop:SelectedFromRegistry")); }
+        if (!dataConsent.scopeOfConsent.equals(SCOPE_INHERITED) && dataConsent.inheritsFrom != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot inherit from another data consent without a scope of interop:Inherited")); }
+        if (!dataConsent.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY) && !dataConsent.dataInstances.isEmpty()) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot target specific data instances without a scope of interop:SelectedFromRegistry")); }
     }
 
     /**
      * Validate a data consent with scope of interop:All
      */
-    private void validateAll() throws SaiException {
-        if (this.dataRegistration != null) { throw new SaiException(buildInvalidMessage("Cannot target a specific data registration with scope of interop:All")); }
+    private static void validateAll(DataConsent dataConsent) throws SaiException {
+        if (dataConsent.dataOwner != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot provide a data owner with scope of interop:All")); }
+        if (dataConsent.dataRegistration != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot target a specific data registration with scope of interop:All")); }
     }
 
     /**
      * Validate a data consent with scope of interop:AllFromRegistry
      */
-    private void validateAllFromRegistry() throws SaiException {
-        if (this.dataRegistration == null) { throw new SaiException(buildInvalidMessage("Must provide a specific data registration with a scope of interop:AllFromRegistry")); }
+    private static void validateAllFromRegistry(DataConsent dataConsent) throws SaiException {
+        if (dataConsent.dataRegistration == null) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide a specific data registration with a scope of interop:AllFromRegistry")); }
     }
 
     /**
      * Validate a data consent with scope of interop:AllFromAgent
      */
-    private void validateAllFromAgent() throws SaiException {
-        if (this.dataRegistration != null) { throw new SaiException(buildInvalidMessage("Cannot target a specific data registration with scope of interop:AllFromAgent")); }
+    private static void validateAllFromAgent(DataConsent dataConsent) throws SaiException {
+        if (dataConsent.dataRegistration != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot target a specific data registration with scope of interop:AllFromAgent")); }
     }
 
     /**
      * Validate a data consent with scope of interop:SelectedFromRegistry
      */
-    private void validateSelectedFromRegistry() throws SaiException {
-        if (this.dataRegistration == null) { throw new SaiException(buildInvalidMessage("Must provide a specific data registration with a scope of interop:SelectedFromRegistry")); }
+    private static void validateSelectedFromRegistry(DataConsent dataConsent) throws SaiException {
+        if (dataConsent.dataRegistration == null) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide a specific data registration with a scope of interop:SelectedFromRegistry")); }
+        if (dataConsent.getDataInstances().isEmpty()) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide specific data instances with a scope of interop:SelectedFromRegistry")); }
     }
 
     /**
      * Validate a data consent with scope of interop:Inherited
      */
-    private void validateInherited() throws SaiException {
-        if (this.inheritsFrom == null) { throw new SaiException(buildInvalidMessage("Must provide a data consent to inherit from with a scope of interop:Inherited")); }
+    private static void validateInherited(DataConsent dataConsent) throws SaiException {
+        if (dataConsent.inheritsFrom == null) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide a data consent to inherit from with a scope of interop:Inherited")); }
     }
 
     /**
      * Validate a data consent with scope of interop:NoAccess
      */
-    private void validateNoAccess() { }
+    private static void validateNoAccess(DataConsent dataConsent) { 
+        // Placeholder for future logic to validate no access scope
+    }
 
     /**
      * Provide context for a validation failure in string form
      * @param reason reason for the validation failure
      * @return Stringified failure message
      */
-    private String buildInvalidMessage(String reason) {
+    private static String buildInvalidMessage(DataConsent dataConsent, String reason) {
         StringBuilder message = new StringBuilder();
-        message.append("Invalid data consent " + this.url);
-        message.append(" - Scope: " + this.scopeOfConsent);
-        message.append(" - Shape Tree: " + this.registeredShapeTree);
-        message.append(" - Grantee: " + this.grantee);
+        message.append("Invalid data consent " + dataConsent.url);
+        message.append(" - Scope: " + dataConsent.scopeOfConsent);
+        message.append(" - Shape Tree: " + dataConsent.registeredShapeTree);
+        message.append(" - Grantee: " + dataConsent.grantee);
         message.append(" - Reason: " + reason);
         return message.toString();
     }
@@ -580,7 +582,7 @@ public class DataConsent extends ImmutableResource {
             Objects.requireNonNull(this.scopeOfConsent, "Must provide a scope of consent for the data consent");
             Objects.requireNonNull(this.accessNeed, "Must provide a URL for the access need associated with the data consent");
             if (this.dataset == null) { populateDataset(); }
-            return new DataConsent(this);
+            return validate(new DataConsent(this));
         }
     }
 }

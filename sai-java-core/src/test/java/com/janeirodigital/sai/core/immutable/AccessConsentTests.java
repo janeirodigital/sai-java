@@ -60,6 +60,8 @@ class AccessConsentTests {
         mockOnPut(dispatcher, "/access/all-1-task", "http/201");
         mockOnGet(dispatcher, "/access/all-1-issue", "access/all/all-1-issue-ttl");
         mockOnPut(dispatcher, "/access/all-1-issue", "http/201");
+        // GET access consent in Turtle with missing fields
+        mockOnGet(dispatcher, "/missing-fields/access/all-1", "access/all/all-1-missing-fields-ttl");
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
@@ -85,7 +87,7 @@ class AccessConsentTests {
     }
 
     @Test
-    @DisplayName("Create an access consent and data consents - Scope: All")
+    @DisplayName("Create new access consent and linked data consents - scope: all")
     void createAccessConsentScopeAll() throws SaiException {
         URL accessUrl = toUrl(server, "/access/all-1");
         URL projectUrl = toUrl(server, "/access/all-1-project");
@@ -94,22 +96,22 @@ class AccessConsentTests {
         URL taskUrl = toUrl(server, "/access/all-1-task");
         
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
-        DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+        DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                                                    .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                                                    .setScopeOfConsent(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
         DataConsent.Builder milestoneBuilder = new DataConsent.Builder(milestoneUrl, saiSession);
-        DataConsent milestoneConsent = milestoneBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(MILESTONE_TREE)
+        DataConsent milestoneConsent = milestoneBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(MILESTONE_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfConsent(SCOPE_INHERITED).setAccessNeed(PROJECTRON_MILESTONE_NEED).setInheritsFrom(projectConsent.getUrl()).build();
 
         DataConsent.Builder issueBuilder = new DataConsent.Builder(issueUrl, saiSession);
-        DataConsent issueConsent = issueBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(ISSUE_TREE)
+        DataConsent issueConsent = issueBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(ISSUE_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfConsent(SCOPE_INHERITED).setAccessNeed(PROJECTRON_ISSUE_NEED).setInheritsFrom(milestoneConsent.getUrl()).build();
 
         DataConsent.Builder taskBuilder = new DataConsent.Builder(taskUrl, saiSession);
-        DataConsent taskConsent = taskBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(TASK_TREE)
+        DataConsent taskConsent = taskBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(TASK_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfConsent(SCOPE_INHERITED).setAccessNeed(PROJECTRON_TASK_NEED).setInheritsFrom(milestoneConsent.getUrl()).build();
 
@@ -119,39 +121,41 @@ class AccessConsentTests {
         AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                                                    .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                                                    .setDataConsents(dataConsents).build();
-
-        accessConsent.create();
-        assertNotNull(accessConsent);
+        assertDoesNotThrow(() -> accessConsent.create());
     }
 
     @Test
-    @DisplayName("Create an access grant and data grants - Scope: All")
-    void createAccessGrantScopeAll() { }
-
-
-    @Test
-    @DisplayName("Read an access consent and data consents - Scope: All")
-    void readAccessConsentScopeAll() throws SaiNotFoundException, SaiException {
+    @DisplayName("Get an access consent and linked data consents - scope: all")
+    void getAccessConsent() throws SaiNotFoundException, SaiException {
         URL url = toUrl(server, "/access/all-1");
-        AccessConsent consent = AccessConsent.get(url, saiSession);
-        assertNotNull(consent);
-        assertEquals(ALICE_ID, consent.getGrantedBy());
-        assertEquals(JARVIS_ID, consent.getGrantedWith());
-        assertEquals(PROJECTRON_ID, consent.getGrantee());
-        assertEquals(GRANT_TIME, consent.getGrantedAt());
-        assertEquals(PROJECTRON_NEED_GROUP, consent.getAccessNeedGroup());
-        for (DataConsent dataConsent : consent.getDataConsents()) { assertTrue(ALL_DATA_CONSENT_URLS.contains(dataConsent.getUrl())); }
+        AccessConsent accessConsent = AccessConsent.get(url, saiSession);
+        checkAccessConsent(accessConsent);
     }
 
     @Test
-    @DisplayName("Read an access grant and data grants - Scope: All")
-    void readAccessGrantScopeAll() {
-        // This should be testing the more extensive readable access grant
+    @DisplayName("Reload an access consent and linked data consents - scope: all")
+    void reloadAccessConsent() throws SaiNotFoundException, SaiException {
+        URL url = toUrl(server, "/access/all-1");
+        AccessConsent accessConsent = AccessConsent.get(url, saiSession);
+        AccessConsent reloaded = accessConsent.reload();
+        checkAccessConsent(reloaded);
     }
 
-    // Create an access consent and data consents
-    // Add it to the registry (replace if necessary)
-    // Regenerate the access grant and data grants
-    // Let a consuming application use them (potentially have integration tests that work across modules?)
+    @Test
+    @DisplayName("Fail to get access consent - missing required fields")
+    void failToGetAccessConsentRequired() {
+        URL url = toUrl(server, "/missing-fields/access/all-1");
+        assertThrows(SaiException.class, () -> AccessConsent.get(url, saiSession));
+    }
 
+    private void checkAccessConsent(AccessConsent accessConsent) {
+        assertNotNull(accessConsent);
+        assertEquals(ALICE_ID, accessConsent.getGrantedBy());
+        assertEquals(JARVIS_ID, accessConsent.getGrantedWith());
+        assertEquals(PROJECTRON_ID, accessConsent.getGrantee());
+        assertEquals(GRANT_TIME, accessConsent.getGrantedAt());
+        assertEquals(PROJECTRON_NEED_GROUP, accessConsent.getAccessNeedGroup());
+        for (DataConsent dataConsent : accessConsent.getDataConsents()) { assertTrue(ALL_DATA_CONSENT_URLS.contains(dataConsent.getUrl())); }
+
+    }
 }
