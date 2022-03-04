@@ -11,9 +11,9 @@ body: >
   PREFIX alice: <https://alice.example/>
   PREFIX jarvis: <https://jarvis.example/>
   PREFIX projectron: <https://projectron.example/>
-  PREFIX alice-consents: <${SERVER_BASE}/consents/>
+  PREFIX alice-access: <${SERVER_BASE}/access/>
 
-  alice-consents:access-all
+  alice-access:selected-1
     a interop:AccessConsent ;
     interop:grantedBy alice:id ;
     interop:grantedWith jarvis:id ;
@@ -21,7 +21,7 @@ body: >
     interop:grantee projectron:id ;
     interop:hasAccessNeedGroup projectron:\#d8219b1f ;
     interop:hasDataConsent
-      alice-consents:data-all-project ,
-      alice-consents:data-all-milestone ,
-      alice-consents:data-all-issue ,
-      alice-consents:data-all-task .
+      alice-access:selected-1-project ,
+      alice-access:selected-1-milestone ,
+      alice-access:selected-1-issue ,
+      alice-access:selected-1-task .

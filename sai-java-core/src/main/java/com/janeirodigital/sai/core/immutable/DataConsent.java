@@ -530,7 +530,7 @@ public class DataConsent extends ImmutableResource {
 
         private void populateFromDataset() throws SaiException {
             try {
-                this.dataOwner = getRequiredUrlObject(this.resource, DATA_OWNER);
+                this.dataOwner = getUrlObject(this.resource, DATA_OWNER);
                 this.grantedBy = getRequiredUrlObject(this.resource, GRANTED_BY);
                 this.grantee = getRequiredUrlObject(this.resource, GRANTEE);
                 this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
@@ -549,13 +549,14 @@ public class DataConsent extends ImmutableResource {
         private void populateDataset() throws SaiException {
             this.resource = getNewResourceForType(this.url, DATA_CONSENT);
             this.dataset = this.resource.getModel();
-            updateObject(this.resource, DATA_OWNER, this.dataOwner);
+
             updateObject(this.resource, GRANTED_BY, this.grantedBy);
             updateObject(this.resource, GRANTEE, this.grantee);
             updateObject(this.resource, REGISTERED_SHAPE_TREE, this.registeredShapeTree);
             updateObject(this.resource, SCOPE_OF_CONSENT, this.scopeOfConsent);
             updateObject(this.resource, SATISFIES_ACCESS_NEED, this.accessNeed);
 
+            if (this.dataOwner != null) { updateObject(this.resource, DATA_OWNER, this.dataOwner); }
             if (this.dataRegistration != null) { updateObject(this.resource, HAS_DATA_REGISTRATION, this.dataRegistration); }
             if (!this.dataInstances.isEmpty()) { updateUrlObjects(this.resource, HAS_DATA_INSTANCE, this.dataInstances); }
             if (this.inheritsFrom != null) { updateObject(this.resource, INHERITS_FROM_CONSENT, this.inheritsFrom); }
@@ -572,7 +573,6 @@ public class DataConsent extends ImmutableResource {
         }
 
         public DataConsent build() throws SaiException {
-            Objects.requireNonNull(this.dataOwner, "Must provide a URL for the data owner");
             Objects.requireNonNull(this.grantedBy, "Must provide a URL for the grantee of the data consent");
             Objects.requireNonNull(this.grantee, "Must provide a URL for the grantee of the data consent");
             Objects.requireNonNull(this.registeredShapeTree, "Must provide a URL for the registered shape tree of the data consent");

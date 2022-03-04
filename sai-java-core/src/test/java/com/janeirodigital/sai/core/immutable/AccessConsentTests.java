@@ -50,16 +50,16 @@ class AccessConsentTests {
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET agent registry in Turtle
-        mockOnGet(dispatcher, "/consents/access-all", "access/all/access-consent-all-ttl");
-        mockOnPut(dispatcher, "/consents/access-all", "http/201");
-        mockOnGet(dispatcher, "/consents/data-all-project", "access/all/data-consent-all-project-ttl");
-        mockOnPut(dispatcher, "/consents/data-all-project", "http/201");
-        mockOnGet(dispatcher, "/consents/data-all-milestone", "access/all/data-consent-all-milestone-ttl");
-        mockOnPut(dispatcher, "/consents/data-all-milestone", "http/201");
-        mockOnGet(dispatcher, "/consents/data-all-task", "access/all/data-consent-all-task-ttl");
-        mockOnPut(dispatcher, "/consents/data-all-task", "http/201");
-        mockOnGet(dispatcher, "/consents/data-all-issue", "access/all/data-consent-all-issue-ttl");
-        mockOnPut(dispatcher, "/consents/data-all-issue", "http/201");
+        mockOnGet(dispatcher, "/access/all-1", "access/all/all-1-ttl");
+        mockOnPut(dispatcher, "/access/all-1", "http/201");
+        mockOnGet(dispatcher, "/access/all-1-project", "access/all/all-1-project-ttl");
+        mockOnPut(dispatcher, "/access/all-1-project", "http/201");
+        mockOnGet(dispatcher, "/access/all-1-milestone", "access/all/all-1-milestone-ttl");
+        mockOnPut(dispatcher, "/access/all-1-milestone", "http/201");
+        mockOnGet(dispatcher, "/access/all-1-task", "access/all/all-1-task-ttl");
+        mockOnPut(dispatcher, "/access/all-1-task", "http/201");
+        mockOnGet(dispatcher, "/access/all-1-issue", "access/all/all-1-issue-ttl");
+        mockOnPut(dispatcher, "/access/all-1-issue", "http/201");
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
@@ -73,8 +73,8 @@ class AccessConsentTests {
         PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
         PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
-        ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/consents/data-all-project"), toUrl(server, "/consents/data-all-milestone"),
-                                              toUrl(server, "/consents/data-all-issue"), toUrl(server, "/consents/data-all-task"));
+        ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/access/all-1-project"), toUrl(server, "/access/all-1-milestone"),
+                                              toUrl(server, "/access/all-1-issue"), toUrl(server, "/access/all-1-task"));
         PROJECT_TREE = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
         MILESTONE_TREE = stringToUrl("http://data.example/shapetrees/pm#MilestoneTree");
         ISSUE_TREE = stringToUrl("http://data.example/shapetrees/pm#IssueTree");
@@ -87,11 +87,11 @@ class AccessConsentTests {
     @Test
     @DisplayName("Create an access consent and data consents - Scope: All")
     void createAccessConsentScopeAll() throws SaiException {
-        URL accessUrl = toUrl(server, "/consents/access-all");
-        URL projectUrl = toUrl(server, "/consents/data-all-project");
-        URL milestoneUrl = toUrl(server, "/consents/data-all-milestone");
-        URL issueUrl = toUrl(server, "/consents/data-all-issue");
-        URL taskUrl = toUrl(server, "/consents/data-all-task");
+        URL accessUrl = toUrl(server, "/access/all-1");
+        URL projectUrl = toUrl(server, "/access/all-1-project");
+        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
+        URL issueUrl = toUrl(server, "/access/all-1-issue");
+        URL taskUrl = toUrl(server, "/access/all-1-task");
         
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
@@ -132,7 +132,7 @@ class AccessConsentTests {
     @Test
     @DisplayName("Read an access consent and data consents - Scope: All")
     void readAccessConsentScopeAll() throws SaiNotFoundException, SaiException {
-        URL url = toUrl(server, "/consents/access-all");
+        URL url = toUrl(server, "/access/all-1");
         AccessConsent consent = AccessConsent.get(url, saiSession);
         assertNotNull(consent);
         assertEquals(ALICE_ID, consent.getGrantedBy());

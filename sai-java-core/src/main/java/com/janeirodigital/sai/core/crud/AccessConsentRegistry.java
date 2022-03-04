@@ -4,10 +4,10 @@ import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.immutable.AccessConsent;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -20,7 +20,6 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getNewResourceForType;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.updateUrlObjects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.ACCESS_CONSENT_REGISTRY;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_ACCESS_CONSENT;
 
@@ -80,6 +79,36 @@ public class AccessConsentRegistry extends CRUDResource {
     }
 
     /**
+     * Indicate whether the {@link AccessConsentRegistry} has any {@link AccessConsent}s
+     * @return true if there are no access consents
+     */
+    public boolean isEmpty() {
+        return this.accessConsents.isEmpty();
+    }
+
+    /**
+     * Add an {@link AccessConsent} to the {@link AccessConsentRegistry}
+     * @param accessConsent {@link AccessConsent} to add
+     * @throws SaiException
+     * @throws SaiAlreadyExistsException
+     */
+    public void add(AccessConsent accessConsent) throws SaiException, SaiAlreadyExistsException {
+        Objects.requireNonNull(accessConsent, "Cannot add a null access consent to access consent registry");
+        AccessConsent found = this.getAccessConsents().find(accessConsent.getGrantee());
+        if (found != null) { throw new SaiAlreadyExistsException("Access Consent already exists for grantee " + accessConsent.getGrantee() + " at " + found.getUrl()); }
+        this.getAccessConsents().add(accessConsent.getUrl());
+    }
+
+    /**
+     * Remove an {@link AccessConsent} from the {@link AccessConsentRegistry}
+     * @param accessConsent {@link AccessConsent} to remove
+     */
+    public void remove(AccessConsent accessConsent) {
+        Objects.requireNonNull(accessConsent, "Cannot remove a null access consent from access consent registry");
+        this.accessConsents.remove(accessConsent.getUrl());
+    }
+
+    /**
      * Builder for {@link AccessConsentRegistry} instances.
      */
     public static class Builder extends CRUDResource.Builder<Builder> {
@@ -93,7 +122,6 @@ public class AccessConsentRegistry extends CRUDResource {
          */
         public Builder(URL url, SaiSession saiSession) {
             super(url, saiSession);
-            this.accessConsents = new AccessConsentList<>(this.saiSession, this.resource);
         }
 
         /**
@@ -119,22 +147,12 @@ public class AccessConsentRegistry extends CRUDResource {
         }
 
         /**
-         * Set the URLs of access consents in the Access Consent Registry (which must have already been created)
-         * @param accessConsentUrls List of URLs to {@link AccessConsent} instances
-         * @return {@link Builder}
-         */
-        private Builder setAccessConsentUrls(List<URL> accessConsentUrls) throws SaiAlreadyExistsException {
-            Objects.requireNonNull(accessConsentUrls, "Must provide a list of access consent urls to the access consent registry builder");
-            this.accessConsents.addAll(accessConsentUrls);
-            return this;
-        }
-
-        /**
          * Populates the fields of the {@link AccessConsentRegistry} based on the associated Jena resource.
          * @throws SaiException
          */
         private void populateFromDataset() throws SaiException {
             try {
+                this.accessConsents = new AccessConsentList<>(this.saiSession, this.resource);
                 this.accessConsents.populate();
             } catch (SaiException ex) {
                 throw new SaiException("Failed to load access consent registry " + this.url + ": " + ex.getMessage());
@@ -175,30 +193,6 @@ public class AccessConsentRegistry extends CRUDResource {
         public AccessConsentList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_ACCESS_CONSENT); }
 
         /**
-         * Add an {@link AccessConsent} to the {@link AccessConsentRegistry}
-         * @param consentUrl URL of {@link AccessConsent} to add
-         * @throws SaiException
-         */
-        @Override
-        public void add(URL consentUrl) throws SaiException {
-            Objects.requireNonNull(consentUrl, "Must provide the URL of the access consent to add to registry");
-            // Get the consent to add
-            AccessConsent consent;
-            try { consent = AccessConsent.get(consentUrl, this.saiSession); } catch (SaiNotFoundException ex) {
-                throw new SaiException("Failed to get access consent at " + consentUrl + ": " + ex.getMessage());
-            }
-            // Check to see if an access consent for that grantee already exists
-            AccessConsent existing = (AccessConsent) find(consent.getGrantee());
-            if (existing != null) {
-                registrationUrls.remove(existing.getUrl());
-                // TODO - this should be handled by access consent builder
-                //consent.setReplaces(existing.getUrl());
-            }
-            registrationUrls.add(consentUrl);  // add the consent to the registry list
-            updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
-        }
-
-        /**
          * Override the default find in {@link RegistrationList} to lookup based on the grantee of an {@link AccessConsent}
          * @param granteeUrl URL of the grantee to find
          * @return {@link SocialAgentRegistration}
@@ -230,11 +224,14 @@ public class AccessConsentRegistry extends CRUDResource {
              * Get the {@link AccessConsent} for the next URL in the iterator
              * @return {@link AccessConsent}
              */
-            @SneakyThrows
             @Override
             public T next() {
-                URL registrationUrl = current.next();
-                return (T) AccessConsent.get(registrationUrl, saiSession);
+                try {
+                    URL registrationUrl = current.next();
+                    return (T) AccessConsent.get(registrationUrl, saiSession);
+                } catch (SaiException|SaiNotFoundException ex) {
+                    throw new SaiRuntimeException("Failed to get access consent while iterating list: " + ex.getMessage());
+                }
             }
         }
     }
