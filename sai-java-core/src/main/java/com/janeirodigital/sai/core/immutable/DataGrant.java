@@ -73,11 +73,8 @@ public class DataGrant extends ImmutableResource {
     public static DataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
         DataGrant.Builder builder = new DataGrant.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType);
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
-        DataGrant dataGrant = builder.build();
-        dataGrant.validate();
-        return dataGrant;
     }
 
     /**
@@ -114,62 +111,64 @@ public class DataGrant extends ImmutableResource {
      * Basic structural validations of the {@link DataGrant}
      * @throws SaiException
      */
-    private void validate() throws SaiException {
-        Objects.requireNonNull(this.scopeOfGrant, "Cannot validate an unscoped data grant");
-        validateGeneral();
-        if (this.scopeOfGrant.equals(SCOPE_ALL_FROM_REGISTRY)) { validateAllFromRegistry(); }
-        else if (this.scopeOfGrant.equals(SCOPE_SELECTED_FROM_REGISTRY)) { validateSelectedFromRegistry(); }
-        else if (this.scopeOfGrant.equals(SCOPE_INHERITED)) { validateInherited(); }
-        else if (this.scopeOfGrant.equals(SCOPE_NO_ACCESS)) { validateNoAccess(); }
-        else { throw new SaiException("Unsupported data grant scope: " + this.scopeOfGrant); }
+    private static DataGrant validate(DataGrant dataGrant) throws SaiException {
+        Objects.requireNonNull(dataGrant.scopeOfGrant, "Cannot validate an unscoped data grant");
+        validateGeneral(dataGrant);
+        if (dataGrant.scopeOfGrant.equals(SCOPE_ALL_FROM_REGISTRY)) { validateAllFromRegistry(dataGrant); }
+        else if (dataGrant.scopeOfGrant.equals(SCOPE_SELECTED_FROM_REGISTRY)) { validateSelectedFromRegistry(dataGrant); }
+        else if (dataGrant.scopeOfGrant.equals(SCOPE_INHERITED)) { validateInherited(dataGrant); }
+        else if (dataGrant.scopeOfGrant.equals(SCOPE_NO_ACCESS)) { validateNoAccess(dataGrant); }
+        else { throw new SaiException("Unsupported data grant scope: " + dataGrant.scopeOfGrant); }
+        return dataGrant;
     }
 
     /**
      * Validate the data grant with criteria that isn't specific to a given scope
      * @throws SaiException
      */
-    private void validateGeneral() throws SaiException {
-        if (this.canCreate() && this.creatorAccessModes == null) {
-            throw new SaiException(buildInvalidMessage("Must provide creator access modes when grant includes the ability to create resources"));
+    private static void validateGeneral(DataGrant dataGrant) throws SaiException {
+        if (dataGrant.canCreate() && dataGrant.creatorAccessModes.isEmpty()) {
+            throw new SaiException(buildInvalidMessage(dataGrant, "Must provide creator access modes when grant includes the ability to create resources"));
         }
-        if (!this.scopeOfGrant.equals(SCOPE_INHERITED) && this.inheritsFrom != null) { throw new SaiException(buildInvalidMessage("Cannot inherit from another data grant without a scope of interop:Inherited")); }
-        if (!this.scopeOfGrant.equals(SCOPE_SELECTED_FROM_REGISTRY) && !this.dataInstances.isEmpty()) { throw new SaiException(buildInvalidMessage("Cannot target specific data instances without a scope of interop:SelectedFromRegistry")); }
-        if (this.dataRegistration == null) { throw new SaiException(buildInvalidMessage("Must provide a specific data registration for the data grant")); }
+        if (!dataGrant.scopeOfGrant.equals(SCOPE_INHERITED) && dataGrant.inheritsFrom != null) { throw new SaiException(buildInvalidMessage(dataGrant, "Cannot inherit from another data grant without a scope of interop:Inherited")); }
+        if (!dataGrant.scopeOfGrant.equals(SCOPE_SELECTED_FROM_REGISTRY) && !dataGrant.dataInstances.isEmpty()) { throw new SaiException(buildInvalidMessage(dataGrant, "Cannot target specific data instances without a scope of interop:SelectedFromRegistry")); }
     }
 
     /**
      * Validate a data grant with scope of interop:AllFromRegistry
      */
-    private void validateAllFromRegistry() { }
+    private static void validateAllFromRegistry(DataGrant dataGrant) { }
 
     /**
      * Validate a data grant with scope of interop:SelectedFromRegistry
      */
-    private void validateSelectedFromRegistry() { }
+    private static void validateSelectedFromRegistry(DataGrant dataGrant) throws SaiException {
+        if (dataGrant.dataInstances.isEmpty()) { throw new SaiException(buildInvalidMessage(dataGrant, "Must provide selected data instances with a scope of interop:SelectedFromRegistry")); }
+    }
 
     /**
      * Validate a data grant with scope of interop:Inherited
      */
-    private void validateInherited() throws SaiException {
-        if (this.inheritsFrom == null) { throw new SaiException(buildInvalidMessage("Must provide a data grant to inherit from with a scope of interop:Inherited")); }
+    private static void validateInherited(DataGrant dataGrant) throws SaiException {
+        if (dataGrant.inheritsFrom == null) { throw new SaiException(buildInvalidMessage(dataGrant, "Must provide a data grant to inherit from with a scope of interop:Inherited")); }
     }
 
     /**
      * Validate a data grant with scope of interop:NoAccess
      */
-    private void validateNoAccess() { }
+    private static void validateNoAccess(DataGrant dataGrant) { }
 
     /**
      * Provide context for a validation failure in string form
      * @param reason reason for the validation failure
      * @return Stringified failure message
      */
-    private String buildInvalidMessage(String reason) {
+    private static String buildInvalidMessage(DataGrant dataGrant, String reason) {
         StringBuilder message = new StringBuilder();
-        message.append("Invalid data grant " + this.url);
-        message.append(" - Scope: " + this.scopeOfGrant);
-        message.append(" - Shape Tree: " + this.registeredShapeTree);
-        message.append(" - Grantee: " + this.grantee);
+        message.append("Invalid data grant " + dataGrant.url);
+        message.append(" - Scope: " + dataGrant.scopeOfGrant);
+        message.append(" - Shape Tree: " + dataGrant.registeredShapeTree);
+        message.append(" - Grantee: " + dataGrant.grantee);
         message.append(" - Reason: " + reason);
         return message.toString();
     }
@@ -417,7 +416,7 @@ public class DataGrant extends ImmutableResource {
             Objects.requireNonNull(dataRegistration, "Must provide a URL for the data registration associated with the data grant");
             Objects.requireNonNull(accessNeed, "Must provide a URL for the access need associated with the data grant");
             if (this.dataset == null) { populateDataset(); }
-            return new DataGrant(this);
+            return validate(new DataGrant(this));
         }
     }
 

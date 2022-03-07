@@ -49,7 +49,7 @@ class AccessConsentTests {
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
-        // GET agent registry in Turtle
+        // GET access consent registry in Turtle
         mockOnGet(dispatcher, "/access/all-1", "access/all/all-1-ttl");
         mockOnPut(dispatcher, "/access/all-1", "http/201");
         mockOnGet(dispatcher, "/access/all-1-project", "access/all/all-1-project-ttl");
