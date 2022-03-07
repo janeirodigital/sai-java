@@ -1,0 +1,17 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice-data: <${SERVER_BASE}/personal/data/>
+
+  alice-data:
+    a interop:DataRegistry ;
+    interop:hasDataRegistration 
+      alice-data:projects\/ ,
+      alice-data:milestones\/ ,
+      alice-data:tasks\/ ,
+      alice-data:issues\/ .

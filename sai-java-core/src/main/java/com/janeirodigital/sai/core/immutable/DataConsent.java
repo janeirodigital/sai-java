@@ -203,15 +203,17 @@ public class DataConsent extends ImmutableResource {
             if (childConsent.scopeOfConsent.equals(SCOPE_INHERITED) && childConsent.inheritsFrom.equals(this.getUrl())) {
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();
                 // find the data registration for the child data consent (must be same registry as parent)
-                DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(this.registeredShapeTree);
+                DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(childConsent.getRegisteredShapeTree());
                 if (childRegistration == null) { throw new SaiException("Could not find data registration " + dataRegistration.getUrl() + " in registry " + dataRegistry.getUrl()); }
                 DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession);
                 childBuilder.setDataOwner(childConsent.dataOwner);
+                childBuilder.setGrantee(childConsent.getGrantee());
                 childBuilder.setRegisteredShapeTree(childConsent.registeredShapeTree);
                 childBuilder.setDataRegistration(childRegistration.getUrl());
                 childBuilder.setScopeOfGrant(SCOPE_INHERITED);
                 childBuilder.setAccessModes(childConsent.accessModes);
                 childBuilder.setCreatorAccessModes(childConsent.creatorAccessModes);
+                childBuilder.setAccessNeed(childConsent.getAccessNeed());
                 childBuilder.setInheritsFrom(dataGrantUrl);
                 childDataGrants.add(childBuilder.build());
             }

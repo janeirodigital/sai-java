@@ -1,6 +1,9 @@
 package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.crud.AgentRegistry;
+import com.janeirodigital.sai.core.crud.ApplicationRegistration;
+import com.janeirodigital.sai.core.crud.DataRegistry;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
@@ -49,7 +52,7 @@ class AccessConsentTests {
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
-        // GET access consent registry in Turtle
+        // GET access consent registry in Turtle - scope:all
         mockOnGet(dispatcher, "/access/all-1", "access/all/all-1-ttl");
         mockOnPut(dispatcher, "/access/all-1", "http/201");
         mockOnGet(dispatcher, "/access/all-1-project", "access/all/all-1-project-ttl");
@@ -60,6 +63,22 @@ class AccessConsentTests {
         mockOnPut(dispatcher, "/access/all-1-task", "http/201");
         mockOnGet(dispatcher, "/access/all-1-issue", "access/all/all-1-issue-ttl");
         mockOnPut(dispatcher, "/access/all-1-issue", "http/201");
+        // Get Alice's agent registry
+        mockOnGet(dispatcher, "/agents/", "agents/alice/agent-registry-ttl");
+        // Get Alice's application registration for projectron
+        mockOnGet(dispatcher, "/agents/projectron/", "agents/alice/projectron-registration-all-1-ttl");
+        // Get Alice's data registries
+        mockOnGet(dispatcher, "/personal/data/", "data/alice/data-registry-ttl");
+        mockOnGet(dispatcher, "/personal/data/projects/", "data/alice/data-registration-projects-ttl");
+        mockOnGet(dispatcher, "/personal/data/milestones/", "data/alice/data-registration-milestones-ttl");
+        mockOnGet(dispatcher, "/personal/data/issues/", "data/alice/data-registration-issues-ttl");
+        mockOnGet(dispatcher, "/personal/data/tasks/", "data/alice/data-registration-tasks-ttl");
+        // GET access consent registry in Turtle - scope:all from registry
+        mockOnGet(dispatcher, "/access/registry-1", "access/all-from-registry/registry-1-ttl");
+        mockOnGet(dispatcher, "/access/registry-1-project", "access/all-from-registry/registry-1-project-ttl");
+        mockOnGet(dispatcher, "/access/registry-1-milestone", "access/all-from-registry/registry-1-milestone-ttl");
+        mockOnGet(dispatcher, "/access/registry-1-task", "access/all-from-registry/registry-1-task-ttl");
+        mockOnGet(dispatcher, "/access/registry-1-issue", "access/all-from-registry/registry-1-issue-ttl");
         // GET access consent in Turtle with missing fields
         mockOnGet(dispatcher, "/missing-fields/access/all-1", "access/all/all-1-missing-fields-ttl");
         // Initialize the Mock Web Server and assign the initialized dispatcher
@@ -70,6 +89,7 @@ class AccessConsentTests {
         JARVIS_ID = stringToUrl("https://jarvis.example/id");
         PROJECTRON_ID = stringToUrl("https://projectron.example/id");
         GRANT_TIME = OffsetDateTime.parse("2020-09-05T06:15:01Z", DateTimeFormatter.ISO_DATE_TIME);
+
         PROJECTRON_NEED_GROUP = stringToUrl("https://projectron.example/#d8219b1f");
         PROJECTRON_PROJECT_NEED = stringToUrl("https://projectron.example/#ac54ff1e");
         PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
@@ -122,6 +142,23 @@ class AccessConsentTests {
                                                    .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                                                    .setDataConsents(dataConsents).build();
         assertDoesNotThrow(() -> accessConsent.create());
+    }
+
+    @Test
+    @DisplayName("Generate access grant and associated data grants")
+    void testGenerateAccessGrant() throws SaiNotFoundException, SaiException {
+        // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
+        // be generating the grants right after generating the consents
+        URL accessUrl = toUrl(server, "/access/registry-1");
+        URL agentRegistryUrl = toUrl(server, "/agents/");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL registrationUrl = toUrl(server, "/agents/projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AccessConsent accessConsent = AccessConsent.get(accessUrl, saiSession);
+        AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
+        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
     }
 
     @Test
