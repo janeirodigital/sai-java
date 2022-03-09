@@ -52,10 +52,10 @@ class DataGrantTests {
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET data grant in Turtle with missing fields
-        mockOnGet(dispatcher, "/missing-fields/agents/projectron/all-1-grant-project", "agents/alice/projectron-all/all-1-grant-project-missing-fields-ttl");
+        mockOnGet(dispatcher, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant-personal-project", "agents/alice/projectron-all/all-1-grant-personal-project-missing-fields-ttl");
         // GET / PUT access grant and data grants from the agent registry
-        mockOnGet(dispatcher, "/agents/projectron/all-1-grant-project", "agents/alice/projectron-all/all-1-grant-project-ttl");
-        mockOnPut(dispatcher, "/agents/projectron/all-1-grant-project", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-project", "agents/alice/projectron-all/all-1-grant-personal-project-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-project", "http/201");
         mockOnGet(dispatcher, "/agents/projectron/selected-1-grant-project", "agents/alice/projectron-selected/selected-1-grant-project-ttl");
         mockOnPut(dispatcher, "/agents/projectron/selected-1-grant-project", "http/201");
         mockOnPut(dispatcher, "/agents/projectron/selected-1-grant-milestone", "http/201");
@@ -75,10 +75,10 @@ class DataGrantTests {
         PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
         PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
-        ALL_DATA_GRANT_URLS = Arrays.asList(toUrl(server, "/agents/projectron/all-1-grant-project"),
-                                            toUrl(server, "/agents/projectron/all-1-grant-milestone"),
-                                            toUrl(server, "/agents/projectron/all-1-grant-issue"),
-                                            toUrl(server, "/agents/projectron/all-1-grant-task"));
+        ALL_DATA_GRANT_URLS = Arrays.asList(toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-issue"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-task"));
         BOB_PROJECTS_DATA_GRANT = toUrl(server, "/bob/agents/alice/selected-1-grant-project");
         PROJECTS_DATA_REGISTRATION = toUrl(server, "/personal/data/projects/");
         BOB_PROJECTS_DATA_REGISTRATION = toUrl(server, "/bob/data/projects/");
@@ -99,7 +99,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Create new data grant - scope: all from registry")
     void createDataGrantAllFromRegistry() throws SaiException {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
         DataGrant projectGrant = projectBuilder.setDataOwner(ALICE_ID)
                                                .setGrantee(PROJECTRON_ID)
@@ -178,7 +178,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Create new data grant - scope: no access")
     void createDataGrantNoAccess() throws SaiException {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
         DataGrant projectGrant = projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
@@ -195,7 +195,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Fail to create new data grant - invalid scope")
     void failToCreateDataGrantBadScope() throws SaiException {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> projectBuilder.setDataOwner(ALICE_ID)
                                                               .setGrantee(PROJECTRON_ID)
@@ -211,7 +211,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Fail to create new data grant - missing creator modes")
     void failToCreateDataGrantMissingCreatorModes() {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
@@ -226,7 +226,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Fail to create new data grant - inherits from without inherited scope")
     void failToCreateDataGrantInvalidInheritsFrom() {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
@@ -243,7 +243,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Fail to create new data grant - inherited scope without inherits from")
     void failToCreateDataGrantInheritsFromMissing() {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
@@ -259,7 +259,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Fail to create new data grant - selected instances without selected scope")
     void failToCreateDataGrantInstancesNoSelected() {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                 toUrl(server, "/personal/data/projects/project-2"),
                 toUrl(server, "/personal/data/projects/project-3"));
@@ -279,7 +279,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Fail to create new data grant - selected scope without selected instances")
     void failToCreateDataGrantSelectedNoInstances() {
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                 toUrl(server, "/personal/data/projects/project-2"),
                 toUrl(server, "/personal/data/projects/project-3"));
@@ -297,7 +297,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Get data grant - scope: all from registry")
     void getDataGrant() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant dataGrant = DataGrant.get(url, saiSession);
         assertEquals(ALICE_ID, dataGrant.getDataOwner());
         assertEquals(PROJECTRON_ID, dataGrant.getGrantee());
@@ -312,7 +312,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Reload data grant - scope: all from registry")
     void reloadDataGrant() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/agents/projectron/all-1-grant-project");
+        URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant dataGrant = DataGrant.get(url, saiSession);
         DataGrant reloaded = dataGrant.reload();
         assertEquals(ALICE_ID, reloaded.getDataOwner());
@@ -328,7 +328,7 @@ class DataGrantTests {
     @Test
     @DisplayName("Fail to get data grant - missing required fields")
     void failToGetDataGrantRequired() {
-        URL url = toUrl(server, "/missing-fields/agents/projectron/all-1-grant-project");
+        URL url = toUrl(server, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         assertThrows(SaiException.class, () -> DataGrant.get(url, saiSession));
     }
 

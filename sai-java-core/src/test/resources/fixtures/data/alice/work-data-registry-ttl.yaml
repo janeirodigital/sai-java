@@ -6,12 +6,12 @@ body: >
 
   PREFIX interop: <http://www.w3.org/ns/solid/interop#>
   PREFIX solid: <http://www.w3.org/ns/solid/terms#>
-  PREFIX alice-data: <${SERVER_BASE}/personal/data/>
+  PREFIX alice-work: <${SERVER_BASE}/work/data/>
 
-  alice-data:
+  alice-work:
     a interop:DataRegistry ;
     interop:hasDataRegistration 
-      alice-data:projects\/ ,
-      alice-data:milestones\/ ,
-      alice-data:tasks\/ ,
-      alice-data:issues\/ .
+      alice-work:projects\/ ,
+      alice-work:milestones\/ ,
+      alice-work:tasks\/ ,
+      alice-work:issues\/ .

@@ -207,6 +207,8 @@ class DataConsentTests {
         assertDoesNotThrow(() -> projectConsent.create());
     }
 
+    // Generate data grants
+
     @Test
     @DisplayName("Fail to create new data consent - scope: invalid")
     void failToCreateInvalidScope() throws SaiException {

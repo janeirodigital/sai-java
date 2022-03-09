@@ -9,18 +9,14 @@ body: >
   PREFIX solid: <http://www.w3.org/ns/solid/terms#>
   PREFIX alice: <https://alice.example/>
   PREFIX jarvis: <https://jarvis.example/>
-  PREFIX alice-data: <${SERVER_BASE}/personal/data/>
-  PREFIX pm: <http://data.example/shapetrees/pm#>
-  PREFIX ldp: <http://www.w3.org/ns/ldp#>
+  PREFIX projectron: <https://projectron.example/>
+  PREFIX alice-agents-projectron: <${SERVER_BASE}/all-1-agents/all-1-projectron/>
 
-  alice-data:milestones\/
-    a interop:DataRegistration ;
+  alice-agents-projectron:
+    a interop:ApplicationRegistration ;
     interop:registeredBy alice:id ;
     interop:registeredWith jarvis:id ;
     interop:registeredAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
     interop:updatedAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
-    interop:registeredShapeTree pm:MilestoneTree ;
-    ldp:contains
-      alice-data:milestones\/milestone-1 ,
-      alice-data:milestones\/milestone-2 ,
-      alice-data:milestones\/milestone-3 .
+    interop:registeredAgent projectron:id ;
+    interop:hasAccessGrant alice-agents-projectron:all-1-grant .

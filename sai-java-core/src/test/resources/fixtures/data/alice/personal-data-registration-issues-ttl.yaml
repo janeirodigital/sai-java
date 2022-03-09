@@ -9,18 +9,18 @@ body: >
   PREFIX solid: <http://www.w3.org/ns/solid/terms#>
   PREFIX alice: <https://alice.example/>
   PREFIX jarvis: <https://jarvis.example/>
-  PREFIX alice-data: <${SERVER_BASE}/personal/data/>
+  PREFIX alice-personal: <${SERVER_BASE}/personal/data/>
   PREFIX pm: <http://data.example/shapetrees/pm#>
   PREFIX ldp: <http://www.w3.org/ns/ldp#>
 
-  alice-data:tasks\/
+  alice-personal:issues\/
     a interop:DataRegistration ;
     interop:registeredBy alice:id ;
     interop:registeredWith jarvis:id ;
     interop:registeredAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
     interop:updatedAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
-    interop:registeredShapeTree pm:TaskTree ;
+    interop:registeredShapeTree pm:IssueTree ;
     ldp:contains
-      alice-data:tasks\/task-1 ,
-      alice-data:tasks\/task-2 ,
-      alice-data:tasks\/task-3 .
+      alice-personal:issues\/issue-1 ,
+      alice-personal:issues\/issue-2 ,
+      alice-personal:issues\/issue-3 .

@@ -9,16 +9,16 @@ body: >
   PREFIX solid: <http://www.w3.org/ns/solid/terms#>
   PREFIX alice: <https://alice.example/>
   PREFIX projectron: <https://projectron.example/>
-  PREFIX alice-agents-projectron: <${SERVER_BASE}/selected-1-agents/selected-1-projectron/>
+  PREFIX alice-agents-projectron: <${SERVER_BASE}/agent-1-agents/agent-1-projectron/>
 
-  alice-agents-projectron:selected-1-grant
+  alice-agents-projectron:agent-1-grant
     a interop:AccessGrant ;
     interop:grantedBy alice:id ;
     interop:grantedAt "2020-09-05T06:15:01Z"^^xsd:dateTime ;
     interop:grantee projectron:id ;
     interop:hasAccessNeedGroup projectron:\#d8219b1f ;
     interop:hasDataGrant
-      alice-agents-projectron:selected-1-grant-personal-project ,
-      alice-agents-projectron:selected-1-grant-personal-milestone ,
-      alice-agents-projectron:selected-1-grant-personal-issue ,
-      alice-agents-projectron:selected-1-grant-personal-task .
+      alice-agents-projectron:agent-1-delegated-grant-bob-project ,
+      alice-agents-projectron:agent-1-delegated-grant-bob-milestone ,
+      alice-agents-projectron:agent-1-delegated-grant-bob-issue ,
+      alice-agents-projectron:agent-1-delegated-grant-bob-task .

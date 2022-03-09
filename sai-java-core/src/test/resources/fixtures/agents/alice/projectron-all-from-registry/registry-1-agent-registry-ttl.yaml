@@ -6,11 +6,9 @@ body: >
 
   PREFIX interop: <http://www.w3.org/ns/solid/interop#>
   PREFIX solid: <http://www.w3.org/ns/solid/terms#>
-  PREFIX alice-agents: <${SERVER_BASE}/agents/>
+  PREFIX alice-agents: <${SERVER_BASE}/registry-1-agents/>
 
   alice-agents:
     a interop:AgentRegistry ;
-    interop:hasSocialAgentRegistration 
-      alice-agents:bob\/ ;
     interop:hasApplicationRegistration
-      alice-agents:projectron\/ .
+      alice-agents:registry-1-projectron\/ .

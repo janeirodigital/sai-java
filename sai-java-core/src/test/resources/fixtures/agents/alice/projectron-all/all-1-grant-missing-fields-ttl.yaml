@@ -9,14 +9,14 @@ body: >
   PREFIX solid: <http://www.w3.org/ns/solid/terms#>
   PREFIX alice: <https://alice.example/>
   PREFIX projectron: <https://projectron.example/>
-  PREFIX alice-agents-projectron: <${SERVER_BASE}/agents/projectron/>
+  PREFIX alice-agents-projectron: <${SERVER_BASE}/all-1-agents/all-1-projectron/>
 
   alice-agents-projectron:all-1-grant
     a interop:AccessGrant ;
     interop:grantedBy alice:id ;
     interop:grantedAt "2020-09-05T06:15:01Z"^^xsd:dateTime ;
     interop:hasDataGrant
-      alice-agents-projectron:all-1-grant-project ,
-      alice-agents-projectron:all-1-grant-milestone ,
-      alice-agents-projectron:all-1-grant-issue ,
-      alice-agents-projectron:all-1-grant-task .
+      alice-agents-projectron:all-1-grant-personal-project ,
+      alice-agents-projectron:all-1-grant-personal-milestone ,
+      alice-agents-projectron:all-1-grant-personal-issue ,
+      alice-agents-projectron:all-1-grant-personal-task .

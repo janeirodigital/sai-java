@@ -160,6 +160,7 @@ public class DataConsent extends ImmutableResource {
 
         List<DataGrant> dataGrants = new ArrayList<>();
         for (Map.Entry<DataRegistration, DataRegistry> entry : dataRegistrations.entrySet()) {
+            DataRegistration dataRegistration = entry.getKey();
             URL dataGrantUrl = granteeRegistration.generateContainedUrl();
             DataGrant.Builder grantBuilder = new DataGrant.Builder(dataGrantUrl, this.saiSession);
             // create children if needed (generate child source grants)
@@ -172,7 +173,7 @@ public class DataConsent extends ImmutableResource {
             grantBuilder.setRegisteredShapeTree(this.registeredShapeTree);
             grantBuilder.setAccessModes(this.accessModes);
             grantBuilder.setAccessNeed(this.accessNeed);
-            if (this.dataRegistration != null) { grantBuilder.setDataRegistration(this.dataRegistration); }
+            grantBuilder.setDataRegistration(dataRegistration.getUrl());
             if (this.creatorAccessModes != null) { grantBuilder.setCreatorAccessModes(this.creatorAccessModes); }
             if (!this.dataInstances.isEmpty()) { grantBuilder.setDataInstances(this.dataInstances); }
             // add the data grant (and child grants if they exist) to the list
@@ -203,17 +204,17 @@ public class DataConsent extends ImmutableResource {
             if (childConsent.scopeOfConsent.equals(SCOPE_INHERITED) && childConsent.inheritsFrom.equals(this.getUrl())) {
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();
                 // find the data registration for the child data consent (must be same registry as parent)
-                DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(childConsent.getRegisteredShapeTree());
+                DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(childConsent.registeredShapeTree);
                 if (childRegistration == null) { throw new SaiException("Could not find data registration " + dataRegistration.getUrl() + " in registry " + dataRegistry.getUrl()); }
                 DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession);
-                childBuilder.setDataOwner(childConsent.dataOwner);
-                childBuilder.setGrantee(childConsent.getGrantee());
+                childBuilder.setDataOwner(childConsent.grantedBy);
+                childBuilder.setGrantee(childConsent.grantee);
                 childBuilder.setRegisteredShapeTree(childConsent.registeredShapeTree);
                 childBuilder.setDataRegistration(childRegistration.getUrl());
                 childBuilder.setScopeOfGrant(SCOPE_INHERITED);
                 childBuilder.setAccessModes(childConsent.accessModes);
                 childBuilder.setCreatorAccessModes(childConsent.creatorAccessModes);
-                childBuilder.setAccessNeed(childConsent.getAccessNeed());
+                childBuilder.setAccessNeed(childConsent.accessNeed);
                 childBuilder.setInheritsFrom(dataGrantUrl);
                 childDataGrants.add(childBuilder.build());
             }
@@ -267,8 +268,10 @@ public class DataConsent extends ImmutableResource {
                 List<DataGrant> childDataGrants = generateChildDelegatedGrants(grantUrl, remoteDataGrant, granteeRegistration);
                 // build the delegated data grant
                 grantBuilder.setDataOwner(remoteDataGrant.getDataOwner());
+                grantBuilder.setGrantee(this.grantee);
                 grantBuilder.setRegisteredShapeTree(remoteDataGrant.getRegisteredShapeTree());
                 grantBuilder.setScopeOfGrant(remoteDataGrant.getScopeOfGrant());
+                grantBuilder.setAccessNeed(remoteDataGrant.getAccessNeed());
                 grantBuilder.setDelegationOf(remoteDataGrant.getUrl());
                 if (!remoteDataGrant.getAccessModes().containsAll(this.accessModes)) { throw new SaiException("Data consent issues access modes that were not granted by remote social agent"); }
                 grantBuilder.setAccessModes(this.accessModes);
@@ -302,9 +305,11 @@ public class DataConsent extends ImmutableResource {
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();
                 DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession);
                 childBuilder.setDataOwner(remoteChildGrant.getDataOwner());
+                childBuilder.setGrantee(this.grantee);
                 childBuilder.setRegisteredShapeTree(remoteChildGrant.getRegisteredShapeTree());
                 childBuilder.setScopeOfGrant(SCOPE_INHERITED);
-                if (this.getDataRegistration() != null) { childBuilder.setDataRegistration(remoteChildGrant.getDataRegistration()); }
+                childBuilder.setAccessNeed(remoteChildGrant.getAccessNeed());
+                childBuilder.setDataRegistration(remoteChildGrant.getDataRegistration());
                 if (!remoteChildGrant.getAccessModes().containsAll(childConsent.accessModes)) { throw new SaiException("Data consent issues access modes that were not granted by remote social agent"); }
                 childBuilder.setAccessModes(childConsent.accessModes);
                 if (childConsent.canCreate()) {

@@ -12,18 +12,18 @@ body: >
   PREFIX acl: <http://www.w3.org/ns/auth/acl#>
   PREFIX alice: <https://alice.example/>
   PREFIX projectron: <https://projectron.example/>
-  PREFIX alice-agents-projectron: <${SERVER_BASE}/agents/projectron/>
+  PREFIX alice-agents-projectron: <${SERVER_BASE}/selected-1-agents/selected-1-projectron/>
   PREFIX alice-personal: <${SERVER_BASE}/personal/data/>
   PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
 
-  alice-agents-projectron:all-1-grant-issue
+  alice-agents-projectron:selected-1-grant-personal-task
     a interop:DataGrant ;
     interop:dataOwner alice:id ;
     interop:grantee projectron:id ;
-    interop:registeredShapeTree pm-shapetrees:IssueTree ;
-    interop:hasDataRegistration alice-personal:issues\/ ;
+    interop:registeredShapeTree pm-shapetrees:TaskTree ;
+    interop:hasDataRegistration alice-personal:tasks\/ ;
     interop:accessMode acl:Read, acl:Create ;
     interop:creatorAccessMode acl:Update, acl:Delete ;
     interop:scopeOfGrant interop:Inherited ;
-    interop:satisfiesAccessNeed projectron:\#aa123a1b ;
-    interop:inheritsFromGrant alice-agents-projectron:all-1-grant-project .
+    interop:satisfiesAccessNeed projectron:\#ce22cc1a ;
+    interop:inheritsFromGrant alice-agents-projectron:selected-1-grant-personal-project .

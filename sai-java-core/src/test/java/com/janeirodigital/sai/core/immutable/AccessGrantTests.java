@@ -50,18 +50,34 @@ class AccessGrantTests {
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET access grant in Turtle with missing fields
-        mockOnGet(dispatcher, "/missing-fields/agents/projectron/all-1-grant", "agents/alice/projectron-all/all-1-grant-missing-fields-ttl");
+        mockOnGet(dispatcher, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant", "agents/alice/projectron-all/all-1-grant-missing-fields-ttl");
         // GET / PUT access grant and data grants from the agent registry
-        mockOnGet(dispatcher, "/agents/projectron/all-1-grant", "agents/alice/projectron-all/all-1-grant-ttl");
-        mockOnPut(dispatcher, "/agents/projectron/all-1-grant", "http/201");
-        mockOnGet(dispatcher, "/agents/projectron/all-1-grant-project", "agents/alice/projectron-all/all-1-grant-project-ttl");
-        mockOnPut(dispatcher, "/agents/projectron/all-1-grant-project", "http/201");
-        mockOnGet(dispatcher, "/agents/projectron/all-1-grant-milestone", "agents/alice/projectron-all/all-1-grant-milestone-ttl");
-        mockOnPut(dispatcher, "/agents/projectron/all-1-grant-milestone", "http/201");
-        mockOnGet(dispatcher, "/agents/projectron/all-1-grant-issue", "agents/alice/projectron-all/all-1-grant-issue-ttl");
-        mockOnPut(dispatcher, "/agents/projectron/all-1-grant-issue", "http/201");
-        mockOnGet(dispatcher, "/agents/projectron/all-1-grant-task", "agents/alice/projectron-all/all-1-grant-task-ttl");
-        mockOnPut(dispatcher, "/agents/projectron/all-1-grant-task", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant", "agents/alice/projectron-all/all-1-grant-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-project", "agents/alice/projectron-all/all-1-grant-personal-project-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-project", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone", "agents/alice/projectron-all/all-1-grant-personal-milestone-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-issue", "agents/alice/projectron-all/all-1-grant-personal-issue-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-issue", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-task", "agents/alice/projectron-all/all-1-grant-personal-task-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-task", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-project", "agents/alice/projectron-all/all-1-grant-work-project-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-project", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-milestone", "agents/alice/projectron-all/all-1-grant-work-milestone-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-milestone", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-issue", "agents/alice/projectron-all/all-1-grant-work-issue-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-issue", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-task", "agents/alice/projectron-all/all-1-grant-work-task-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-task", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-project", "agents/alice/projectron-all/all-1-delegated-grant-bob-project-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-project", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-milestone", "agents/alice/projectron-all/all-1-delegated-grant-bob-milestone-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-milestone", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-issue", "agents/alice/projectron-all/all-1-delegated-grant-bob-issue-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-issue", "http/201");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-task", "agents/alice/projectron-all/all-1-delegated-grant-bob-task-ttl");
+        mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-task", "http/201");
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
@@ -74,10 +90,18 @@ class AccessGrantTests {
         PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
         PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
-        ALL_DATA_GRANT_URLS = Arrays.asList(toUrl(server, "/agents/projectron/all-1-grant-project"),
-                                            toUrl(server, "/agents/projectron/all-1-grant-milestone"),
-                                            toUrl(server, "/agents/projectron/all-1-grant-issue"),
-                                            toUrl(server, "/agents/projectron/all-1-grant-task"));
+        ALL_DATA_GRANT_URLS = Arrays.asList(toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-issue"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-task"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-work-project"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-work-milestone"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-work-issue"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-work-task"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-project"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-milestone"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-issue"),
+                                            toUrl(server, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-task"));
         PROJECTS_DATA_REGISTRATION = toUrl(server, "/personal/data/projects/");
         MILESTONES_DATA_REGISTRATION = toUrl(server, "/personal/data/milestones/");
         ISSUES_DATA_REGISTRATION = toUrl(server, "/personal/data/issues/");
@@ -94,11 +118,11 @@ class AccessGrantTests {
     @Test
     @DisplayName("Create new access grant and linked data grants - scope: all")
     void createAccessGrantScopeAll() throws SaiException {
-        URL accessUrl = toUrl(server, "/agents/projectron/all-1-grant");
-        URL projectUrl = toUrl(server, "/agents/projectron/all-1-grant-project");
-        URL milestoneUrl = toUrl(server, "/agents/projectron/all-1-grant-milestone");
-        URL issueUrl = toUrl(server, "/agents/projectron/all-1-grant-issue");
-        URL taskUrl = toUrl(server, "/agents/projectron/all-1-grant-task");
+        URL accessUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
+        URL milestoneUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
+        URL issueUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-issue");
+        URL taskUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-task");
         
         DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
         DataGrant projectGrant = projectBuilder.setDataOwner(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
@@ -132,7 +156,7 @@ class AccessGrantTests {
     @Test
     @DisplayName("Get an access grant and linked data grants - scope: all")
     void getAccessGrant() throws SaiNotFoundException, SaiException {
-        URL url = toUrl(server, "/agents/projectron/all-1-grant");
+        URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         AccessGrant accessGrant = AccessGrant.get(url, saiSession);
         checkAccessGrant(accessGrant);
     }
@@ -140,7 +164,7 @@ class AccessGrantTests {
     @Test
     @DisplayName("Reload an access grant and linked data grants - scope: all")
     void reloadAccessGrant() throws SaiNotFoundException, SaiException {
-        URL url = toUrl(server, "/agents/projectron/all-1-grant");
+        URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         AccessGrant accessGrant = AccessGrant.get(url, saiSession);
         AccessGrant reloaded = accessGrant.reload();
         checkAccessGrant(reloaded);
@@ -149,7 +173,7 @@ class AccessGrantTests {
     @Test
     @DisplayName("Fail to get access grant - missing required fields")
     void failToGetAccessGrantRequired() {
-        URL url = toUrl(server, "/missing-fields/agents/projectron/all-1-grant");
+        URL url = toUrl(server, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant");
         assertThrows(SaiException.class, () -> AccessGrant.get(url, saiSession));
     }
 
@@ -159,7 +183,9 @@ class AccessGrantTests {
         assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
         assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
         assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
-        for (DataGrant dataGrant : accessGrant.getDataGrants()) { assertTrue(ALL_DATA_GRANT_URLS.contains(dataGrant.getUrl())); }
-
+        for (DataGrant dataGrant : accessGrant.getDataGrants()) {
+            assertTrue(ALL_DATA_GRANT_URLS.contains(dataGrant.getUrl()));
+            if (dataGrant.getRegisteredShapeTree().equals(PROJECT_TREE)) { assertEquals(3, dataGrant.getInheritingGrants().size()); }
+        }
     }
 }

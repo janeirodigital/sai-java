@@ -52,8 +52,10 @@ class AccessConsentTests {
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
-        // GET access consent registry in Turtle - scope:all
+
+        // Scope: interop:All - GET all necessary resources across registries (used in basic crud tests as well as grant generation)
         mockOnGet(dispatcher, "/access/all-1", "access/all/all-1-ttl");
+        mockOnGet(dispatcher, "/missing-fields/access/all-1", "access/all/all-1-missing-fields-ttl");
         mockOnPut(dispatcher, "/access/all-1", "http/201");
         mockOnGet(dispatcher, "/access/all-1-project", "access/all/all-1-project-ttl");
         mockOnPut(dispatcher, "/access/all-1-project", "http/201");
@@ -63,24 +65,91 @@ class AccessConsentTests {
         mockOnPut(dispatcher, "/access/all-1-task", "http/201");
         mockOnGet(dispatcher, "/access/all-1-issue", "access/all/all-1-issue-ttl");
         mockOnPut(dispatcher, "/access/all-1-issue", "http/201");
-        // Get Alice's agent registry
-        mockOnGet(dispatcher, "/agents/", "agents/alice/agent-registry-ttl");
-        // Get Alice's application registration for projectron
-        mockOnGet(dispatcher, "/agents/projectron/", "agents/alice/projectron-registration-all-1-ttl");
-        // Get Alice's data registries
-        mockOnGet(dispatcher, "/personal/data/", "data/alice/data-registry-ttl");
-        mockOnGet(dispatcher, "/personal/data/projects/", "data/alice/data-registration-projects-ttl");
-        mockOnGet(dispatcher, "/personal/data/milestones/", "data/alice/data-registration-milestones-ttl");
-        mockOnGet(dispatcher, "/personal/data/issues/", "data/alice/data-registration-issues-ttl");
-        mockOnGet(dispatcher, "/personal/data/tasks/", "data/alice/data-registration-tasks-ttl");
-        // GET access consent registry in Turtle - scope:all from registry
+        mockOnGet(dispatcher, "/all-1-agents/", "agents/alice/projectron-all/all-1-agent-registry-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/", "agents/alice/projectron-all/all-1-projectron-registration-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-bob/", "agents/alice/projectron-all/all-1-bob-registration-ttl");
+        mockOnGet(dispatcher, "/all-1-bob-agents/all-1-alice/", "agents/alice/projectron-all/all-1-bob-alice-registration-ttl");
+        mockOnGet(dispatcher, "/all-1-bob-agents/all-1-alice/all-1-grant", "agents/alice/projectron-all/all-1-bob-grant-ttl");
+        mockOnGet(dispatcher, "/all-1-bob-agents/all-1-alice/all-1-grant-project", "agents/alice/projectron-all/all-1-bob-grant-project-ttl");
+        mockOnGet(dispatcher, "/all-1-bob-agents/all-1-alice/all-1-grant-milestone", "agents/alice/projectron-all/all-1-bob-grant-milestone-ttl");
+        mockOnGet(dispatcher, "/all-1-bob-agents/all-1-alice/all-1-grant-issue", "agents/alice/projectron-all/all-1-bob-grant-issue-ttl");
+        mockOnGet(dispatcher, "/all-1-bob-agents/all-1-alice/all-1-grant-task", "agents/alice/projectron-all/all-1-bob-grant-task-ttl");
+        // // Known good baseline grants used to compare against generated grants for interop:All
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant", "agents/alice/projectron-all/all-1-grant-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-project", "agents/alice/projectron-all/all-1-grant-personal-project-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone", "agents/alice/projectron-all/all-1-grant-personal-milestone-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-issue", "agents/alice/projectron-all/all-1-grant-personal-issue-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-task", "agents/alice/projectron-all/all-1-grant-personal-task-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-project", "agents/alice/projectron-all/all-1-grant-work-project-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-milestone", "agents/alice/projectron-all/all-1-grant-work-milestone-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-issue", "agents/alice/projectron-all/all-1-grant-work-issue-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-work-task", "agents/alice/projectron-all/all-1-grant-work-task-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-project", "agents/alice/projectron-all/all-1-delegated-grant-bob-project-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-milestone", "agents/alice/projectron-all/all-1-delegated-grant-bob-milestone-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-issue", "agents/alice/projectron-all/all-1-delegated-grant-bob-issue-ttl");
+        mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-task", "agents/alice/projectron-all/all-1-delegated-grant-bob-task-ttl");
+
+        // Scope: interop:AllFromRegistry - GET all necessary resources across registries (for testing grant generation)
         mockOnGet(dispatcher, "/access/registry-1", "access/all-from-registry/registry-1-ttl");
         mockOnGet(dispatcher, "/access/registry-1-project", "access/all-from-registry/registry-1-project-ttl");
         mockOnGet(dispatcher, "/access/registry-1-milestone", "access/all-from-registry/registry-1-milestone-ttl");
         mockOnGet(dispatcher, "/access/registry-1-task", "access/all-from-registry/registry-1-task-ttl");
         mockOnGet(dispatcher, "/access/registry-1-issue", "access/all-from-registry/registry-1-issue-ttl");
-        // GET access consent in Turtle with missing fields
-        mockOnGet(dispatcher, "/missing-fields/access/all-1", "access/all/all-1-missing-fields-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/", "agents/alice/projectron-all-from-registry/registry-1-agent-registry-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/", "agents/alice/projectron-all-from-registry/registry-1-projectron-registration-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant", "agents/alice/projectron-all-from-registry/registry-1-grant-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-milestone", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-milestone-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-issue", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-issue-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-task", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-task-ttl");
+
+        // Scope: interop:SelectedFromRegistry - GET all necessary resources across registries (for testing grant generation)
+        mockOnGet(dispatcher, "/access/selected-1", "access/selected-from-registry/selected-1-ttl");
+        mockOnGet(dispatcher, "/access/selected-1-project", "access/selected-from-registry/selected-1-project-ttl");
+        mockOnGet(dispatcher, "/access/selected-1-milestone", "access/selected-from-registry/selected-1-milestone-ttl");
+        mockOnGet(dispatcher, "/access/selected-1-task", "access/selected-from-registry/selected-1-task-ttl");
+        mockOnGet(dispatcher, "/access/selected-1-issue", "access/selected-from-registry/selected-1-issue-ttl");
+        mockOnGet(dispatcher, "/selected-1-agents/", "agents/alice/projectron-selected-from-registry/selected-1-agent-registry-ttl");
+        mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/", "agents/alice/projectron-selected-from-registry/selected-1-projectron-registration-ttl");
+        mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/selected-1-grant", "agents/alice/projectron-selected-from-registry/selected-1-grant-ttl");
+        mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/selected-1-grant-personal-project", "agents/alice/projectron-selected-from-registry/selected-1-grant-personal-project-ttl");
+        mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/selected-1-grant-personal-milestone", "agents/alice/projectron-selected-from-registry/selected-1-grant-personal-milestone-ttl");
+        mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/selected-1-grant-personal-issue", "agents/alice/projectron-selected-from-registry/selected-1-grant-personal-issue-ttl");
+        mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/selected-1-grant-personal-task", "agents/alice/projectron-selected-from-registry/selected-1-grant-personal-task-ttl");
+        
+        // Scope: interop:AllFromAgent - GET all necessary resources across registries (for testing grant generation)
+        mockOnGet(dispatcher, "/access/agent-1", "access/all-from-agent/agent-1-ttl");
+        mockOnGet(dispatcher, "/access/agent-1-project", "access/all-from-agent/agent-1-project-ttl");
+        mockOnGet(dispatcher, "/access/agent-1-milestone", "access/all-from-agent/agent-1-milestone-ttl");
+        mockOnGet(dispatcher, "/access/agent-1-task", "access/all-from-agent/agent-1-task-ttl");
+        mockOnGet(dispatcher, "/access/agent-1-issue", "access/all-from-agent/agent-1-issue-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/", "agents/alice/projectron-all-from-agent/agent-1-agent-registry-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/", "agents/alice/projectron-all-from-agent/agent-1-projectron-registration-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/agent-1-grant", "agents/alice/projectron-all-from-agent/agent-1-grant-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/agent-1-delegated-grant-bob-project", "agents/alice/projectron-all-from-agent/agent-1-delegated-grant-bob-project-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/agent-1-delegated-grant-bob-milestone", "agents/alice/projectron-all-from-agent/agent-1-delegated-grant-bob-milestone-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/agent-1-delegated-grant-bob-issue", "agents/alice/projectron-all-from-agent/agent-1-delegated-grant-bob-issue-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/agent-1-delegated-grant-bob-task", "agents/alice/projectron-all-from-agent/agent-1-delegated-grant-bob-task-ttl");
+        mockOnGet(dispatcher, "/agent-1-agents/agent-1-bob/", "agents/alice/projectron-all-from-agent/agent-1-bob-registration-ttl");
+        mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/", "agents/alice/projectron-all-from-agent/agent-1-bob-alice-registration-ttl");
+        mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-ttl");
+        mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-project", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-project-ttl");
+        mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-milestone", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-milestone-ttl");
+        mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-issue", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-issue-ttl");
+        mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-task", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-task-ttl");
+        
+        // Get Alice's data registries - doesn't change across use cases
+        mockOnGet(dispatcher, "/personal/data/", "data/alice/personal-data-registry-ttl");
+        mockOnGet(dispatcher, "/personal/data/projects/", "data/alice/personal-data-registration-projects-ttl");
+        mockOnGet(dispatcher, "/personal/data/milestones/", "data/alice/personal-data-registration-milestones-ttl");
+        mockOnGet(dispatcher, "/personal/data/issues/", "data/alice/personal-data-registration-issues-ttl");
+        mockOnGet(dispatcher, "/personal/data/tasks/", "data/alice/personal-data-registration-tasks-ttl");
+        mockOnGet(dispatcher, "/work/data/", "data/alice/work-data-registry-ttl");
+        mockOnGet(dispatcher, "/work/data/projects/", "data/alice/work-data-registration-projects-ttl");
+        mockOnGet(dispatcher, "/work/data/milestones/", "data/alice/work-data-registration-milestones-ttl");
+        mockOnGet(dispatcher, "/work/data/issues/", "data/alice/work-data-registration-issues-ttl");
+        mockOnGet(dispatcher, "/work/data/tasks/", "data/alice/work-data-registration-tasks-ttl");
+
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
@@ -145,20 +214,73 @@ class AccessConsentTests {
     }
 
     @Test
-    @DisplayName("Generate access grant and associated data grants")
-    void testGenerateAccessGrant() throws SaiNotFoundException, SaiException {
+    @DisplayName("Generate access grant and associated data grants - Scope: All")
+    void testGenerateAccessGrantAll() throws SaiNotFoundException, SaiException {
+        // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
+        // be generating the grants right after generating the consents
+        URL accessUrl = toUrl(server, "/access/all-1");
+        URL agentRegistryUrl = toUrl(server, "/all-1-agents/");
+        URL personalDataUrl = toUrl(server, "/personal/data/");
+        URL workDataUrl = toUrl(server, "/personal/data/");
+        URL registrationUrl = toUrl(server, "/all-1-agents/all-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry personalData = DataRegistry.get(personalDataUrl, saiSession);
+        DataRegistry workData = DataRegistry.get(workDataUrl, saiSession);
+        AccessConsent accessConsent = AccessConsent.get(accessUrl, saiSession);
+        AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(personalData, workData));
+        checkAccessGrantAll(accessGrant);
+    }
+
+    @Test
+    @DisplayName("Generate access grant and associated data grants - Scope: AllFromRegistry")
+    void testGenerateAccessGrantAllFromRegistry() throws SaiNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
         // be generating the grants right after generating the consents
         URL accessUrl = toUrl(server, "/access/registry-1");
-        URL agentRegistryUrl = toUrl(server, "/agents/");
+        URL agentRegistryUrl = toUrl(server, "/registry-1-agents/");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL registrationUrl = toUrl(server, "/agents/projectron/");
+        URL registrationUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/");
         AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
         ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
         DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
         AccessConsent accessConsent = AccessConsent.get(accessUrl, saiSession);
         AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
-        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
+        checkAccessGrantAllFromRegistry(accessGrant);
+    }
+
+    @Test
+    @DisplayName("Generate access grant and associated data grants - Scope: SelectedFromRegistry")
+    void testGenerateAccessGrantSelectedFromRegistry() throws SaiNotFoundException, SaiException {
+        // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
+        // be generating the grants right after generating the consents
+        URL accessUrl = toUrl(server, "/access/selected-1");
+        URL agentRegistryUrl = toUrl(server, "/selected-1-agents/");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL registrationUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AccessConsent accessConsent = AccessConsent.get(accessUrl, saiSession);
+        AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
+        checkAccessGrantSelectedFromRegistry(accessGrant);
+    }
+
+    @Test
+    @DisplayName("Generate access grant and associated data grants - Scope: AllFromAgent")
+    void testGenerateAccessGrantAllFromAgent() throws SaiNotFoundException, SaiException {
+        // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
+        // be generating the grants right after generating the consents
+        URL accessUrl = toUrl(server, "/access/agent-1");
+        URL agentRegistryUrl = toUrl(server, "/agent-1-agents/");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL registrationUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AccessConsent accessConsent = AccessConsent.get(accessUrl, saiSession);
+        AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
+        checkAccessGrantAllFromAgent(accessGrant);
     }
 
     @Test
@@ -193,6 +315,91 @@ class AccessConsentTests {
         assertEquals(GRANT_TIME, accessConsent.getGrantedAt());
         assertEquals(PROJECTRON_NEED_GROUP, accessConsent.getAccessNeedGroup());
         for (DataConsent dataConsent : accessConsent.getDataConsents()) { assertTrue(ALL_DATA_CONSENT_URLS.contains(dataConsent.getUrl())); }
+    }
+
+    // The most efficient way to ensure that the access grants and data grants generated are
+    // correct is to create fixtures that are known to be correct, load them, and then compare.
+    private void checkAccessGrantAll(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+
+        // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
+        URL baselineUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+
+        assertNotNull(accessGrant);
+        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
+        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
+        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
+        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
+        assertEquals(baselineGrant.getDataGrants().size(), accessGrant.getDataGrants().size());
+        for (DataGrant dataGrant : accessGrant.getDataGrants()) {
+            assertNotNull(findMatchingGrant(dataGrant, accessGrant.getDataGrants()));
+        }
+    }
+
+    private DataGrant findMatchingGrant(DataGrant grantToMatch, List<DataGrant> dataGrants) {
+        for (DataGrant dataGrant : dataGrants) {
+            if (dataGrant.getRegisteredShapeTree() != grantToMatch.getRegisteredShapeTree()) continue;
+            if (dataGrant.getScopeOfGrant() != grantToMatch.getScopeOfGrant()) continue;
+            if (dataGrant.getDataOwner() != grantToMatch.getDataOwner()) continue;
+            if (dataGrant.getInheritsFrom() != grantToMatch.getInheritsFrom()) continue;
+            if (dataGrant.getDelegationOf() != grantToMatch.getDelegationOf()) continue;
+            return dataGrant;
+        }
+        return null;
+    }
+
+    private void checkAccessGrantAllFromRegistry(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+
+        // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
+        URL baselineUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+
+        assertNotNull(accessGrant);
+        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
+        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
+        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
+        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
+        assertEquals(baselineGrant.getDataGrants().size(), accessGrant.getDataGrants().size());
+        for (DataGrant dataGrant : accessGrant.getDataGrants()) {
+            assertNotNull(findMatchingGrant(dataGrant, accessGrant.getDataGrants()));
+        }
 
     }
+
+    private void checkAccessGrantSelectedFromRegistry(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+
+        // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
+        URL baselineUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/selected-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+
+        assertNotNull(accessGrant);
+        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
+        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
+        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
+        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
+        assertEquals(baselineGrant.getDataGrants().size(), accessGrant.getDataGrants().size());
+        for (DataGrant dataGrant : accessGrant.getDataGrants()) {
+            assertNotNull(findMatchingGrant(dataGrant, accessGrant.getDataGrants()));
+        }
+        
+    }
+
+    private void checkAccessGrantAllFromAgent(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+
+        // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
+        URL baselineUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/agent-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+
+        assertNotNull(accessGrant);
+        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
+        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
+        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
+        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
+        assertEquals(baselineGrant.getDataGrants().size(), accessGrant.getDataGrants().size());
+        for (DataGrant dataGrant : accessGrant.getDataGrants()) {
+            assertNotNull(findMatchingGrant(dataGrant, accessGrant.getDataGrants()));
+        }
+
+    }
+
 }

@@ -1,0 +1,30 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX acl: <http://www.w3.org/ns/auth/acl#>
+  PREFIX alice: <https://alice.example/>
+  PREFIX bob: <https://bob.example/>
+  PREFIX projectron: <https://projectron.example/>
+  PREFIX bob-agents-alice: <${SERVER_BASE}/agent-1-bob-agents/agent-1-alice/>
+  PREFIX bob-data: <${SERVER_BASE}/bob/data/>
+  PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
+
+  bob-agents-alice:agent-1-grant-task
+    a interop:DataGrant ;
+    interop:dataOwner bob:id ;
+    interop:grantee alice:id ;
+    interop:registeredShapeTree pm-shapetrees:TaskTree ;
+    interop:hasDataRegistration bob-data:tasks\/ ;
+    interop:accessMode acl:Read, acl:Create ;
+    interop:creatorAccessMode acl:Update, acl:Delete ;
+    interop:scopeOfGrant interop:Inherited ;
+    interop:satisfiesAccessNeed projectron:\#ac54ff1e ;
+    interop:inheritsFromGrant bob-agents-alice:agent-1-grant-project .
