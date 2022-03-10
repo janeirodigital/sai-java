@@ -27,7 +27,17 @@ public class DataInstanceList implements Iterable<DataInstance> {
         this.dataInstanceUrls = dataInstanceUrls;
     }
 
+    /**
+     * Indicates whether the {@link DataInstanceList} is empty
+     * @return true when there are no data instances
+     */
     public boolean isEmpty() { return this.dataInstanceUrls.isEmpty(); }
+
+    /**
+     * Indicates the number of {@link DataInstance}s in the list
+     * @return Amount of {@link DataInstance}s in the list
+     */
+    public int size() { return this.dataInstanceUrls.size(); }
 
     /**
      * Return an iterator for the {@link DataInstanceList}

@@ -5,6 +5,9 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.readable.InheritableDataGrant;
+import com.janeirodigital.sai.core.readable.ReadableAccessGrant;
+import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
@@ -23,7 +26,7 @@ import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPut;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_ALL_FROM_REGISTRY;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -154,7 +157,7 @@ class AccessGrantTests {
     }
 
     @Test
-    @DisplayName("Create new access grant and linked data grants - only require fields")
+    @DisplayName("Create new access grant and linked data grants - only required fields")
     void createAccessGrantRequiredOnly() throws SaiException {
         URL accessUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
@@ -196,10 +199,34 @@ class AccessGrantTests {
     }
 
     @Test
+    @DisplayName("Get a readable access grant and linked data grants - scope: all")
+    void getReadableAccessGrant() throws SaiNotFoundException, SaiException {
+        URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
+        ReadableAccessGrant accessGrant = ReadableAccessGrant.get(url, saiSession);
+        checkReadableAccessGrant(accessGrant);
+    }
+
+    @Test
+    @DisplayName("Reload a readable access grant and linked data grants - scope: all")
+    void reloadReadableAccessGrant() throws SaiNotFoundException, SaiException {
+        URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
+        ReadableAccessGrant accessGrant = ReadableAccessGrant.get(url, saiSession);
+        ReadableAccessGrant reloaded = accessGrant.reload();
+        checkReadableAccessGrant(accessGrant);
+    }
+
+    @Test
     @DisplayName("Fail to get access grant - missing required fields")
     void failToGetAccessGrantRequired() {
         URL url = toUrl(server, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant");
         assertThrows(SaiException.class, () -> AccessGrant.get(url, saiSession));
+    }
+
+    @Test
+    @DisplayName("Fail to get readable access grant - missing required fields")
+    void failToGetReadableAccessGrantRequired() {
+        URL url = toUrl(server, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant");
+        assertThrows(SaiException.class, () -> ReadableAccessGrant.get(url, saiSession));
     }
 
     private void checkAccessGrant(AccessGrant accessGrant) {
@@ -213,4 +240,20 @@ class AccessGrantTests {
             if (dataGrant.getRegisteredShapeTree().equals(PROJECT_TREE)) { assertEquals(3, dataGrant.getInheritingGrants().size()); }
         }
     }
+
+    private void checkReadableAccessGrant(ReadableAccessGrant accessGrant) {
+        assertNotNull(accessGrant);
+        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
+        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
+        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
+        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
+        for (ReadableDataGrant dataGrant : accessGrant.getDataGrants()) {
+            assertTrue(ALL_DATA_GRANT_URLS.contains(dataGrant.getUrl()));
+            if (dataGrant.getRegisteredShapeTree().equals(PROJECT_TREE)) {
+                InheritableDataGrant inheritableDataGrant = (InheritableDataGrant) dataGrant;
+                assertEquals(3, inheritableDataGrant.getInheritingGrants().size());
+            }
+        }
+    }
+
 }

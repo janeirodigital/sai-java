@@ -5,6 +5,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
@@ -326,10 +327,33 @@ class DataGrantTests {
     }
 
     @Test
+    @DisplayName("Reload readable data grant - scope: all from registry")
+    void reloadReadableDataGrant() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
+        ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
+        ReadableDataGrant reloaded = dataGrant.reload();
+        assertEquals(ALICE_ID, reloaded.getDataOwner());
+        assertEquals(PROJECTRON_ID, reloaded.getGrantee());
+        assertEquals(PROJECT_TREE, reloaded.getRegisteredShapeTree());
+        assertEquals(PROJECTS_DATA_REGISTRATION, reloaded.getDataRegistration());
+        for (RDFNode mode : reloaded.getAccessModes()) { assertTrue(ACCESS_MODES.contains(mode)); }
+        for (RDFNode mode : reloaded.getCreatorAccessModes()) { assertTrue(CREATOR_ACCESS_MODES.contains(mode)); }
+        assertEquals(SCOPE_ALL_FROM_REGISTRY, reloaded.getScopeOfGrant());
+        assertEquals(PROJECTRON_PROJECT_NEED, reloaded.getAccessNeed());
+    }
+
+    @Test
     @DisplayName("Fail to get data grant - missing required fields")
     void failToGetDataGrantRequired() {
         URL url = toUrl(server, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         assertThrows(SaiException.class, () -> DataGrant.get(url, saiSession));
+    }
+
+    @Test
+    @DisplayName("Fail to get readable data grant - missing required fields")
+    void failToGetReadableDataGrantRequired() {
+        URL url = toUrl(server, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant-personal-project");
+        assertThrows(SaiException.class, () -> ReadableDataGrant.get(url, saiSession));
     }
 
 }

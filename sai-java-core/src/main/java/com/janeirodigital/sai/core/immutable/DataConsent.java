@@ -4,6 +4,9 @@ import com.janeirodigital.sai.core.crud.*;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.readable.InheritableDataGrant;
+import com.janeirodigital.sai.core.readable.ReadableAccessGrant;
+import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Response;
@@ -255,9 +258,8 @@ public class DataConsent extends ImmutableResource {
             SocialAgentRegistration remoteRegistration = SocialAgentRegistration.get(agentRegistration.getReciprocalRegistration(), this.saiSession);
             // continue if there's no access grant iri in the reciprocal (which would mean they haven't shared anything so there's nothing to delegate)
             if (remoteRegistration.getAccessGrantUrl() == null) { continue; }
-            // Get the remote access grant - TODO - change this to ReadableAccessGrant
-            AccessGrant remoteGrant = AccessGrant.get(remoteRegistration.getAccessGrantUrl(), this.saiSession);
-            for (DataGrant remoteDataGrant : remoteGrant.getDataGrants()) {
+            ReadableAccessGrant remoteGrant = ReadableAccessGrant.get(remoteRegistration.getAccessGrantUrl(), this.saiSession);
+            for (ReadableDataGrant remoteDataGrant : remoteGrant.getDataGrants()) {
                 // skip data grants that don't match the shape tree of this data consent
                 if (!remoteDataGrant.getRegisteredShapeTree().equals(this.registeredShapeTree)) { continue; }
                 // filter to a given data registration if specified
@@ -297,10 +299,12 @@ public class DataConsent extends ImmutableResource {
      * @return List of child delegated {@link DataGrant}s
      * @throws SaiException
      */
-    private List<DataGrant> generateChildDelegatedGrants(URL dataGrantUrl, DataGrant remoteDataGrant, AgentRegistration granteeRegistration) throws SaiException {
+    private List<DataGrant> generateChildDelegatedGrants(URL dataGrantUrl, ReadableDataGrant remoteDataGrant, AgentRegistration granteeRegistration) throws SaiException {
         List<DataGrant> childDataGrants = new ArrayList<>();
         for (DataConsent childConsent : this.getInheritingConsents()) {
-            for (DataGrant remoteChildGrant: remoteDataGrant.getInheritingGrants()) {
+            if (!(remoteDataGrant instanceof InheritableDataGrant)) continue;
+            InheritableDataGrant remoteInheritableGrant = (InheritableDataGrant) remoteDataGrant;
+            for (ReadableDataGrant remoteChildGrant: remoteInheritableGrant.getInheritingGrants()) {
                 // continue if the remote inheriting grant isn't the same shape tree as the child consent
                 if (!remoteChildGrant.getRegisteredShapeTree().equals(childConsent.getRegisteredShapeTree())) { continue; }
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();

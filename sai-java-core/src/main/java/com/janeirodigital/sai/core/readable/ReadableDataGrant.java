@@ -91,6 +91,14 @@ public abstract class ReadableDataGrant extends ReadableResource {
     }
 
     /**
+     * Indicates whether the {@link ReadableDataGrant} is a delegated data grant
+     * @return true when the data grant is delegated
+     */
+    public boolean isDelegated() {
+        return this.delegationOf != null;
+    }
+
+    /**
      * Abstract method implemented by specific types of data grants, that allow the {@link DataInstance}s
      * permitted by that grant to be iterated.
      * @return {@link DataInstanceList} of permitted {@link DataInstance}s

@@ -12,6 +12,7 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
@@ -81,6 +82,51 @@ public class ReadableAccessGrant extends ReadableResource {
      */
     public ReadableAccessGrant reload() throws SaiNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
+    }
+
+    /**
+     * Lookup {@link ReadableDataGrant}s linked to the {@link ReadableAccessGrant} by data owner and
+     * shape tree
+     * @param dataOwnerUrl URL of the data owner that granted access
+     * @param shapeTreeUrl URL of the shape tree associated with the data
+     * @return List of matching {@link ReadableDataGrant}
+     */
+    public List<ReadableDataGrant> findDataGrants(URL dataOwnerUrl, URL shapeTreeUrl) {
+        Objects.requireNonNull(dataOwnerUrl, "Must provide the URL of the data owner to find data grant");
+        Objects.requireNonNull(shapeTreeUrl, "Must provide the URL of the shape tree to find data grant");
+        List<ReadableDataGrant> dataGrants = new ArrayList<>();
+        for (ReadableDataGrant dataGrant : this.getDataGrants()) {
+            if (!dataGrant.getDataOwner().equals(dataOwnerUrl)) continue;
+            if (!dataGrant.getRegisteredShapeTree().equals(shapeTreeUrl)) continue;
+            dataGrants.add(dataGrant);
+        }
+        return dataGrants;
+    }
+
+    /**
+     * Lookup {@link ReadableDataGrant}s linked to the {@link ReadableAccessGrant} by shape tree
+     * @param shapeTreeUrl URL of the shape tree associated with the data
+     * @return List of matching {@link ReadableDataGrant}
+     */
+    public List<ReadableDataGrant> findDataGrants(URL shapeTreeUrl) {
+        Objects.requireNonNull(shapeTreeUrl, "Must provide the URL of the shape tree to find data grant");
+        List<ReadableDataGrant> dataGrants = new ArrayList<>();
+        for (ReadableDataGrant dataGrant : this.getDataGrants()) {
+            if (dataGrant.getRegisteredShapeTree().equals(shapeTreeUrl)) dataGrants.add(dataGrant);
+        }
+        return dataGrants;
+    }
+
+    /**
+     * Lookup the data owners represented by the {@link ReadableDataGrant}s linked to the {@link ReadableAccessGrant}
+     * @return List of data owner identifiers
+     */
+    public List<URL> getDataOwners() {
+        List<URL> dataOwners = new ArrayList<>();
+        for (ReadableDataGrant dataGrant : this.getDataGrants()) {
+            if (!dataOwners.contains(dataGrant.getDataOwner())) dataOwners.add(dataGrant.getDataOwner());
+        }
+        return dataOwners;
     }
 
     /**
