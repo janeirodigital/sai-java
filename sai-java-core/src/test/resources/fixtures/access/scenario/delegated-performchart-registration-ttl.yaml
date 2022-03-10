@@ -1,0 +1,21 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice: <https://alice.example/>
+  PREFIX jarvis: <https://jarvis.example/>
+  PREFIX performchart: <https://performchart.example/>
+  PREFIX alice-agents-performchart: <${SERVER_BASE}/delegated-agents/delegated-performchart/>
+
+  alice-agents-performchart:
+    a interop:ApplicationRegistration ;
+    interop:registeredBy alice:id ;
+    interop:registeredWith jarvis:id ;
+    interop:registeredAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
+    interop:updatedAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
+    interop:registeredAgent performchart:id .

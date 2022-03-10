@@ -87,7 +87,6 @@ class SocialAgentRegistrationTests {
         URL url = toUrl(server, "/new/ttl/agents/sa-1/");
         SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
         SocialAgentRegistration registration = builder.setRegisteredBy(sa1RegisteredBy).setRegisteredWith(sa1RegisteredWith)
-                .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
                 .setRegisteredAgent(sa1RegisteredAgent).build();
         assertDoesNotThrow(() -> registration.update());
         assertFalse(registration.hasAccessGrant());

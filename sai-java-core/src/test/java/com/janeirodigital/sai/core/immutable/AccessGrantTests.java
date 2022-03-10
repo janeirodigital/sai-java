@@ -154,6 +154,31 @@ class AccessGrantTests {
     }
 
     @Test
+    @DisplayName("Create new access grant and linked data grants - only require fields")
+    void createAccessGrantRequiredOnly() throws SaiException {
+        URL accessUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
+        URL projectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
+        URL milestoneUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
+
+        DataGrant.Builder projectBuilder = new DataGrant.Builder(projectUrl, saiSession);
+        DataGrant projectGrant = projectBuilder.setDataOwner(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+                .setDataRegistration(PROJECTS_DATA_REGISTRATION).setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
+                .setScopeOfGrant(SCOPE_ALL_FROM_REGISTRY).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
+
+        DataGrant.Builder milestoneBuilder = new DataGrant.Builder(milestoneUrl, saiSession);
+        DataGrant milestoneGrant = milestoneBuilder.setDataOwner(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+                .setDataRegistration(MILESTONES_DATA_REGISTRATION).setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
+                .setScopeOfGrant(SCOPE_ALL_FROM_REGISTRY).setAccessNeed(PROJECTRON_MILESTONE_NEED).build();
+
+        List<DataGrant> dataGrants = Arrays.asList(projectGrant, milestoneGrant);
+
+        AccessGrant.Builder accessBuilder = new AccessGrant.Builder(accessUrl, saiSession);
+        AccessGrant accessGrant = accessBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
+                .setDataGrants(dataGrants).build();
+        assertDoesNotThrow(() -> accessGrant.create());
+    }
+
+    @Test
     @DisplayName("Get an access grant and linked data grants - scope: all")
     void getAccessGrant() throws SaiNotFoundException, SaiException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");

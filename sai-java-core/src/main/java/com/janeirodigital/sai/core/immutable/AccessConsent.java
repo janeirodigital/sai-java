@@ -251,12 +251,14 @@ public class AccessConsent extends ImmutableResource {
             this.dataset = this.resource.getModel();
             updateObject(this.resource, GRANTED_BY, this.grantedBy);
             updateObject(this.resource, GRANTED_WITH, this.grantedWith);
+            if (this.grantedAt == null) { this.grantedAt = OffsetDateTime.now(); }
             updateObject(this.resource, GRANTED_AT, this.grantedAt);
             updateObject(this.resource, GRANTEE, this.grantee);
             updateObject(this.resource, HAS_ACCESS_NEED_GROUP, this.accessNeedGroup);
             if (this.replaces != null) { updateObject(this.resource, REPLACES, this.replaces); }
             List<URL> dataConsentUrls = new ArrayList<>();
             for (DataConsent dataConsent : this.dataConsents) { dataConsentUrls.add(dataConsent.getUrl()); }
+            organizeInheritance();
             updateUrlObjects(this.resource, HAS_DATA_CONSENT, dataConsentUrls);
         }
 
@@ -270,7 +272,6 @@ public class AccessConsent extends ImmutableResource {
         public AccessConsent build() throws SaiException {
             Objects.requireNonNull(this.grantedBy, "Must provide a URL for the social agent that granted the access consent");
             Objects.requireNonNull(this.grantedWith, "Must provide a URL for the application that was used to grant the access consent");
-            Objects.requireNonNull(this.grantedAt, "Must provide the time the access consent was granted at");
             Objects.requireNonNull(this.grantee, "Must provide a URL for the grantee of the access consent");
             Objects.requireNonNull(this.accessNeedGroup, "Must provide a URL for the access need group of the access consent");
             Objects.requireNonNull(this.dataConsents, "Must provide a list of data consents for the access consent");

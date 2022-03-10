@@ -245,14 +245,15 @@ public class DataConsent extends ImmutableResource {
 
         List<DataGrant> delegatedGrants = new ArrayList<>();
         for (SocialAgentRegistration agentRegistration : agentRegistry.getSocialAgentRegistrations()) {
-            // Continue if the data owner is set (AllFromAgent) but the agent registration is not theirs (registeredAgent)
-            if (this.getDataOwner() != null && !agentRegistration.getRegisteredAgent().equals(this.getDataOwner())) { continue; }
             // continue if the grantee of the data consent is the registered agent of the agent registration (don't delegate to themselves)
             if (this.getGrantee().equals(agentRegistration.getRegisteredAgent())) { continue; }
-            // continue if there's no access grant iri in the reciprocal (which would mean they haven't shared anything so there's nothing to delegate)
+            // Continue if the data owner is set (AllFromAgent) but the agent registration is not theirs (registeredAgent)
+            if (this.getDataOwner() != null && !agentRegistration.getRegisteredAgent().equals(this.getDataOwner())) { continue; }
+            // continue if there's no reciprocal registration
             if (agentRegistration.getReciprocalRegistration() == null) { continue; }
             // Lookup the remote agent registration
             SocialAgentRegistration remoteRegistration = SocialAgentRegistration.get(agentRegistration.getReciprocalRegistration(), this.saiSession);
+            // continue if there's no access grant iri in the reciprocal (which would mean they haven't shared anything so there's nothing to delegate)
             if (remoteRegistration.getAccessGrantUrl() == null) { continue; }
             // Get the remote access grant - TODO - change this to ReadableAccessGrant
             AccessGrant remoteGrant = AccessGrant.get(remoteRegistration.getAccessGrantUrl(), this.saiSession);
@@ -279,7 +280,7 @@ public class DataConsent extends ImmutableResource {
                     if (!remoteDataGrant.getCreatorAccessModes().containsAll(this.creatorAccessModes)) { throw new SaiException("Data consent issues creator access modes that were not granted by remote social agent"); }
                     grantBuilder.setCreatorAccessModes(this.creatorAccessModes);
                 }
-                if (remoteDataGrant.getDataRegistration() != null) { grantBuilder.setDataRegistration(remoteDataGrant.getDataRegistration()); }
+                grantBuilder.setDataRegistration(remoteDataGrant.getDataRegistration());
                 delegatedGrants.add(grantBuilder.build());
                 if (!childDataGrants.isEmpty()) { delegatedGrants.addAll(childDataGrants); }
             }
@@ -379,8 +380,8 @@ public class DataConsent extends ImmutableResource {
     /**
      * Validate a data consent with scope of interop:AllFromAgent
      */
-    private static void validateAllFromAgent(DataConsent dataConsent) throws SaiException {
-        if (dataConsent.dataRegistration != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot target a specific data registration with scope of interop:AllFromAgent")); }
+    private static void validateAllFromAgent(DataConsent dataConsent) {
+        // Placeholder for future logic to validate all from agent scope
     }
 
     /**

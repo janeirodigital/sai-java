@@ -357,7 +357,7 @@ public class DataGrant extends ImmutableResource {
                 this.accessModes = getRequiredObjects(this.resource, ACCESS_MODE);
                 this.creatorAccessModes = getRequiredObjects(this.resource, CREATOR_ACCESS_MODE);
                 this.scopeOfGrant = getRequiredObject(this.resource, SCOPE_OF_GRANT);
-                this.dataRegistration = getUrlObject(this.resource, HAS_DATA_REGISTRATION);
+                this.dataRegistration = getRequiredUrlObject(this.resource, HAS_DATA_REGISTRATION);
                 this.dataInstances = getUrlObjects(this.resource, HAS_DATA_INSTANCE);
                 this.accessNeed = getRequiredUrlObject(this.resource, SATISFIES_ACCESS_NEED);
                 this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_GRANT);

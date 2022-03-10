@@ -153,8 +153,6 @@ public class SocialAgentRegistration extends AgentRegistration {
         public SocialAgentRegistration build() throws SaiException {
             Objects.requireNonNull(this.registeredBy, "Must provide the social agent who registered the agent registration");
             Objects.requireNonNull(this.registeredWith, "Must provide the application used to register the agent registration");
-            Objects.requireNonNull(this.registeredAt, "Must provide the time that the agent registration was created");
-            Objects.requireNonNull(this.updatedAt, "Must provide the time that the agent registration was updated");
             Objects.requireNonNull(this.registeredAgent, "Must provide the agent to register");
             if (this.dataset == null) { populateDataset(); }
             return new SocialAgentRegistration(this);

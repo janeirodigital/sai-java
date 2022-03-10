@@ -175,7 +175,9 @@ public abstract class AgentRegistration extends CRUDResource {
         protected void populateDataset() {
             updateObject(this.resource, REGISTERED_BY, this.registeredBy);
             updateObject(this.resource, REGISTERED_WITH, this.registeredWith);
+            if (this.registeredAt == null) { this.registeredAt = OffsetDateTime.now(); }
             updateObject(this.resource, REGISTERED_AT, this.registeredAt);
+            if (this.updatedAt == null) { this.updatedAt = OffsetDateTime.now(); }
             updateObject(this.resource, UPDATED_AT, this.updatedAt);
             updateObject(this.resource, REGISTERED_AGENT, this.registeredAgent);
             if (this.accessGrantUrl != null) { updateObject(this.resource, HAS_ACCESS_GRANT, this.accessGrantUrl); }

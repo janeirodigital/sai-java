@@ -84,7 +84,6 @@ class ApplicationRegistrationTests {
         URL url = toUrl(server, "/new/ttl/agents/app-1/");
         ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession);
         ApplicationRegistration registration = builder.setRegisteredBy(app1RegisteredBy).setRegisteredWith(app1RegisteredWith)
-                .setRegisteredAt(app1RegisteredAt).setUpdatedAt(app1UpdatedAt)
                 .setRegisteredAgent(app1RegisteredAgent).build();
         assertDoesNotThrow(() -> registration.update());
         assertFalse(registration.hasAccessGrant());

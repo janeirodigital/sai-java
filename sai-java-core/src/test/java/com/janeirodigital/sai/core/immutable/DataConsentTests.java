@@ -401,27 +401,6 @@ class DataConsentTests {
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - all from agent but data registration provided")
-    void failToCreateAllFromAgentAndDataReg() {
-        URL projectUrl = toUrl(server, "/access/all-1-project");
-        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
-        assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(BOB_ID)
-                    .setGrantedBy(ALICE_ID)
-                    .setGrantee(PROJECTRON_ID)
-                    .setRegisteredShapeTree(PROJECT_TREE)
-                    .setDataRegistration(drUrl)
-                    .setAccessModes(ACCESS_MODES)
-                    .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                    .setScopeOfConsent(SCOPE_ALL_FROM_AGENT)
-                    .setAccessNeed(PROJECTRON_PROJECT_NEED)
-                    .build();
-        });
-    }
-
-    @Test
     @DisplayName("Fail to create new data consent - inherited but no inherits from")
     void failToCreateInheritedNoInheritsFrom() {
         URL projectUrl = toUrl(server, "/access/all-1-project");

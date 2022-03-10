@@ -195,6 +195,7 @@ public class AccessGrant extends ImmutableResource {
             this.resource = getNewResourceForType(this.url, ACCESS_GRANT);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, GRANTED_BY, this.grantedBy);
+            if (this.grantedAt == null) { this.grantedAt = OffsetDateTime.now(); }
             updateObject(this.resource, GRANTED_AT, this.grantedAt);
             updateObject(this.resource, GRANTEE, this.grantee);
             updateObject(this.resource, HAS_ACCESS_NEED_GROUP, this.accessNeedGroup);
@@ -205,7 +206,6 @@ public class AccessGrant extends ImmutableResource {
         
         public AccessGrant build() throws SaiException {
             Objects.requireNonNull(this.grantedBy, "Must provide a URL for the social agent that granted the access grant");
-            Objects.requireNonNull(this.grantedAt, "Must provide the time the access grant was granted at");
             Objects.requireNonNull(this.grantee, "Must provide a URL for the grantee of the access grant");
             Objects.requireNonNull(this.accessNeedGroup, "Must provide a URL for the access need group of the access grant");
             Objects.requireNonNull(this.dataGrants, "Must provide a list of data consents for the access grant");
