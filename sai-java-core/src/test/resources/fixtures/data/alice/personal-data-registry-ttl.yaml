@@ -14,4 +14,6 @@ body: >
       alice-personal:projects\/ ,
       alice-personal:milestones\/ ,
       alice-personal:tasks\/ ,
-      alice-personal:issues\/ .
+      alice-personal:issues\/ ,
+      alice-personal:calendars\/ ,
+      alice-personal:appointments\/ .

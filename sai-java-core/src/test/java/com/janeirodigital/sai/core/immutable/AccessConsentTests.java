@@ -14,6 +14,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -26,11 +29,12 @@ import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPut;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_ALL;
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_INHERITED;
+import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 class AccessConsentTests {
 
     private static SaiSession saiSession;
@@ -39,11 +43,12 @@ class AccessConsentTests {
     private static URL JARVIS_ID;
     private static URL PROJECTRON_ID;
     private static URL PROJECTRON_NEED_GROUP;
-    private static URL PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE;
+    private static URL PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE, CALENDAR_TREE, APPOINTMENT_TREE;
     private static URL PROJECTRON_PROJECT_NEED, PROJECTRON_MILESTONE_NEED, PROJECTRON_ISSUE_NEED, PROJECTRON_TASK_NEED;
+    private static URL PROJECTRON_CALENDAR_NEED, PROJECTRON_APPOINTMENT_NEED;
     private static OffsetDateTime GRANT_TIME;
     private static List<URL> ALL_DATA_CONSENT_URLS;
-    private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES;
+    private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES, READ_MODES;
 
     @BeforeAll
     static void beforeAll() throws SaiException, SaiNotFoundException {
@@ -137,13 +142,19 @@ class AccessConsentTests {
         mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-milestone", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-milestone-ttl");
         mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-issue", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-issue-ttl");
         mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-task", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-task-ttl");
-        
+
+        // FAILURE SCENARIOS - Fixtures for failure scenarios related to grant generation
+        mockOnGet(dispatcher, "/failure-agents/", "access/failure/failure-agent-registry-ttl");
+        mockOnGet(dispatcher, "/failure-agents/failure-projectron/", "access/failure/failure-projectron-registration-ttl");
+
         // Get Alice's data registries - doesn't change across use cases
         mockOnGet(dispatcher, "/personal/data/", "data/alice/personal-data-registry-ttl");
         mockOnGet(dispatcher, "/personal/data/projects/", "data/alice/personal-data-registration-projects-ttl");
         mockOnGet(dispatcher, "/personal/data/milestones/", "data/alice/personal-data-registration-milestones-ttl");
         mockOnGet(dispatcher, "/personal/data/issues/", "data/alice/personal-data-registration-issues-ttl");
         mockOnGet(dispatcher, "/personal/data/tasks/", "data/alice/personal-data-registration-tasks-ttl");
+        mockOnGet(dispatcher, "/personal/data/calendars/", "data/alice/personal-data-registration-calendars-ttl");
+        mockOnGet(dispatcher, "/personal/data/appointments/", "data/alice/personal-data-registration-appointments-ttl");
         mockOnGet(dispatcher, "/work/data/", "data/alice/work-data-registry-ttl");
         mockOnGet(dispatcher, "/work/data/projects/", "data/alice/work-data-registration-projects-ttl");
         mockOnGet(dispatcher, "/work/data/milestones/", "data/alice/work-data-registration-milestones-ttl");
@@ -164,12 +175,17 @@ class AccessConsentTests {
         PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
         PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
+        PROJECTRON_CALENDAR_NEED = stringToUrl("https://projectron.example/#ba66ff1e");
+        PROJECTRON_APPOINTMENT_NEED = stringToUrl("https://projectron.example/#aa11aa1b");
         ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/access/all-1-project"), toUrl(server, "/access/all-1-milestone"),
                                               toUrl(server, "/access/all-1-issue"), toUrl(server, "/access/all-1-task"));
         PROJECT_TREE = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
         MILESTONE_TREE = stringToUrl("http://data.example/shapetrees/pm#MilestoneTree");
         ISSUE_TREE = stringToUrl("http://data.example/shapetrees/pm#IssueTree");
         TASK_TREE = stringToUrl("http://data.example/shapetrees/pm#TaskTree");
+        CALENDAR_TREE = stringToUrl("http://data.example/shapetrees/pm#CalendarTree");
+        APPOINTMENT_TREE = stringToUrl("http://data.example/shapetrees/pm#AppointmentTree");
+        READ_MODES = Arrays.asList(ACL_READ);
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         CREATOR_ACCESS_MODES = Arrays.asList(ACL_UPDATE, ACL_DELETE);
          
@@ -282,6 +298,213 @@ class AccessConsentTests {
         AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
         checkAccessGrantAllFromAgent(accessGrant);
     }
+
+    @Test
+    @DisplayName("Generate access grant and associated data grants - no matching data registrations")
+    void generateDataGrantsNoMatchingRegistrations() throws SaiNotFoundException, SaiException {
+        URL accessUrl = toUrl(server, "/access/invalid-scope");
+        URL dataConsentUrl = toUrl(server, "/access/invalid-scope-project");
+        URL EVENT_TREE = stringToUrl("http://data.example/shapetrees/pm#EventTree");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL agentRegistryUrl = toUrl(server, "/failure-agents/");
+        URL registrationUrl = toUrl(server, "/failure-agents/failure-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+
+        DataConsent.Builder projectBuilder = new DataConsent.Builder(dataConsentUrl, saiSession);
+        DataConsent eventConsent = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(EVENT_TREE)
+                .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
+                .setScopeOfConsent(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
+
+        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession);
+        AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
+                .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
+                .setDataConsents(Arrays.asList(eventConsent)).build();
+
+        AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
+        assertTrue(accessGrant.getDataGrants().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Generate access grant and associated data grants - read-only access modes")
+    void generateDataGrantsReadOnly() throws SaiNotFoundException, SaiException {
+        URL accessUrl = toUrl(server, "/access/invalid-scope");
+        URL dataConsentUrl = toUrl(server, "/access/invalid-scope-project");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL agentRegistryUrl = toUrl(server, "/failure-agents/");
+        URL registrationUrl = toUrl(server, "/failure-agents/failure-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+
+        DataConsent.Builder projectBuilder = new DataConsent.Builder(dataConsentUrl, saiSession);
+        DataConsent eventConsent = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+                .setAccessModes(READ_MODES).setScopeOfConsent(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
+
+        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession);
+        AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
+                .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
+                .setDataConsents(Arrays.asList(eventConsent)).build();
+
+        AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
+        assertFalse(accessGrant.getDataGrants().get(0).canCreate());
+    }
+
+    @Test
+    @DisplayName("Generate access grant and associated data grants - multiple parents and children")
+    void generateDataGrantsMultipleParents() throws SaiNotFoundException, SaiException {
+        URL accessUrl = toUrl(server, "/access/invalid-scope");
+        URL dataConsentUrl = toUrl(server, "/access/multiple-parents-project");
+        URL milestoneConsentUrl = toUrl(server, "/access/multiple-parents-milestone");
+        URL calendarConsentUrl = toUrl(server, "/access/multiple-parents-calendar");
+        URL appointmentConsentUrl = toUrl(server, "/access/multiple-parents-appointment");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL agentRegistryUrl = toUrl(server, "/failure-agents/");
+        URL registrationUrl = toUrl(server, "/failure-agents/failure-projectron/");
+        URL PROJECT_REGISTRATION = toUrl(server, "/personal/data/projects/");
+        URL MILESTONE_REGISTRATION = toUrl(server, "/personal/data/milestones/");
+        URL CALENDAR_REGISTRATION = toUrl(server, "/personal/data/calendars/");
+        URL APPOINTMENT_REGISTRATION = toUrl(server, "/personal/data/appointments/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+
+        DataConsent.Builder projectBuilder = new DataConsent.Builder(dataConsentUrl, saiSession);
+        DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+                .setAccessModes(READ_MODES).setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY)
+                .setAccessNeed(PROJECTRON_PROJECT_NEED).setDataRegistration(PROJECT_REGISTRATION).build();
+
+        DataConsent.Builder milestoneBuilder = new DataConsent.Builder(milestoneConsentUrl, saiSession);
+        DataConsent milestoneConsent = milestoneBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(MILESTONE_TREE)
+                .setAccessModes(READ_MODES).setScopeOfConsent(SCOPE_INHERITED).setInheritsFrom(projectConsent.getUrl())
+                .setAccessNeed(PROJECTRON_PROJECT_NEED).setDataRegistration(MILESTONE_REGISTRATION).build();
+
+        DataConsent.Builder calendarBuilder = new DataConsent.Builder(calendarConsentUrl, saiSession);
+        DataConsent calendarConsent = calendarBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(CALENDAR_TREE)
+                .setAccessModes(READ_MODES).setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY)
+                .setAccessNeed(PROJECTRON_CALENDAR_NEED).setDataRegistration(CALENDAR_REGISTRATION).build();
+
+        DataConsent.Builder appointmentBuilder = new DataConsent.Builder(appointmentConsentUrl, saiSession);
+        DataConsent appointmentConsent = appointmentBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(APPOINTMENT_TREE)
+                .setAccessModes(READ_MODES).setScopeOfConsent(SCOPE_INHERITED).setInheritsFrom(calendarConsent.getUrl())
+                .setAccessNeed(PROJECTRON_APPOINTMENT_NEED).setDataRegistration(APPOINTMENT_REGISTRATION).build();
+        
+        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession);
+        AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
+                .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
+                .setDataConsents(Arrays.asList(projectConsent, milestoneConsent, calendarConsent, appointmentConsent)).build();
+
+        AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
+        assertEquals(4, accessGrant.getDataGrants().size());
+    }
+
+    @Test
+    @DisplayName("Fail to generate data grants - data consent has inherited scope")
+    void failToGenerateDataGrantsAccessScopeInherited() throws SaiNotFoundException, SaiException {
+        URL accessUrl = toUrl(server, "/access/registry-1");
+        URL agentRegistryUrl = toUrl(server, "/registry-1-agents/");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL registrationUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AccessConsent accessConsent = AccessConsent.get(accessUrl, saiSession);
+        for (DataConsent dataConsent : accessConsent.getDataConsents()) {
+            if (dataConsent.getScopeOfConsent().equals(SCOPE_INHERITED)) {
+                assertThrows(SaiException.class, () -> dataConsent.generateGrants(accessConsent, registration, agentRegistry, Arrays.asList(dataRegistry)));
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Fail to generate data grants - data consent has invalid scope")
+    void failToGenerateDataGrantsInvalidDataConsentScope() throws SaiNotFoundException, SaiException {
+        URL accessUrl = toUrl(server, "/access/invalid-scope");
+        URL dataConsentUrl = toUrl(server, "/access/invalid-scope-project");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL agentRegistryUrl = toUrl(server, "/failure-agents/");
+        URL registrationUrl = toUrl(server, "/failure-agents/failure-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+
+        DataConsent.Builder projectBuilder = new DataConsent.Builder(dataConsentUrl, saiSession);
+        DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+                .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
+                .setScopeOfConsent(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
+
+        DataConsent spyProject = Mockito.spy(projectConsent);
+        when(spyProject.getScopeOfConsent()).thenReturn(ACCESS_GRANT); // NOT A VALID SCOPE TYPE
+
+        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession);
+        AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
+                .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
+                .setDataConsents(Arrays.asList(spyProject)).build();
+
+        assertThrows(SaiException.class, () -> accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry)));
+    }
+
+    @Test
+    @DisplayName("Fail to generate data grants - specified data registration doesn't exist")
+    void failToGenerateDataGrantsInvalidDataRegistration() throws SaiNotFoundException, SaiException {
+        URL accessUrl = toUrl(server, "/access/invalid-registration");
+        URL dataConsentUrl = toUrl(server, "/access/invalid-registration-project");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL agentRegistryUrl = toUrl(server, "/failure-agents/");
+        URL registrationUrl = toUrl(server, "/failure-agents/failure-projectron/");
+        URL MISSING_REGISTRATION = toUrl(server, "/personal/data/noprojects/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+
+        DataConsent.Builder projectBuilder = new DataConsent.Builder(dataConsentUrl, saiSession);
+        DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+                .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES).setDataRegistration(MISSING_REGISTRATION)
+                .setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
+
+        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession);
+        AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
+                .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
+                .setDataConsents(Arrays.asList(projectConsent)).build();
+
+        assertThrows(SaiException.class, () -> accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry)));
+    }
+
+    @Test
+    @DisplayName("Fail to generate data grants - specified child data registration doesn't exist")
+    void failToGenerateDataGrantsInvalidChildDataRegistration() throws SaiNotFoundException, SaiException {
+        URL accessUrl = toUrl(server, "/access/invalid-registration");
+        URL dataConsentUrl = toUrl(server, "/access/invalid-registration-project");
+        URL eventConsentUrl = toUrl(server, "/access/invalid-registration-event");
+        URL dataRegistryUrl = toUrl(server, "/personal/data/");
+        URL agentRegistryUrl = toUrl(server, "/failure-agents/");
+        URL registrationUrl = toUrl(server, "/failure-agents/failure-projectron/");
+        URL PROJECT_REGISTRATION = toUrl(server, "/personal/data/projects/");
+        URL EVENT_TREE = stringToUrl("http://data.example/shapetrees/pm#EventTree");
+
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+
+        DataConsent.Builder projectBuilder = new DataConsent.Builder(dataConsentUrl, saiSession);
+        DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
+                .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES).setDataRegistration(PROJECT_REGISTRATION)
+                .setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
+
+        DataConsent.Builder eventBuilder = new DataConsent.Builder(eventConsentUrl, saiSession);
+        DataConsent eventConsent = eventBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(EVENT_TREE)  // UNKNOWN
+                .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
+                .setScopeOfConsent(SCOPE_INHERITED).setInheritsFrom(projectConsent.getUrl()).setAccessNeed(PROJECTRON_MILESTONE_NEED).build();
+
+        AccessConsent.Builder accessBuilder = new AccessConsent.Builder(accessUrl, saiSession);
+        AccessConsent accessConsent = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
+                .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
+                .setDataConsents(Arrays.asList(projectConsent, eventConsent)).build();
+
+        assertThrows(SaiException.class, () -> accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry)));
+    }
+
 
     @Test
     @DisplayName("Get an access consent and linked data consents - scope: all")

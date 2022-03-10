@@ -107,16 +107,16 @@ public class DataConsent extends ImmutableResource {
         Objects.requireNonNull(granteeRegistration, "Must provide a grantee agent registration to generate data grants");
         Objects.requireNonNull(agentRegistry, "Must provide an agent registry to generate data grants");
         Objects.requireNonNull(dataRegistries, "Must provide data registries to generate data grants");
-        if (this.scopeOfConsent.equals(SCOPE_INHERITED)) { throw new SaiException("A data consent with an inherited scope cannot generate data grants"); }
+        if (this.getScopeOfConsent().equals(SCOPE_INHERITED)) { throw new SaiException("A data consent with an inherited scope cannot generate data grants"); }
         List<DataGrant> dataGrants = new ArrayList<>();
-        if (this.dataOwner == null || this.dataOwner.equals(this.grantedBy)) {
+        if (this.getDataOwner() == null || this.getDataOwner().equals(this.getGrantedBy())) {
             // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
             // Scope: AllFromRegistry - Data owner sharing all data of a type from a data registry they own (dataOwner == grantedBy)
             // Scope: SelectedFromRegistry - Data owner sharing data instances of a type from a data registry they own (dataOwner == grantedBy)
             dataGrants.addAll(generateSourceGrants(accessConsent, granteeRegistration, agentRegistry, dataRegistries));
         }
 
-        if (this.dataOwner == null || !this.dataOwner.equals(this.grantedBy)) {
+        if (this.getDataOwner() == null || !this.getDataOwner().equals(this.getGrantedBy())) {
             // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
             // Scope: AllFromAgent - Data owner sharing all data of a type shared with them (dataOwner != grantedBy)
             dataGrants.addAll(generateDelegatedGrants(accessConsent, granteeRegistration, agentRegistry, dataRegistries));
@@ -138,8 +138,8 @@ public class DataConsent extends ImmutableResource {
     private List<DataGrant> generateSourceGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
                                                  AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException {
 
-        if (!this.scopeOfConsent.equals(SCOPE_ALL) && !this.scopeOfConsent.equals(SCOPE_ALL_FROM_REGISTRY) && !this.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY)) {
-            throw new SaiException("Cannot generate a regular (non-delegated) data grant for a data consent with scope: " + this.scopeOfConsent);
+        if (!this.getScopeOfConsent().equals(SCOPE_ALL) && !this.getScopeOfConsent().equals(SCOPE_ALL_FROM_REGISTRY) && !this.getScopeOfConsent().equals(SCOPE_SELECTED_FROM_REGISTRY)) {
+            throw new SaiException("Cannot generate a regular (non-delegated) data grant for a data consent with scope: " + this.getScopeOfConsent());
         }
         // get data registrations from all registries that match the registered shape tree
         Map<DataRegistration, DataRegistry> dataRegistrations = new HashMap<>();
@@ -148,12 +148,12 @@ public class DataConsent extends ImmutableResource {
             if (matchingRegistration != null) { dataRegistrations.put(matchingRegistration, dataRegistry); }
         }
 
-        if (this.dataRegistration != null) {
+        if (this.getDataRegistration() != null) {
             // filter down to a specifically matched data registration if hasDataRegistration was set
             Map.Entry<DataRegistration,DataRegistry> filtered = dataRegistrations.entrySet().stream()
-                                                         .filter(e -> this.dataRegistration.equals(e.getKey().getUrl()))
+                                                         .filter(e -> this.getDataRegistration().equals(e.getKey().getUrl()))
                                                          .findAny().orElse(null);
-            if (filtered == null) { throw new SaiException("Data registration " + this.dataRegistration + "not found in data registries: " + dataRegistries); }
+            if (filtered == null) { throw new SaiException("Data registration " + this.getDataRegistration() + "not found in data registries: " + dataRegistries); }
             dataRegistrations.clear();
             dataRegistrations.put(filtered.getKey(), filtered.getValue());
         }
@@ -174,8 +174,8 @@ public class DataConsent extends ImmutableResource {
             grantBuilder.setAccessModes(this.accessModes);
             grantBuilder.setAccessNeed(this.accessNeed);
             grantBuilder.setDataRegistration(dataRegistration.getUrl());
-            if (this.creatorAccessModes != null) { grantBuilder.setCreatorAccessModes(this.creatorAccessModes); }
-            if (!this.dataInstances.isEmpty()) { grantBuilder.setDataInstances(this.dataInstances); }
+            if (!this.getCreatorAccessModes().isEmpty()) { grantBuilder.setCreatorAccessModes(this.getCreatorAccessModes()); }
+            if (!this.getDataInstances().isEmpty()) { grantBuilder.setDataInstances(this.getDataInstances()); }
             // add the data grant (and child grants if they exist) to the list
             dataGrants.add(grantBuilder.build());
             if (!childDataGrants.isEmpty()) { dataGrants.addAll(childDataGrants); }
@@ -201,7 +201,7 @@ public class DataConsent extends ImmutableResource {
         List<DataGrant> childDataGrants = new ArrayList<>();
         for (DataConsent childConsent : accessConsent.getDataConsents()) {
             // for each child data consent that inherits from the current one (e.g. specifies it with inheritsFrom)
-            if (childConsent.scopeOfConsent.equals(SCOPE_INHERITED) && childConsent.inheritsFrom.equals(this.getUrl())) {
+            if (childConsent.getScopeOfConsent().equals(SCOPE_INHERITED) && childConsent.getInheritsFrom().equals(this.getUrl())) {
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();
                 // find the data registration for the child data consent (must be same registry as parent)
                 DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(childConsent.registeredShapeTree);
@@ -239,16 +239,16 @@ public class DataConsent extends ImmutableResource {
      */
     private List<DataGrant> generateDelegatedGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
                                                     AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
-        if (!this.scopeOfConsent.equals(SCOPE_ALL) && !this.scopeOfConsent.equals(SCOPE_ALL_FROM_AGENT)) {
-            throw new SaiException("Cannot generate a delegated data grant for a data consent with scope: " + this.scopeOfConsent);
+        if (!this.getScopeOfConsent().equals(SCOPE_ALL) && !this.getScopeOfConsent().equals(SCOPE_ALL_FROM_AGENT)) {
+            throw new SaiException("Cannot generate a delegated data grant for a data consent with scope: " + this.getScopeOfConsent());
         }
 
         List<DataGrant> delegatedGrants = new ArrayList<>();
         for (SocialAgentRegistration agentRegistration : agentRegistry.getSocialAgentRegistrations()) {
             // Continue if the data owner is set (AllFromAgent) but the agent registration is not theirs (registeredAgent)
-            if (this.dataOwner != null && !agentRegistration.getRegisteredAgent().equals(this.dataOwner)) { continue; }
+            if (this.getDataOwner() != null && !agentRegistration.getRegisteredAgent().equals(this.getDataOwner())) { continue; }
             // continue if the grantee of the data consent is the registered agent of the agent registration (don't delegate to themselves)
-            if (this.grantee.equals(agentRegistration.getRegisteredAgent())) { continue; }
+            if (this.getGrantee().equals(agentRegistration.getRegisteredAgent())) { continue; }
             // continue if there's no access grant iri in the reciprocal (which would mean they haven't shared anything so there's nothing to delegate)
             if (agentRegistration.getReciprocalRegistration() == null) { continue; }
             // Lookup the remote agent registration
@@ -260,7 +260,7 @@ public class DataConsent extends ImmutableResource {
                 // skip data grants that don't match the shape tree of this data consent
                 if (!remoteDataGrant.getRegisteredShapeTree().equals(this.registeredShapeTree)) { continue; }
                 // filter to a given data registration if specified
-                if (this.getDataRegistration() != null) { if (!remoteDataGrant.getDataRegistration().equals(this.dataRegistration)) { continue; } }
+                if (this.getDataRegistration() != null) { if (!remoteDataGrant.getDataRegistration().equals(this.getDataRegistration())) { continue; } }
                 // Build the delegated data grant based on this data consent and the remote data grant
                 URL grantUrl = granteeRegistration.generateContainedUrl();
                 DataGrant.Builder grantBuilder = new DataGrant.Builder(grantUrl, this.saiSession);
