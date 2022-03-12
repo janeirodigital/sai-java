@@ -79,10 +79,10 @@ class DataConsentTests {
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
         ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/access/all-1-project"), toUrl(server, "/access/all-1-milestone"),
                                               toUrl(server, "/access/all-1-issue"), toUrl(server, "/access/all-1-task"));
-        PROJECT_TREE = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
-        MILESTONE_TREE = stringToUrl("http://data.example/shapetrees/pm#MilestoneTree");
-        ISSUE_TREE = stringToUrl("http://data.example/shapetrees/pm#IssueTree");
-        TASK_TREE = stringToUrl("http://data.example/shapetrees/pm#TaskTree");
+        PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
+        MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
+        ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
+        TASK_TREE = toUrl(server, "/shapetrees/pm#TaskTree");
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         READ_MODES = Arrays.asList(ACL_READ);
         WRITE_MODES = Arrays.asList(ACL_WRITE);

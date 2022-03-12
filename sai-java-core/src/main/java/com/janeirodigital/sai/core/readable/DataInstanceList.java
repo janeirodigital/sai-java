@@ -4,13 +4,11 @@ import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.SneakyThrows;
 
 import java.net.URL;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class DataInstanceList implements Iterable<DataInstance> {
     
-    private List<URL> dataInstanceUrls;
+    protected Map<URL, DataInstance> dataInstanceUrls;
     protected SaiSession saiSession;
     protected ReadableDataGrant dataGrant;
 
@@ -18,10 +16,12 @@ public class DataInstanceList implements Iterable<DataInstance> {
      * Construct a {@link DataInstanceList}
      * @param saiSession {@link SaiSession} to assign
      * @param dataGrant {@link ReadableDataGrant} associated with instance access
-     * @param dataInstanceUrls List of data instance URLs to iterate over and fetch
+     * @param dataInstanceUrls Map of {@link DataInstance} URLs to iterate and (optionally) their parent {@link DataInstance}s
      */
-    public DataInstanceList(SaiSession saiSession, ReadableDataGrant dataGrant, List<URL> dataInstanceUrls) {
+    public DataInstanceList(SaiSession saiSession, ReadableDataGrant dataGrant, Map<URL, DataInstance> dataInstanceUrls) {
         Objects.requireNonNull(saiSession, "Must provide a sai session for the data instance list");
+        Objects.requireNonNull(dataGrant, "Must provide a data grant for the data instance list");
+        Objects.requireNonNull(dataInstanceUrls, "Must provide a map of data instance urls and their associated parents where applicable");
         this.saiSession = saiSession;
         this.dataGrant = dataGrant;
         this.dataInstanceUrls = dataInstanceUrls;
@@ -48,19 +48,21 @@ public class DataInstanceList implements Iterable<DataInstance> {
     }
 
     private class DataInstanceListIterator implements Iterator<DataInstance> {
-        private final Iterator<URL> current;
+        private final Iterator<Map.Entry<URL,DataInstance>> current;
         private final SaiSession saiSession;
         private final ReadableDataGrant dataGrant;
-        public DataInstanceListIterator(SaiSession saiSession, ReadableDataGrant dataGrant, List<URL> dataInstanceUrls) {
+        public DataInstanceListIterator(SaiSession saiSession, ReadableDataGrant dataGrant, Map<URL, DataInstance> dataInstanceUrls) {
             this.saiSession = saiSession;
-            this.current = dataInstanceUrls.iterator();
+            this.current = dataInstanceUrls.entrySet().iterator();
             this.dataGrant = dataGrant;
         }
         public boolean hasNext() { return current.hasNext(); }
         @SneakyThrows
         public DataInstance next() {
-            URL instanceUrl = current.next();
-            return DataInstance.get(instanceUrl, saiSession, false, dataGrant);
+            Map.Entry pair = (Map.Entry) current.next();
+            URL instanceUrl = (URL) pair.getKey();
+            DataInstance parent = (DataInstance) pair.getValue();
+            return DataInstance.get(instanceUrl, saiSession, false, dataGrant, parent);
         }
     }
 

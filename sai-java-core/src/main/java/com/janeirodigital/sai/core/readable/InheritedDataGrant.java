@@ -5,8 +5,8 @@ import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import lombok.Getter;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Readable instantiation of a
@@ -38,9 +38,11 @@ public class InheritedDataGrant extends ReadableDataGrant {
     public DataInstanceList getDataInstances() throws SaiException {
         try {
             ReadableDataGrant parentGrant = ReadableDataGrant.get(this.inheritsFrom, this.saiSession);
-            List<URL> childInstanceUrls = new ArrayList<>();
+            Map<URL, DataInstance> childInstanceUrls = new HashMap<>();
             for (DataInstance parentInstance : parentGrant.getDataInstances()) {
-                childInstanceUrls.addAll(parentInstance.getChildReferences(this.getRegisteredShapeTree()));
+                for (URL childReference : parentInstance.getChildReferences(this.getRegisteredShapeTree())) {
+                    childInstanceUrls.put(childReference, parentInstance);
+                }
             }
             return new DataInstanceList(this.saiSession, this, childInstanceUrls);
         } catch (SaiNotFoundException ex) {
@@ -56,8 +58,8 @@ public class InheritedDataGrant extends ReadableDataGrant {
      * @throws SaiException
      */
     @Override
-    public DataInstance newDataInstance(DataInstance parent) throws SaiException {
-        return ReadableDataGrant.newDataInstance(this, parent);
+    public DataInstance newDataInstance(DataInstance parent, String resourceName) throws SaiException {
+        return ReadableDataGrant.newDataInstance(this, parent, resourceName);
     }
 
 }

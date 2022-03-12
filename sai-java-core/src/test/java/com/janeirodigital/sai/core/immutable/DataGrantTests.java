@@ -86,10 +86,10 @@ class DataGrantTests {
         MILESTONES_DATA_REGISTRATION = toUrl(server, "/personal/data/milestones/");
         ISSUES_DATA_REGISTRATION = toUrl(server, "/personal/data/issues/");
         TASKS_DATA_REGISTRATION = toUrl(server, "/personal/data/tasks/");
-        PROJECT_TREE = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
-        MILESTONE_TREE = stringToUrl("http://data.example/shapetrees/pm#MilestoneTree");
-        ISSUE_TREE = stringToUrl("http://data.example/shapetrees/pm#IssueTree");
-        TASK_TREE = stringToUrl("http://data.example/shapetrees/pm#TaskTree");
+        PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
+        MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
+        ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
+        TASK_TREE = toUrl(server, "/shapetrees/pm#TaskTree");
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         READ_MODES = Arrays.asList(ACL_READ);
         WRITE_MODES = Arrays.asList(ACL_WRITE);

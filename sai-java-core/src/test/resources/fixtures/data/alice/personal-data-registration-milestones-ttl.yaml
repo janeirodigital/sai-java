@@ -10,7 +10,7 @@ body: >
   PREFIX alice: <https://alice.example/>
   PREFIX jarvis: <https://jarvis.example/>
   PREFIX alice-personal: <${SERVER_BASE}/personal/data/>
-  PREFIX pm: <http://data.example/shapetrees/pm#>
+  PREFIX pm: <${SERVER_BASE}/shapetrees/pm#>
   PREFIX ldp: <http://www.w3.org/ns/ldp#>
 
   alice-personal:milestones\/
@@ -21,6 +21,6 @@ body: >
     interop:updatedAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
     interop:registeredShapeTree pm:MilestoneTree ;
     ldp:contains
-      alice-personal:milestones\/milestone-1 ,
-      alice-personal:milestones\/milestone-2 ,
-      alice-personal:milestones\/milestone-3 .
+      alice-personal:milestones\/p1m1 ,
+      alice-personal:milestones\/p1m2 ,
+      alice-personal:milestones\/p2m3 .

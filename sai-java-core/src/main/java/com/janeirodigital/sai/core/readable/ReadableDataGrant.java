@@ -16,6 +16,8 @@ import java.util.UUID;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
+import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_WRITE;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**
@@ -99,6 +101,14 @@ public abstract class ReadableDataGrant extends ReadableResource {
     }
 
     /**
+     * Denotes whether the grantee can create new resources based on the assigned permission modes
+     * @return true when grantee can create
+     */
+    public boolean canCreate() {
+        return (this.accessModes.contains(ACL_CREATE) || this.accessModes.contains(ACL_WRITE));
+    }
+
+    /**
      * Abstract method implemented by specific types of data grants, that allow the {@link DataInstance}s
      * permitted by that grant to be iterated.
      * @return {@link DataInstanceList} of permitted {@link DataInstance}s
@@ -114,7 +124,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * @return
      * @throws SaiException
      */
-    protected abstract DataInstance newDataInstance(DataInstance parent) throws SaiException;
+    protected abstract DataInstance newDataInstance(DataInstance parent, String resourceName) throws SaiException;
 
     /**
      * Static helper used to create a new {@link DataInstance} for the provided <code>dataGrant</code>.
@@ -124,9 +134,10 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * @return New {@link DataInstance}
      * @throws SaiException
      */
-    public static DataInstance newDataInstance(ReadableDataGrant dataGrant, DataInstance parent) throws SaiException {
+    public static DataInstance newDataInstance(ReadableDataGrant dataGrant, DataInstance parent, String resourceName) throws SaiException {
         // Get a URL for the data instance to add (built from the data registration)
-        URL instanceUrl = addChildToUrlPath(dataGrant.dataRegistration, UUID.randomUUID().toString());
+        if (resourceName == null) resourceName = UUID.randomUUID().toString();
+        URL instanceUrl = addChildToUrlPath(dataGrant.dataRegistration, resourceName);
         DataInstance.Builder builder = new DataInstance.Builder(instanceUrl, dataGrant.saiSession);
         builder.setDataGrant(dataGrant).setDraft(true);
         if (parent != null) { builder.setParent(parent); }  // if this is a child instance set the parent

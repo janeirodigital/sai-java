@@ -10,7 +10,7 @@ body: >
   PREFIX alice: <https://alice.example/>
   PREFIX jarvis: <https://jarvis.example/>
   PREFIX bob-data: <${SERVER_BASE}/bob/data/>
-  PREFIX pm: <http://data.example/shapetrees/pm#>
+  PREFIX pm: <${SERVER_BASE}/shapetrees/pm#>
   PREFIX ldp: <http://www.w3.org/ns/ldp#>
 
   bob-data:tasks\/

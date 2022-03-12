@@ -8,7 +8,7 @@ body: >
   PREFIX interop: <http://www.w3.org/ns/solid/interop#>
   PREFIX solid: <http://www.w3.org/ns/solid/terms#>
   PREFIX alice-data: <${SERVER_BASE}/ttl/data/>
-  PREFIX pm: <http://data.example/shapetrees/pm#>
+  PREFIX pm: <${SERVER_BASE}/shapetrees/pm#>
 
   alice-data:dr-2\/
     a interop:DataRegistration ;

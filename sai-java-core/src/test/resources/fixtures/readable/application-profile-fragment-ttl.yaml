@@ -10,7 +10,7 @@ body: >
   PREFIX needs: <${SERVER_BASE}/projectron/needs#>
   PREFIX acme: <https://acme.example/>
   PREFIX pm: <https://vocab.example/pm/>
-  PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
+  PREFIX pm-shapetrees: <${SERVER_BASE}/shapetrees/pm#>
 
   projectron:idf\#profile
     a interop:Application ;

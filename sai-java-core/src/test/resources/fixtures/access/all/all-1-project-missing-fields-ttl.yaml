@@ -13,7 +13,7 @@ body: >
   PREFIX jarvis: <https://jarvis.example/>
   PREFIX projectron: <https://projectron.example/>
   PREFIX alice-access: <${SERVER_BASE}/missing-fields/access/>
-  PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
+  PREFIX pm-shapetrees: <${SERVER_BASE}/shapetrees/pm#>
 
   alice-access:all-1-project
     a interop:DataConsent ;

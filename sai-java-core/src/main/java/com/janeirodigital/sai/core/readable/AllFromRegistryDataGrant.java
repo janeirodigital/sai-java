@@ -5,6 +5,10 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import lombok.Getter;
 
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Readable instantiation of a
  * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-consent">Data Grant</a>
@@ -32,7 +36,9 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
     public DataInstanceList getDataInstances() throws SaiException {
         try {
             DataRegistration registration = DataRegistration.get(this.getDataRegistration(), this.saiSession);
-            return new DataInstanceList(saiSession, this, registration.getDataInstances());
+            Map<URL, DataInstance> dataInstanceUrls = new HashMap<>();
+            for (URL dataInstanceUrl : registration.getDataInstances()) { dataInstanceUrls.put(dataInstanceUrl, null); }
+            return new DataInstanceList(saiSession, this, dataInstanceUrls);
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
         }
@@ -45,8 +51,8 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
      * @throws SaiException
      */
     @Override
-    public DataInstance newDataInstance(DataInstance parent) throws SaiException {
-        return ReadableDataGrant.newDataInstance(this, null);
+    public DataInstance newDataInstance(DataInstance parent, String resourceName) throws SaiException {
+        return ReadableDataGrant.newDataInstance(this, null, resourceName);
     }
 
 }

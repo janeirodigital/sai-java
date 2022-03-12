@@ -16,7 +16,7 @@ body: >
   PREFIX alice-agents-projectron: <${SERVER_BASE}/all-1-agents/all-1-projectron/>
   PREFIX bob-agents-alice: <${SERVER_BASE}/all-1-bob-agents/all-1-alice/>
   PREFIX bob-data: <${SERVER_BASE}/bob/data/>
-  PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
+  PREFIX pm-shapetrees: <${SERVER_BASE}/shapetrees/pm#>
 
   alice-agents-projectron:all-1-delegated-grant-bob-project
     a interop:DelegatedDataGrant ;

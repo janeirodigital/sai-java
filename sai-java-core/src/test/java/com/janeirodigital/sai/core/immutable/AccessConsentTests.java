@@ -9,7 +9,6 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
-import com.janeirodigital.sai.core.readable.*;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
@@ -162,7 +161,7 @@ class AccessConsentTests {
         mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/delegated-grant-milestone", "access/scenario/delegated-bob-alice-grant-milestone-ttl");
         mockOnGet(dispatcher, "/delegated-tara-agents/delegated-alice/", "access/scenario/delegated-tara-alice-registration-ttl");
 
-        // Get Alice's data registries - doesn't change across use cases
+        // Get Alice and Bob's data registries - doesn't change across use cases
         mockOnGet(dispatcher, "/personal/data/", "data/alice/personal-data-registry-ttl");
         mockOnGet(dispatcher, "/personal/data/projects/", "data/alice/personal-data-registration-projects-ttl");
         mockOnGet(dispatcher, "/personal/data/milestones/", "data/alice/personal-data-registration-milestones-ttl");
@@ -203,12 +202,12 @@ class AccessConsentTests {
         PROJECTRON_APPOINTMENT_NEED = stringToUrl("https://projectron.example/#aa11aa1b");
         ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/access/all-1-project"), toUrl(server, "/access/all-1-milestone"),
                                               toUrl(server, "/access/all-1-issue"), toUrl(server, "/access/all-1-task"));
-        PROJECT_TREE = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
-        MILESTONE_TREE = stringToUrl("http://data.example/shapetrees/pm#MilestoneTree");
-        ISSUE_TREE = stringToUrl("http://data.example/shapetrees/pm#IssueTree");
-        TASK_TREE = stringToUrl("http://data.example/shapetrees/pm#TaskTree");
-        CALENDAR_TREE = stringToUrl("http://data.example/shapetrees/pm#CalendarTree");
-        APPOINTMENT_TREE = stringToUrl("http://data.example/shapetrees/pm#AppointmentTree");
+        PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
+        MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
+        ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
+        TASK_TREE = toUrl(server, "/shapetrees/pm#TaskTree");
+        CALENDAR_TREE = toUrl(server, "/shapetrees/pm#CalendarTree");
+        APPOINTMENT_TREE = toUrl(server, "/shapetrees/pm#AppointmentTree");
         READ_MODES = Arrays.asList(ACL_READ);
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         CREATOR_ACCESS_MODES = Arrays.asList(ACL_UPDATE, ACL_DELETE);
@@ -322,158 +321,13 @@ class AccessConsentTests {
         AccessGrant accessGrant = accessConsent.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
         checkAccessGrantAllFromAgent(accessGrant);
     }
-    
-    @Test
-    @DisplayName("Get readable access grant and associated readable data grants - Scope: All")
-    void testGetAccessGrantAll() throws SaiNotFoundException, SaiException {
-        URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
-        URL bobProjectGrantUrl = toUrl(server, "/all-1-bob-agents/all-1-alice/all-1-grant-project");
-        URL delegatedProjectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-project");
-        List<URL> aliceProjectUrls = Arrays.asList(toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project"),
-                                                   toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-work-project"));
-        ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
-        assertNotNull(accessGrant);
-        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
-        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
-        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
-        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
-        assertEquals(12, accessGrant.getDataGrants().size());
-        assertEquals(2, accessGrant.getDataOwners().size());
-        assertEquals(3, accessGrant.findDataGrants(PROJECT_TREE).size());
-        for (ReadableDataGrant readableDataGrant : accessGrant.getDataGrants()) {
-            if (readableDataGrant instanceof AllFromRegistryDataGrant) {
-                AllFromRegistryDataGrant specificGrant = (AllFromRegistryDataGrant) readableDataGrant;
-                assertEquals(PROJECT_TREE, specificGrant.getRegisteredShapeTree());
-                assertFalse(specificGrant.getInheritingGrants().isEmpty());
-                if (specificGrant.isDelegated()) { assertEquals(bobProjectGrantUrl, specificGrant.getDelegationOf()); }
-            } else if (readableDataGrant instanceof InheritedDataGrant) {
-                InheritedDataGrant inheritedGrant = (InheritedDataGrant) readableDataGrant;
-                if (inheritedGrant.isDelegated()) { assertEquals(delegatedProjectUrl, inheritedGrant.getInheritsFrom());
-                } else { assertTrue(aliceProjectUrls.contains(inheritedGrant.getInheritsFrom())); }
-            }
-        }
-        List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
-        assertFalse(projectGrants.isEmpty());
-        assertEquals(2, projectGrants.size());
-        for (ReadableDataGrant readableDataGrant : projectGrants) {
-            AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) readableDataGrant;
-            assertFalse(projectGrant.getDataInstances().isEmpty());
-            assertEquals(3, projectGrant.getDataInstances().size());
-        }
-    }
-
-    @Test
-    @DisplayName("Get readable access grant and associated readable data grants - Scope: AllFromRegistry")
-    void testGetAccessGrantAllFromRegistry() throws SaiNotFoundException, SaiException {
-        URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
-        URL aliceProjectUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project");
-        ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
-        assertNotNull(accessGrant);
-        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
-        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
-        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
-        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
-        assertEquals(4, accessGrant.getDataGrants().size());
-        assertEquals(1, accessGrant.getDataOwners().size());
-        assertEquals(1, accessGrant.findDataGrants(PROJECT_TREE).size());
-        for (ReadableDataGrant readableDataGrant : accessGrant.getDataGrants()) {
-            if (readableDataGrant instanceof AllFromRegistryDataGrant) {
-                AllFromRegistryDataGrant specificGrant = (AllFromRegistryDataGrant) readableDataGrant;
-                assertEquals(PROJECT_TREE, specificGrant.getRegisteredShapeTree());
-                assertFalse(specificGrant.getInheritingGrants().isEmpty());
-                assertFalse(specificGrant.isDelegated());
-            } else if (readableDataGrant instanceof InheritedDataGrant) {
-                InheritedDataGrant inheritedGrant = (InheritedDataGrant) readableDataGrant;
-                assertFalse(inheritedGrant.isDelegated());
-                assertEquals(aliceProjectUrl, inheritedGrant.getInheritsFrom());
-            }
-        }
-        List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
-        assertFalse(projectGrants.isEmpty());
-        assertEquals(1, projectGrants.size());
-        AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) projectGrants.get(0);
-        assertFalse(projectGrant.getDataInstances().isEmpty());
-        assertEquals(3, projectGrant.getDataInstances().size());
-    }
-
-    @Test
-    @DisplayName("Get readable access grant and associated readable data grants - Scope: SelectedFromRegistry")
-    void testGetAccessGrantSelectedFromRegistry() throws SaiNotFoundException, SaiException {
-        URL grantUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/selected-1-grant");
-        URL aliceProjectUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/selected-1-grant-personal-project");
-        ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
-        assertNotNull(accessGrant);
-        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
-        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
-        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
-        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
-        assertEquals(4, accessGrant.getDataGrants().size());
-        assertEquals(1, accessGrant.getDataOwners().size());
-        assertEquals(1, accessGrant.findDataGrants(PROJECT_TREE).size());
-        for (ReadableDataGrant readableDataGrant : accessGrant.getDataGrants()) {
-            if (readableDataGrant instanceof SelectedFromRegistryDataGrant) {
-                SelectedFromRegistryDataGrant specificGrant = (SelectedFromRegistryDataGrant) readableDataGrant;
-                assertEquals(PROJECT_TREE, specificGrant.getRegisteredShapeTree());
-                assertFalse(specificGrant.getInheritingGrants().isEmpty());
-                assertFalse(specificGrant.isDelegated());
-            } else if (readableDataGrant instanceof InheritedDataGrant) {
-                InheritedDataGrant inheritedGrant = (InheritedDataGrant) readableDataGrant;
-                assertFalse(inheritedGrant.isDelegated());
-                assertEquals(aliceProjectUrl, inheritedGrant.getInheritsFrom());
-            }
-        }
-        List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
-        assertFalse(projectGrants.isEmpty());
-        assertEquals(1, projectGrants.size());
-        SelectedFromRegistryDataGrant projectGrant = (SelectedFromRegistryDataGrant) projectGrants.get(0);
-        assertFalse(projectGrant.getDataInstances().isEmpty());
-        assertEquals(3, projectGrant.getDataInstances().size());
-    }
-
-    // Get readable access grant and data grants for scope: all from agent
-    @Test
-    @DisplayName("Get readable access grant and associated readable data grants - Scope: AllFromAgent")
-    void testGetAccessGrantAllFromAgent() throws SaiNotFoundException, SaiException {
-        URL grantUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/agent-1-grant");
-        URL bobProjectGrantUrl = toUrl(server, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-project");
-        URL delegatedProjectUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/agent-1-delegated-grant-bob-project");
-        ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
-        assertNotNull(accessGrant);
-        assertEquals(ALICE_ID, accessGrant.getGrantedBy());
-        assertEquals(GRANT_TIME, accessGrant.getGrantedAt());
-        assertEquals(PROJECTRON_ID, accessGrant.getGrantee());
-        assertEquals(PROJECTRON_NEED_GROUP, accessGrant.getAccessNeedGroup());
-        assertEquals(4, accessGrant.getDataGrants().size());
-        assertEquals(1, accessGrant.getDataOwners().size());
-        assertEquals(1, accessGrant.findDataGrants(PROJECT_TREE).size());
-        for (ReadableDataGrant readableDataGrant : accessGrant.getDataGrants()) {
-            assertTrue(readableDataGrant.isDelegated());
-            if (readableDataGrant instanceof AllFromRegistryDataGrant) {
-                AllFromRegistryDataGrant specificGrant = (AllFromRegistryDataGrant) readableDataGrant;
-                assertEquals(PROJECT_TREE, specificGrant.getRegisteredShapeTree());
-                assertFalse(specificGrant.getInheritingGrants().isEmpty());
-                assertEquals(bobProjectGrantUrl, specificGrant.getDelegationOf());
-            } else if (readableDataGrant instanceof InheritedDataGrant) {
-                InheritedDataGrant inheritedGrant = (InheritedDataGrant) readableDataGrant;
-                assertEquals(delegatedProjectUrl, inheritedGrant.getInheritsFrom());
-            }
-        }
-        List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(BOB_ID, PROJECT_TREE);
-        assertFalse(projectGrants.isEmpty());
-        assertEquals(1, projectGrants.size());
-        for (ReadableDataGrant readableDataGrant : projectGrants) {
-            AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) readableDataGrant;
-            assertFalse(projectGrant.getDataInstances().isEmpty());
-            assertEquals(3, projectGrant.getDataInstances().size());
-        }
-    }
 
     @Test
     @DisplayName("Generate access grant and associated data grants - no matching data registrations")
     void generateDataGrantsNoMatchingRegistrations() throws SaiNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/access/no-matches");
         URL dataConsentUrl = toUrl(server, "/access/no-matches-project");
-        URL EVENT_TREE = stringToUrl("http://data.example/shapetrees/pm#EventTree");
+        URL EVENT_TREE = toUrl(server, "/shapetrees/pm#EventTree");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
         URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
@@ -967,7 +821,7 @@ class AccessConsentTests {
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
         URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
         URL PROJECT_REGISTRATION = toUrl(server, "/personal/data/projects/");
-        URL EVENT_TREE = stringToUrl("http://data.example/shapetrees/pm#EventTree");
+        URL EVENT_TREE = toUrl(server, "/shapetrees/pm#EventTree");
 
         AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
         ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);

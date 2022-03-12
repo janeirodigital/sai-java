@@ -21,7 +21,6 @@ import java.util.List;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -112,8 +111,8 @@ class DataRegistryTests {
     @DisplayName("Find a data registration")
     void findDataRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/data/");
-        URL toFind = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
-        URL toFail = stringToUrl("http://data.example/shapetrees/pm#MissingTree");
+        URL toFind = toUrl(server, "/shapetrees/pm#ProjectTree");
+        URL toFail = toUrl(server,"/shapetrees/pm#MissingTree");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
         DataRegistration found = dataRegistry.getDataRegistrations().find(toFind);
         assertEquals(toFind, found.getRegisteredShapeTree());
@@ -163,7 +162,7 @@ class DataRegistryTests {
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
 
         URL drUrl = toUrl(server, "/ttl/data/dr-5/");
-        URL drTree = stringToUrl("http://data.example/shapetrees/pm#StatusTree");
+        URL drTree = toUrl(server,"/shapetrees/pm#StatusTree");
         DataRegistration registration = mock(DataRegistration.class);
         when(registration.getUrl()).thenReturn(drUrl);
         when(registration.getRegisteredShapeTree()).thenReturn(drTree);
@@ -189,7 +188,7 @@ class DataRegistryTests {
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
 
         URL drUrl = toUrl(server, "/ttl/data/registration-1/");
-        URL drTree = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
+        URL drTree = toUrl(server,"/shapetrees/pm#ProjectTree");
         DataRegistration registration = mock(DataRegistration.class);
         when(registration.getUrl()).thenReturn(drUrl);
         when(registration.getRegisteredShapeTree()).thenReturn(drTree);

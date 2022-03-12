@@ -61,7 +61,7 @@ class DataRegistrationTests {
         dr1RegisteredWith = toUrl(server, "https://trusted.example/id#app");
         dr1RegisteredAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
         dr1UpdatedAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
-        dr1RegisteredShapeTree = stringToUrl("http://data.example/shapetrees/pm#ProjectTree");
+        dr1RegisteredShapeTree = toUrl(server, "/shapetrees/pm#ProjectTree");
     }
 
     @Test
@@ -128,7 +128,7 @@ class DataRegistrationTests {
     void updateDataRegistration() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/ttl/data/dr-1/");
         DataRegistration registration = DataRegistration.get(url, saiSession);
-        registration.setRegisteredShapeTree(stringToUrl("http://data.example/shapetrees/pm#OtherTree"));
+        registration.setRegisteredShapeTree(toUrl(server, "/shapetrees/pm#OtherTree"));
         assertDoesNotThrow(() -> registration.update());
     }
 

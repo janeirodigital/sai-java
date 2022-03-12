@@ -4,7 +4,9 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import lombok.Getter;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Readable instantiation of a
@@ -33,7 +35,9 @@ public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
      */
     @Override
     public DataInstanceList getDataInstances() {
-        return new DataInstanceList(saiSession, this, this.dataInstances);
+        Map<URL, DataInstance> dataInstanceUrls = new HashMap<>();
+        for (URL dataInstanceUrl : this.dataInstances) { dataInstanceUrls.put(dataInstanceUrl, null); }
+        return new DataInstanceList(saiSession, this, dataInstanceUrls);
     }
 
     /**
@@ -42,7 +46,7 @@ public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
      * @throws SaiException
      */
     @Override
-    public DataInstance newDataInstance(DataInstance instance) throws SaiException {
+    public DataInstance newDataInstance(DataInstance instance, String resourceName) throws SaiException {
         throw new SaiException("Cannot create new data instances for a SelectedFromRegistry grant scope");
     }
 

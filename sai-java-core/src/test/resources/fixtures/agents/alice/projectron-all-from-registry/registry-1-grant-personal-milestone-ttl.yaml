@@ -14,7 +14,7 @@ body: >
   PREFIX projectron: <https://projectron.example/>
   PREFIX alice-agents-projectron: <${SERVER_BASE}/registry-1-agents/registry-1-projectron/>
   PREFIX alice-personal: <${SERVER_BASE}/personal/data/>
-  PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
+  PREFIX pm-shapetrees: <${SERVER_BASE}/shapetrees/pm#>
 
   alice-agents-projectron:registry-1-grant-personal-milestone
     a interop:DataGrant ;

@@ -36,7 +36,7 @@ public class DataInstance extends CRUDResource {
     private boolean draft;
 
 
-    private DataInstance(Builder builder) throws SaiException {
+    protected DataInstance(Builder builder) throws SaiException {
         super(builder);
         this.dataGrant = builder.dataGrant;
         this.parent = builder.parent;
@@ -51,22 +51,40 @@ public class DataInstance extends CRUDResource {
      * @param contentType {@link ContentType} to use
      * @param unprotected when true no credentials are sent in subsequent requests
      * @param dataGrant {@link ReadableDataGrant} furnishing instance access
+     * @param parent Parent {@link DataInstance} to assign
      * @return Retrieved {@link DataInstance}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static DataInstance get(URL url, SaiSession saiSession, ContentType contentType, boolean unprotected, ReadableDataGrant dataGrant) throws SaiException, SaiNotFoundException {
+    public static DataInstance get(URL url, SaiSession saiSession, ContentType contentType, boolean unprotected, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiNotFoundException {
         DataInstance.Builder builder = new DataInstance.Builder(url, saiSession);
         if (unprotected) builder.setUnprotected();
+        if (parent != null) builder.setParent(parent);
         try (Response response = read(url, saiSession, contentType, unprotected)) {
             builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType);
         }
-        return builder.setDataGrant(dataGrant).build();
+        return builder.setDraft(false).setDataGrant(dataGrant).build();
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType, boolean, ReadableDataGrant)}
+     * Call {@link #get(URL, SaiSession, ContentType, boolean, ReadableDataGrant, DataInstance)}
      * without specifying a desired content type for retrieval
+     * @param url URL of the {@link DataInstance} to get
+     * @param saiSession {@link SaiSession} to assign
+     * @param unprotected when true no credentials are sent in subsequent requests
+     * @param dataGrant {@link ReadableDataGrant} associated with {@link DataInstance} access
+     * @param parent Parent {@link DataInstance} to assign
+     * @return Retrieved {@link DataInstance}
+     * @throws SaiNotFoundException
+     * @throws SaiException
+     */
+    public static DataInstance get(URL url, SaiSession saiSession, boolean unprotected, ReadableDataGrant dataGrant, DataInstance parent) throws SaiNotFoundException, SaiException {
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE, unprotected, dataGrant, parent);
+    }
+
+    /**
+     * Call {@link #get(URL, SaiSession, ContentType, boolean, ReadableDataGrant, DataInstance)}
+     * without specifying a desired content type for retrieval, or a parent Data Instance to assign
      * @param url URL of the {@link DataInstance} to get
      * @param saiSession {@link SaiSession} to assign
      * @param unprotected when true no credentials are sent in subsequent requests
@@ -76,7 +94,7 @@ public class DataInstance extends CRUDResource {
      * @throws SaiException
      */
     public static DataInstance get(URL url, SaiSession saiSession, boolean unprotected, ReadableDataGrant dataGrant) throws SaiNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE, unprotected, dataGrant);
+        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE, unprotected, dataGrant, null);
     }
 
     /**
@@ -103,7 +121,7 @@ public class DataInstance extends CRUDResource {
     public void delete() throws SaiException {
         if (!this.draft) {
             super.delete();
-            this.parent.removeChildReference(this);
+            if (this.parent != null) parent.removeChildReference(this);
         }
     }
 
@@ -111,14 +129,15 @@ public class DataInstance extends CRUDResource {
         // Lookup the inherited child grant based on the shape tree type
         ReadableDataGrant childGrant = findChildGrant(shapeTreeUrl);
         // get "child references" for shape tree - gets the shape path for a referenced shape tree // looks in the graph for instances
-        List<URL> childUrls = getChildReferences(shapeTreeUrl);
-        return new DataInstanceList(this.saiSession, childGrant, childUrls);
+        Map<URL, DataInstance> childInstanceUrls = new HashMap<>();
+        for (URL childReference : getChildReferences(shapeTreeUrl)) { childInstanceUrls.put(childReference, this); }
+        return new DataInstanceList(this.saiSession, childGrant, childInstanceUrls);
     }
 
-    public DataInstance newChildInstance(URL shapeTreeUrl) throws SaiException, SaiNotFoundException {
+    public DataInstance newChildInstance(URL shapeTreeUrl, String resourceName) throws SaiException, SaiNotFoundException {
         ReadableDataGrant childGrant = findChildGrant(shapeTreeUrl);
         if (childGrant == null) { throw new SaiNotFoundException("Cannot find a child grant associated with shape tree " + shapeTreeUrl + " for parent instance " + this.getUrl()); }
-        return childGrant.newDataInstance(this);
+        return childGrant.newDataInstance(this, resourceName);
     }
 
     public void addChildReference(DataInstance childInstance) throws SaiException {
@@ -153,7 +172,7 @@ public class DataInstance extends CRUDResource {
         List<URL> childUrls = new ArrayList<>();
         ShapeTreeReference reference = findChildReference(shapeTreeUrl);
         List<URL> foundUrls = findChildInstances(reference);
-        if (foundUrls.isEmpty()) { childUrls.addAll(foundUrls); }
+        if (!foundUrls.isEmpty()) { childUrls.addAll(foundUrls); }
         return childUrls;
     }
 
@@ -180,10 +199,11 @@ public class DataInstance extends CRUDResource {
         Property property = null;
         if (reference.viaPredicate()) { property = ResourceFactory.createProperty(reference.getPredicate().toString()); }
         if (reference.viaShapePath()) {
-            // TODO - this is a bit of a workaround the extract the target property from the shape path, given the
+            // TODO - this is a bit of a workaround to extract the target property from the shape path, given the
             // TODO - (cont'd) current lack of a shape path parser in java. It is functionally equivalent to viaPredicate
             Pattern pattern = Pattern.compile("@\\S+~(\\S*$)");
             Matcher matcher = pattern.matcher(reference.getShapePath());
+            if (!matcher.matches()) return null;
             String parsed = matcher.group(1);
             if (parsed == null) return null;
             property = ResourceFactory.createProperty(parsed);

@@ -11,5 +11,5 @@ body: >
     "registeredWith" : "https://trusted.example/id#app",
     "registeredAt" : "2021-04-04T20:15:47.000Z",
     "updatedAt" : "2021-04-04T20:15:47.000Z",
-    "registeredShapeTree" : "http://data.example/shapetrees/pm#ProjectTree"
+    "registeredShapeTree" : "${SERVER_BASE}/shapetrees/pm#ProjectTree"
   }

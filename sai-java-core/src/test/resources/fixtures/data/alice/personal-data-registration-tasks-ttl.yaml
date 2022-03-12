@@ -10,7 +10,7 @@ body: >
   PREFIX alice: <https://alice.example/>
   PREFIX jarvis: <https://jarvis.example/>
   PREFIX alice-personal: <${SERVER_BASE}/personal/data/>
-  PREFIX pm: <http://data.example/shapetrees/pm#>
+  PREFIX pm: <${SERVER_BASE}/shapetrees/pm#>
   PREFIX ldp: <http://www.w3.org/ns/ldp#>
 
   alice-personal:tasks\/
@@ -21,6 +21,6 @@ body: >
     interop:updatedAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
     interop:registeredShapeTree pm:TaskTree ;
     ldp:contains
-      alice-personal:tasks\/task-1 ,
-      alice-personal:tasks\/task-2 ,
+      alice-personal:tasks\/p1t1 ,
+      alice-personal:tasks\/p1t2 ,
       alice-personal:tasks\/task-3 .

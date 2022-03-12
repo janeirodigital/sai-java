@@ -1,0 +1,57 @@
+statusCode: 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+  PREFIX st: <http://www.w3.org/ns/shapetrees#>
+  PREFIX pmshapes: <${SERVER_BASE}/shapes/pm#>
+  PREFIX pmtrees: <${SERVER_BASE}/trees/pm#>
+  PREFIX testable: <http://testable.example/ns/testable#>
+
+  <#ProjectTree>
+    a st:ShapeTree ;
+    st:expectsType st:Resource ;
+    st:shape pmshapes:ProjectShape ;
+    st:references [
+      st:referencesShapeTree <#MilestoneTree> ;
+      st:viaShapePath "@pmshapes:ProjectShape~testable:hasMilestone"
+    ] ,
+    [
+      st:referencesShapeTree <#TaskTree> ;
+      st:viaPredicate testable:hasTask
+    ] ,
+    [
+      st:referencesShapeTree <#IssueTree> ;
+      st:viaPredicate testable:hasIssue
+    ] .
+
+  <#MilestoneTree>
+    a st:ShapeTree ;
+    st:expectsType st:Resource ;
+    st:shape pmshapes:MilestoneShape ;
+    st:references [
+      st:referencesShapeTree <#TaskTree> ;
+      st:viaPredicate testable:hasTask
+    ] ,
+    [
+    st:referencesShapeTree <#IssueTree> ;
+    st:viaPredicate testable:hasIssue
+    ] .
+
+  <#TaskTree>
+    a st:ShapeTree ;
+    st:expectsType st:Resource ;
+    st:shape pmshapes:TaskShape ;
+    st:references [
+      st:referencesShapeTree st:NonRDFResourceTree ;
+      st:viaShapePath "@pmshapes:TaskShape~testable:hasAttachment"
+    ] .
+
+  <#IssueTree>
+    a st:ShapeTree ;
+    st:expectsType st:Container ;
+    st:shape pmshapes:IssueShape ;
+    st:references [
+      st:referencesShapeTree st:NonRDFResourceTree ;
+      st:viaShapePath "@pmshapes:IssueShape~testable:hasAttachment"
+    ] .

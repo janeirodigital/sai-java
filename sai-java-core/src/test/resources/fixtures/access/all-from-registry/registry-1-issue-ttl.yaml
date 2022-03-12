@@ -14,7 +14,7 @@ body: >
   PREFIX projectron: <https://projectron.example/>
   PREFIX alice-access: <${SERVER_BASE}/access/>
   PREFIX alice-personal: <${SERVER_BASE}/personal/data/>
-  PREFIX pm-shapetrees: <http://data.example/shapetrees/pm#>
+  PREFIX pm-shapetrees: <${SERVER_BASE}/shapetrees/pm#>
 
   alice-access:registry-1-issue
     a interop:DataConsent ;
