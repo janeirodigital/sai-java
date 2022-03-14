@@ -25,7 +25,7 @@
         <okhttp.version>4.9.3</okhttp.version>
         <jena.version>4.4.0</jena.version>
         <titanium.version>1.2.0</titanium.version>
-        <nimbus.version>9.24</nimbus.version>
+        <nimbus.version>9.28</nimbus.version>
         <junit.version>5.8.2</junit.version>
         <shapetrees.version>0.9.5</shapetrees.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
