@@ -37,7 +37,7 @@ class SocialAgentRegistrationTests {
     @BeforeAll
     static void beforeAll() throws SaiException {
 
-        // Initialize the Data Factory
+        // Initialize a mock sai session we can use for protected requests
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
 

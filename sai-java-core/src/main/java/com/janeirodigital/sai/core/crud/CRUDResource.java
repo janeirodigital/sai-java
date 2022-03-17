@@ -25,7 +25,6 @@ public class CRUDResource extends ReadableResource {
      */
     public CRUDResource(Builder<?> builder) throws SaiException {
         super(builder);
-        this.exists = false; // assume the resource doesn't exist until it's bootstrapped
     }
 
     /**

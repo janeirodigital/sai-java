@@ -42,7 +42,7 @@ class AccessGrantTests {
     private static URL PROJECT_1, PROJECT_2, PROJECT_3;
     private static URL PROJECT_1_MILESTONE_1, PROJECT_1_MILESTONE_2, PROJECT_2_MILESTONE_3;
     private static URL PROJECT_1_TASK_1, PROJECT_1_TASK_2, PROJECT_1_ISSUE_1;
-    private static URL PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE;
+    private static URL PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE, MISSING_TREE;
     private static URL PROJECTRON_PROJECT_NEED, PROJECTRON_MILESTONE_NEED, PROJECTRON_ISSUE_NEED, PROJECTRON_TASK_NEED;
     private static OffsetDateTime GRANT_TIME;
     private static List<URL> ALL_DATA_GRANT_URLS;
@@ -129,6 +129,7 @@ class AccessGrantTests {
         mockOnGet(dispatcher, "/personal/data/projects/p1", "data/alice/personal-data-projects-p1-ttl");
         mockOnPut(dispatcher, "/personal/data/projects/p1", "http/204");
         mockOnGet(dispatcher, "/personal/data/projects/p2", "data/alice/personal-data-projects-p2-ttl");
+        mockOnPut(dispatcher, "/personal/data/projects/p2", "http/204");
         mockOnGet(dispatcher, "/personal/data/projects/p3", "data/alice/personal-data-projects-p3-ttl");
         mockOnPut(dispatcher, "/personal/data/projects/p3", "http/204");
         mockOnPut(dispatcher, "/personal/data/projects/new-project", "http/201");
@@ -200,6 +201,7 @@ class AccessGrantTests {
         MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
         ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
         TASK_TREE = toUrl(server, "/shapetrees/pm#TaskTree");
+        MISSING_TREE = toUrl(server, "/shapetrees/pm#MissingTree");
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         CREATOR_ACCESS_MODES = Arrays.asList(ACL_UPDATE, ACL_DELETE);
          
@@ -471,13 +473,12 @@ class AccessGrantTests {
         AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) projectGrants.get(0);
         assertEquals(3, projectGrant.getDataInstances().size());
 
-        for (DataInstance instance : projectGrant.getDataInstances()) {
-            if (instance.getUrl().equals(PROJECT_1)) {
-                checkProject1(instance);
-            } else if (instance.getUrl().equals(PROJECT_2)) {
-                checkProject2(instance);
-            } else if (instance.getUrl().equals(PROJECT_3)) {
-                checkProject3(instance);
+        List<TestableProject> projects = TestableProject.getAccessible(projectGrant, saiSession);
+
+        for (TestableProject project : projects) {
+            if (project.getUrl().equals(PROJECT_1)) { checkProject1(project);
+            } else if (project.getUrl().equals(PROJECT_2)) { checkProject2(project);
+            } else if (project.getUrl().equals(PROJECT_3)) { checkProject3(project);
             }
         }
 
@@ -485,10 +486,10 @@ class AccessGrantTests {
         InheritedDataGrant milestoneGrant = (InheritedDataGrant) milestoneGrants.get(0);
         assertEquals(3, projectGrant.getDataInstances().size());
 
-        for (DataInstance instance : milestoneGrant.getDataInstances()) {
-            if (instance.getUrl().equals(PROJECT_1_MILESTONE_1)) {
-                checkMilestone1(instance);
-            }
+        List<TestableMilestone> milestones = TestableMilestone.getAccessible(milestoneGrant, saiSession);
+
+        for (TestableMilestone milestone : milestones) {
+            if (milestone.getUrl().equals(PROJECT_1_MILESTONE_1)) { checkMilestone1(milestone); }
         }
     }
 
@@ -500,10 +501,22 @@ class AccessGrantTests {
         List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
         AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) projectGrants.get(0);
         assertTrue(projectGrant.canCreate());
-        DataInstance newProjectInstance = projectGrant.newDataInstance(null, "new-project");
-        assertNull(newProjectInstance.getParent());
-        assertEquals(PROJECT_TREE, newProjectInstance.getShapeTree().getId());
-        newProjectInstance.update();
+        URL projectUrl = DataInstance.generateUrl(projectGrant, "new-project");
+        TestableProject project = new TestableProject.Builder(projectUrl, saiSession)
+                                                     .setDataGrant(projectGrant)
+                                                     .setName("New project")
+                                                     .setDescription("New project instance")
+                                                     .build();
+        assertNull(project.getParent());
+        assertTrue(project.hasAccessible(MILESTONE_TREE));
+        assertTrue(project.hasAccessible(ISSUE_TREE));
+        assertTrue(project.hasAccessible(TASK_TREE));
+        assertFalse(project.hasAccessible(MISSING_TREE));
+        assertTrue(project.getMilestones(MILESTONE_TREE).isEmpty());
+        assertTrue(project.getIssues(ISSUE_TREE).isEmpty());
+        assertTrue(project.getTasks(TASK_TREE).isEmpty());
+        assertEquals(PROJECT_TREE, project.getShapeTree().getId());
+        assertDoesNotThrow(() -> project.update());
     }
 
     @Test
@@ -513,73 +526,96 @@ class AccessGrantTests {
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
         List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
         AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) projectGrants.get(0);
-        DataInstance projectInstance = projectGrant.getDataInstances().iterator().next();
-        DataInstance newMilestoneInstance = projectInstance.newChildInstance(MILESTONE_TREE, "new-milestone");
-        assertEquals(projectInstance, newMilestoneInstance.getParent());
-        newMilestoneInstance.update();
+
+        List<TestableProject> projects = TestableProject.getAccessible(projectGrant, saiSession);
+        TestableProject project = projects.get(0);  // grab any project from the accessible projects
+        InheritedDataGrant milestoneGrant = (InheritedDataGrant) project.findChildGrant(MILESTONE_TREE);
+
+        URL milestoneUrl = TestableMilestone.generateUrl(milestoneGrant, "new-milestone");
+        TestableMilestone milestone = new TestableMilestone.Builder(milestoneUrl, saiSession)
+                                                           .setDataGrant(milestoneGrant)
+                                                           .setParent(project)
+                                                           .setName("New milestone")
+                                                           .setDescription("New milestone instance")
+                                                           .build();
+        assertEquals(project, milestone.getParent());
+        assertEquals(MILESTONE_TREE, milestone.getShapeTree().getId());
+        assertDoesNotThrow(() -> milestone.update());
+        assertTrue(project.getChildReferences(MILESTONE_TREE).contains(milestone.getUrl()));
+        assertThrows(SaiException.class, () -> milestone.findChildGrant(ISSUE_TREE));
     }
 
     @Test
-    @DisplayName("Delete a child data instance from readable data grant")
+    @DisplayName("Delete a child data instance from a readable data grant")
     void deleteChildDataInstance() throws SaiNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
         List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
         AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) projectGrants.get(0);
-        for (DataInstance instance : projectGrant.getDataInstances()) {
-            if (instance.getUrl().equals(PROJECT_1)) {
-                for (DataInstance childIssue : instance.getChildInstances(ISSUE_TREE)) {
-                    if (childIssue.getUrl().equals(PROJECT_1_ISSUE_1)) { childIssue.delete(); }
+
+        List<TestableProject> projects = TestableProject.getAccessible(projectGrant, saiSession);
+
+        for (TestableProject project : projects) {
+            if (project.getUrl().equals(PROJECT_1)) {
+                for (TestableIssue issue : project.getIssues(ISSUE_TREE)) {
+                    if (issue.getUrl().equals(PROJECT_1_ISSUE_1)) { issue.delete(); }
                 }
             }
         }
     }
 
-    private void checkProject1(DataInstance instance) throws SaiException {
+    private void checkProject1(TestableProject project) throws SaiException {
         List<URL> P1_MILESTONES = Arrays.asList(PROJECT_1_MILESTONE_1, PROJECT_1_MILESTONE_2);
         List<URL> P1_TASKS = Arrays.asList(PROJECT_1_TASK_1, PROJECT_1_TASK_2);
         List<URL> P1_ISSUES = Arrays.asList(PROJECT_1_ISSUE_1);
         // Ensure that the URLs are referencing the right instances
-        assertEquals(PROJECT_TREE, instance.getShapeTree().getId());
-        assertTrue(P1_MILESTONES.containsAll(instance.getChildReferences(MILESTONE_TREE)));
-        assertTrue(P1_TASKS.containsAll(instance.getChildReferences(TASK_TREE)));
-        assertTrue(P1_ISSUES.containsAll(instance.getChildReferences(ISSUE_TREE)));
+        assertEquals(PROJECT_TREE, project.getShapeTree().getId());
+        assertTrue(P1_MILESTONES.containsAll(project.getChildReferences(MILESTONE_TREE)));
+        assertTrue(P1_TASKS.containsAll(project.getChildReferences(TASK_TREE)));
+        assertTrue(P1_ISSUES.containsAll(project.getChildReferences(ISSUE_TREE)));
 
-        for (DataInstance milestone : instance.getChildInstances(MILESTONE_TREE)) {
-            assertTrue(P1_MILESTONES.contains(instance.getUrl()));
+        for (TestableMilestone milestone : project.getMilestones(MILESTONE_TREE)) {
+            assertTrue(P1_MILESTONES.contains(milestone.getUrl()));
             assertEquals(MILESTONE_TREE, milestone.getShapeTree().getId());
+            assertEquals(project, milestone.getParent());
         }
 
-        for (DataInstance task : instance.getChildInstances(TASK_TREE)) {
+        for (TestableTask task : project.getTasks(TASK_TREE)) {
             assertTrue(P1_TASKS.contains(task.getUrl()));
             assertEquals(TASK_TREE, task.getShapeTree().getId());
+            assertEquals(project, task.getParent());
         }
 
-        for (DataInstance issue : instance.getChildInstances(ISSUE_TREE)) {
+        for (TestableIssue issue : project.getIssues(ISSUE_TREE)) {
             assertTrue(P1_ISSUES.contains(issue.getUrl()));
             assertEquals(ISSUE_TREE, issue.getShapeTree().getId());
+            assertEquals(project, issue.getParent());
         }
     }
 
-    private void checkProject2(DataInstance instance) throws SaiException {
+    private void checkProject2(TestableProject project) throws SaiException {
         List<URL> P2_MILESTONES = Arrays.asList(PROJECT_1_MILESTONE_1, PROJECT_1_MILESTONE_2);
-        assertEquals(PROJECT_TREE, instance.getShapeTree().getId());
-        assertTrue(P2_MILESTONES.containsAll(instance.getChildReferences(MILESTONE_TREE)));
-        for (DataInstance milestone : instance.getChildInstances(MILESTONE_TREE)) {
-            assertTrue(P2_MILESTONES.contains(instance.getUrl()));
+        assertEquals(PROJECT_TREE, project.getShapeTree().getId());
+        assertTrue(P2_MILESTONES.containsAll(project.getChildReferences(MILESTONE_TREE)));
+        for (TestableMilestone milestone : project.getMilestones(MILESTONE_TREE)) {
+            assertTrue(P2_MILESTONES.contains(milestone.getUrl()));
             assertEquals(MILESTONE_TREE, milestone.getShapeTree().getId());
+            assertEquals(project, milestone.getParent());
         }
     }
 
-    private void checkProject3(DataInstance instance) throws SaiException {
-        assertEquals(PROJECT_TREE, instance.getShapeTree().getId());
-        assertTrue(instance.getChildReferences(MILESTONE_TREE).isEmpty());
-        assertTrue(instance.getChildInstances(MILESTONE_TREE).isEmpty());
+    private void checkProject3(TestableProject project) throws SaiException {
+        assertEquals(PROJECT_TREE, project.getShapeTree().getId());
+        assertTrue(project.getChildReferences(MILESTONE_TREE).isEmpty());
+        assertTrue(project.getChildInstances(MILESTONE_TREE).isEmpty());
+        assertTrue(project.getMilestones(MILESTONE_TREE).isEmpty());
+        assertTrue(project.getIssues(ISSUE_TREE).isEmpty());
+        assertTrue(project.getTasks(TASK_TREE).isEmpty());
     }
 
-    private void checkMilestone1(DataInstance instance) throws SaiException {
-        assertEquals(MILESTONE_TREE, instance.getShapeTree().getId());
-        instance.getParent().getUrl().equals(PROJECT_1);
+    private void checkMilestone1(TestableMilestone milestone) throws SaiException {
+        assertEquals(MILESTONE_TREE, milestone.getShapeTree().getId());
+        milestone.getParent().getUrl().equals(PROJECT_1);
     }
 
     private void checkAccessGrant(AccessGrant accessGrant) {

@@ -18,7 +18,7 @@ body: >
   PREFIX alice-personal-tasks: <${SERVER_BASE}/personal/data/tasks/>
   PREFIX alice-personal-issues: <${SERVER_BASE}/personal/data/issues/>
 
-  alice-personal-milestones:p1i1
-    a testable:TestableTask ;
+  alice-personal-issues:p1i1
+    a testable:TestableIssue ;
     testable:name "Project 1 - Issue 1" ;
     testable:description "Issue 1 for the fully populated Project 1" .

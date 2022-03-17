@@ -16,7 +16,7 @@ import java.util.Map;
 @Getter
 public class InheritedDataGrant extends ReadableDataGrant {
 
-    private final URL inheritsFrom;  // TODO - Should this be a URL or a DataGrant?
+    private final URL inheritsFrom;
 
     /**
      * Construct an {@link InheritedDataGrant} from the provided {@link ReadableDataGrant.Builder}.
@@ -48,18 +48,6 @@ public class InheritedDataGrant extends ReadableDataGrant {
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
         }
-    }
-
-    /**
-     * Create a new {@link DataInstance} in the {@link com.janeirodigital.sai.core.crud.DataRegistration}
-     * specified in this data grant, for the parent instance of this inherited grant.
-     * @param parent {@link DataInstance} for a {@link ReadableDataGrant} that this grant inherits from
-     * @return New {@link DataInstance}
-     * @throws SaiException
-     */
-    @Override
-    public DataInstance newDataInstance(DataInstance parent, String resourceName) throws SaiException {
-        return ReadableDataGrant.newDataInstance(this, parent, resourceName);
     }
 
 }

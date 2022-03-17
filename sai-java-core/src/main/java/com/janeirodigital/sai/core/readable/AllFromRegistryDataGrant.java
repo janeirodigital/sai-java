@@ -44,15 +44,4 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
         }
     }
 
-    /**
-     * Create a new {@link DataInstance} in the {@link DataRegistration} specified in this data grant
-     * @param parent not applicable in this scope
-     * @return New {@link DataInstance}
-     * @throws SaiException
-     */
-    @Override
-    public DataInstance newDataInstance(DataInstance parent, String resourceName) throws SaiException {
-        return ReadableDataGrant.newDataInstance(this, null, resourceName);
-    }
-
 }

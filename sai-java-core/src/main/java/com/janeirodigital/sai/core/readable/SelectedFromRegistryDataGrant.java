@@ -40,14 +40,4 @@ public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
         return new DataInstanceList(saiSession, this, dataInstanceUrls);
     }
 
-    /**
-     * Unsupported operation since new data instances cannot be created from for a SelectedFromRegistry
-     * data access scope
-     * @throws SaiException
-     */
-    @Override
-    public DataInstance newDataInstance(DataInstance instance, String resourceName) throws SaiException {
-        throw new SaiException("Cannot create new data instances for a SelectedFromRegistry grant scope");
-    }
-
 }

@@ -20,6 +20,7 @@ public final class TestableVocabulary {
     // Properties and Classes
     public static final Property TESTABLE_ID = model.createProperty(NS + "id");
     public static final Property TESTABLE_NAME = model.createProperty(NS + "name");
+    public static final Property TESTABLE_DESCRIPTION = model.createProperty(NS + "description");
     public static final Property TESTABLE_CREATED_AT = model.createProperty(NS + "createdAt");
     public static final Property TESTABLE_ACTIVE = model.createProperty(NS + "active");
     public static final Property TESTABLE_HAS_MILESTONE = model.createProperty(NS + "hasMilestone");

@@ -395,7 +395,7 @@ public class DataGrant extends ImmutableResource {
             if (!this.creatorAccessModes.isEmpty()) {
                 final List<URL> creatorAccessModeUrls = new ArrayList<>();
                 for(RDFNode creatorMode : this.creatorAccessModes) { creatorAccessModeUrls.add(stringToUrl(creatorMode.asResource().getURI())); }
-                updateUrlObjects(this.resource, ACCESS_MODE, creatorAccessModeUrls);
+                updateUrlObjects(this.resource, CREATOR_ACCESS_MODE, creatorAccessModeUrls);
             }
         }
 

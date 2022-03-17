@@ -12,9 +12,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_WRITE;
@@ -111,38 +111,11 @@ public abstract class ReadableDataGrant extends ReadableResource {
     /**
      * Abstract method implemented by specific types of data grants, that allow the {@link DataInstance}s
      * permitted by that grant to be iterated.
-     * @return {@link DataInstanceList} of permitted {@link DataInstance}s
+     * @return Map of <DataInstance URL, Parent DataInstance URL>
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    protected abstract DataInstanceList getDataInstances() throws SaiNotFoundException, SaiException;
-
-    /**
-     * Abstract method implemented by specific types of data grants that aid in the creation of
-     * new {@link DataInstance}s within the scope of that {@link com.janeirodigital.sai.core.immutable.DataGrant}
-     * @param parent Parent {@link DataInstance}
-     * @return
-     * @throws SaiException
-     */
-    protected abstract DataInstance newDataInstance(DataInstance parent, String resourceName) throws SaiException;
-
-    /**
-     * Static helper used to create a new {@link DataInstance} for the provided <code>dataGrant</code>.
-     * Called from grant specific new data instance instantiations.
-     * @param dataGrant {@link com.janeirodigital.sai.core.immutable.DataGrant} to create new {@link DataInstance} for
-     * @param parent Optional parent {@link DataInstance} of the data instance being created
-     * @return New {@link DataInstance}
-     * @throws SaiException
-     */
-    public static DataInstance newDataInstance(ReadableDataGrant dataGrant, DataInstance parent, String resourceName) throws SaiException {
-        // Get a URL for the data instance to add (built from the data registration)
-        if (resourceName == null) resourceName = UUID.randomUUID().toString();
-        URL instanceUrl = addChildToUrlPath(dataGrant.dataRegistration, resourceName);
-        DataInstance.Builder builder = new DataInstance.Builder(instanceUrl, dataGrant.saiSession);
-        builder.setDataGrant(dataGrant).setDraft(true);
-        if (parent != null) { builder.setParent(parent); }  // if this is a child instance set the parent
-        return builder.build();
-    }
+    public abstract DataInstanceList getDataInstances() throws SaiNotFoundException, SaiException;
 
     /**
      * Builder for {@link ReadableDataGrant} instances.
