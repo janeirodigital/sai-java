@@ -37,14 +37,14 @@ public class InheritedDataGrant extends ReadableDataGrant {
     @Override
     public DataInstanceList getDataInstances() throws SaiException {
         try {
-            ReadableDataGrant parentGrant = ReadableDataGrant.get(this.inheritsFrom, this.saiSession);
+            ReadableDataGrant parentGrant = ReadableDataGrant.get(this.getInheritsFrom(), this.getSaiSession());
             Map<URL, DataInstance> childInstanceUrls = new HashMap<>();
             for (DataInstance parentInstance : parentGrant.getDataInstances()) {
                 for (URL childReference : parentInstance.getChildReferences(this.getRegisteredShapeTree())) {
                     childInstanceUrls.put(childReference, parentInstance);
                 }
             }
-            return new DataInstanceList(this.saiSession, this, childInstanceUrls);
+            return new DataInstanceList(this.getSaiSession(), this, childInstanceUrls);
         } catch (SaiNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
         }

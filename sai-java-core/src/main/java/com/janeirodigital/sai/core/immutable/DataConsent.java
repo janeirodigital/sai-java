@@ -302,7 +302,6 @@ public class DataConsent extends ImmutableResource {
     private List<DataGrant> generateChildDelegatedGrants(URL dataGrantUrl, ReadableDataGrant remoteDataGrant, AgentRegistration granteeRegistration) throws SaiException {
         List<DataGrant> childDataGrants = new ArrayList<>();
         for (DataConsent childConsent : this.getInheritingConsents()) {
-            if (!(remoteDataGrant instanceof InheritableDataGrant)) continue;
             InheritableDataGrant remoteInheritableGrant = (InheritableDataGrant) remoteDataGrant;
             for (ReadableDataGrant remoteChildGrant: remoteInheritableGrant.getInheritingGrants()) {
                 // continue if the remote inheriting grant isn't the same shape tree as the child consent

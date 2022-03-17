@@ -14,7 +14,7 @@ body: >
     st:shape pmshapes:ProjectShape ;
     st:references [
       st:referencesShapeTree <#MilestoneTree> ;
-      st:viaShapePath "@pmshapes:ProjectShape~testable:hasMilestone"
+      st:viaPredicate testable:hasMilestone
     ] ,
     [
       st:referencesShapeTree <#TaskTree> ;

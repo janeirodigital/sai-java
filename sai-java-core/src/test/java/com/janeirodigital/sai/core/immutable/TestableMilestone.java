@@ -99,10 +99,7 @@ public class TestableMilestone extends DataInstance {
          * Initialize builder with a {@DataInstance}
          * @param dataInstance {@link DataInstance} to initialize milestone from
          */
-        public Builder(DataInstance dataInstance) throws SaiException {
-            super(dataInstance.getUrl(), dataInstance.getSaiSession());
-            setDataset(dataInstance.getDataset());
-        }
+        public Builder(DataInstance dataInstance) throws SaiException { super(dataInstance); }
 
         /**
          * Ensures that we don't get an unchecked cast warning when returning from setters

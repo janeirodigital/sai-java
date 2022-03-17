@@ -89,7 +89,12 @@ class AccessGrantTests {
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/", "agents/alice/projectron-all-from-registry/registry-1-projectron-registration-ttl");
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant", "agents/alice/projectron-all-from-registry/registry-1-grant-ttl");
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-missing", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-missing-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-badscope", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-badscope-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-milestone-missing", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-milestone-missing-ttl");
+
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-milestone", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-milestone-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-milestone-missing", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-milestone-missing-ttl");
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-issue", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-issue-ttl");
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-task", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-task-ttl");
 
@@ -120,6 +125,8 @@ class AccessGrantTests {
         // Get Alice and Bob's data registries - doesn't change across use cases
         mockOnGet(dispatcher, "/personal/data/", "data/alice/personal-data-registry-ttl");
         mockOnGet(dispatcher, "/personal/data/projects/", "data/alice/personal-data-registration-projects-ttl");
+        mockOnGet(dispatcher, "/personal/data/projects-milestone-missing/", "data/alice/personal-data-registration-projects-milestone-missing-ttl");
+        mockOnGet(dispatcher, "/personal/data/projects-missing/", "http/404");
         mockOnGet(dispatcher, "/personal/data/milestones/", "data/alice/personal-data-registration-milestones-ttl");
         mockOnGet(dispatcher, "/personal/data/issues/", "data/alice/personal-data-registration-issues-ttl");
         mockOnGet(dispatcher, "/personal/data/tasks/", "data/alice/personal-data-registration-tasks-ttl");
@@ -133,6 +140,7 @@ class AccessGrantTests {
         mockOnGet(dispatcher, "/personal/data/projects/p3", "data/alice/personal-data-projects-p3-ttl");
         mockOnPut(dispatcher, "/personal/data/projects/p3", "http/204");
         mockOnPut(dispatcher, "/personal/data/projects/new-project", "http/201");
+        mockOnGet(dispatcher, "/personal/data/projects/p20-milestone-missing", "data/alice/personal-data-projects-p20-milestone-missing-ttl");
 
         mockOnGet(dispatcher, "/personal/data/milestones/p1m1", "data/alice/personal-data-milestones-p1m1-ttl");
         mockOnGet(dispatcher, "/personal/data/milestones/p1m2", "data/alice/personal-data-milestones-p1m2-ttl");
@@ -293,6 +301,13 @@ class AccessGrantTests {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(url, saiSession);
         checkReadableAccessGrant(accessGrant);
+    }
+
+    @Test
+    @DisplayName("Fail to get readable data grant - invalid scope")
+    void createReadableDataGrant() throws SaiException {
+        URL projectUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-badscope");
+        assertThrows(SaiException.class, () -> ReadableDataGrant.get(projectUrl, saiSession));
     }
 
     @Test
@@ -494,6 +509,42 @@ class AccessGrantTests {
     }
 
     @Test
+    @DisplayName("Fail to get data instances from readable data grant scoped with AllFromRegistry - instance missing")
+    void failToGetDataInstancesAllFromRegistryMissing() throws SaiNotFoundException, SaiException {
+        URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-missing");
+        ReadableDataGrant dataGrant = ReadableDataGrant.get(grantUrl, saiSession);
+        AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) dataGrant;
+        assertThrows(SaiException.class, () -> projectGrant.getDataInstances());
+    }
+
+    @Test
+    @DisplayName("Get data instances from readable data grant - Scope: Inherited")
+    void testGetDataInstancesAllFromRegistryInherited() throws SaiNotFoundException, SaiException {
+        URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-milestone");
+        List<URL> parents = Arrays.asList(PROJECT_1, PROJECT_2);
+        ReadableDataGrant dataGrant = ReadableDataGrant.get(grantUrl, saiSession);
+        InheritedDataGrant milestoneGrant = (InheritedDataGrant) dataGrant;
+        assertEquals(3, milestoneGrant.getDataInstances().size());
+        for (DataInstance dataInstance : milestoneGrant.getDataInstances()) {
+            assertEquals(milestoneGrant, dataInstance.getDataGrant());
+            assertEquals(MILESTONE_TREE, dataInstance.getShapeTree().getId());
+            if (dataInstance.getParent() != null) assertTrue(parents.contains(dataInstance.getParent().getUrl()));
+        }
+    }
+
+    @Test
+    @DisplayName("Fail to get data instances from readable data grant scoped with Inherited - instance missing")
+    void failToGetDataInstancesInheritedMissing() throws SaiNotFoundException, SaiException {
+        URL projectGrantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-missing");
+        URL milestoneGrantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-milestone-missing");
+        ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
+
+        ReadableDataGrant dataGrant = ReadableDataGrant.get(milestoneGrantUrl, saiSession);
+        InheritedDataGrant milestoneGrant = (InheritedDataGrant) dataGrant;
+        assertThrows(SaiException.class, () -> milestoneGrant.getDataInstances());
+    }
+
+    @Test
     @DisplayName("Create a new data instance from readable data grant")
     void createNewDataInstanceAllFromRegistry() throws SaiNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
@@ -594,7 +645,7 @@ class AccessGrantTests {
     }
 
     private void checkProject2(TestableProject project) throws SaiException {
-        List<URL> P2_MILESTONES = Arrays.asList(PROJECT_1_MILESTONE_1, PROJECT_1_MILESTONE_2);
+        List<URL> P2_MILESTONES = Arrays.asList(PROJECT_2_MILESTONE_3);
         assertEquals(PROJECT_TREE, project.getShapeTree().getId());
         assertTrue(P2_MILESTONES.containsAll(project.getChildReferences(MILESTONE_TREE)));
         for (TestableMilestone milestone : project.getMilestones(MILESTONE_TREE)) {

@@ -178,7 +178,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
                 this.grantee = getRequiredUrlObject(this.resource, GRANTEE);
                 this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
                 this.accessModes = getRequiredObjects(this.resource, ACCESS_MODE);
-                this.creatorAccessModes = getRequiredObjects(this.resource, CREATOR_ACCESS_MODE);
+                this.creatorAccessModes = getObjects(this.resource, CREATOR_ACCESS_MODE);
                 this.scopeOfGrant = getRequiredObject(this.resource, SCOPE_OF_GRANT);
                 this.dataRegistration = getUrlObject(this.resource, HAS_DATA_REGISTRATION);
                 this.dataInstances = getUrlObjects(this.resource, HAS_DATA_INSTANCE);

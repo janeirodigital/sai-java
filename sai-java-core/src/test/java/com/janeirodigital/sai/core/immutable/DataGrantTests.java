@@ -56,6 +56,9 @@ class DataGrantTests {
         mockOnGet(dispatcher, "/missing-fields/all-1-agents/all-1-projectron/all-1-grant-personal-project", "agents/alice/projectron-all/all-1-grant-personal-project-missing-fields-ttl");
         // GET / PUT access grant and data grants from the agent registry
         mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-project", "agents/alice/projectron-all/all-1-grant-personal-project-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-readonly", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-readonly-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-cancreate", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-cancreate-ttl");
+        mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-canwrite", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-project-canwrite-ttl");
         mockOnPut(dispatcher, "/all-1-agents/all-1-projectron/all-1-grant-personal-project", "http/201");
         mockOnGet(dispatcher, "/agents/projectron/selected-1-grant-project", "agents/alice/projectron-selected/selected-1-grant-project-ttl");
         mockOnPut(dispatcher, "/agents/projectron/selected-1-grant-project", "http/201");
@@ -308,6 +311,30 @@ class DataGrantTests {
         for (RDFNode mode : dataGrant.getCreatorAccessModes()) { assertTrue(CREATOR_ACCESS_MODES.contains(mode)); }
         assertEquals(SCOPE_ALL_FROM_REGISTRY, dataGrant.getScopeOfGrant());
         assertEquals(PROJECTRON_PROJECT_NEED, dataGrant.getAccessNeed());
+    }
+
+    @Test
+    @DisplayName("Get readable read-only data grant - scope: all from registry")
+    void getReadOnlyDataGrant() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-readonly");
+        ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
+        assertFalse(dataGrant.canCreate());
+    }
+
+    @Test
+    @DisplayName("Get readable data grant with create privileges - scope: all from registry")
+    void getReadOnlyDataGrantCreate() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-cancreate");
+        ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
+        assertTrue(dataGrant.canCreate());
+    }
+
+    @Test
+    @DisplayName("Get readable data grant with write privileges - scope: all from registry")
+    void getReadOnlyDataGrantWrite() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-canwrite");
+        ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
+        assertTrue(dataGrant.canCreate());
     }
 
     @Test

@@ -33,6 +33,8 @@ public class DataInstance extends CRUDResource {
 
     protected DataInstance(Builder builder) throws SaiException {
         super(builder);
+        Objects.requireNonNull(builder.dataGrant, "Must provide a data grant to construct a data instance");
+        Objects.requireNonNull(builder.shapeTree, "Must provide a shape tree to construct a data instance");
         this.dataGrant = builder.dataGrant;
         this.parent = builder.parent;
         this.shapeTree = builder.shapeTree;
