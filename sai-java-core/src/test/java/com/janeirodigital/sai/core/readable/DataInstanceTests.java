@@ -3,6 +3,7 @@ package com.janeirodigital.sai.core.readable;
 import com.janeirodigital.sai.core.authorization.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.immutable.DataGrant;
@@ -22,9 +23,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
@@ -46,6 +45,7 @@ public class DataInstanceTests {
     private static URL PROJECTS_DATA_REGISTRATION;
     private static URL PROJECT_TREE, MILESTONE_TREE, MISSING_TREE;
     private static URL PROJECTRON_PROJECT_NEED;
+    private static List<URL> PROJECT_DATA_INSTANCES;
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES;
 
 
@@ -93,7 +93,9 @@ public class DataInstanceTests {
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         CREATOR_ACCESS_MODES = Arrays.asList(ACL_UPDATE, ACL_DELETE);
         PROJECTRON_PROJECT_NEED = stringToUrl("https://projectron.example/#ac54ff1e");
-
+        PROJECT_DATA_INSTANCES = Arrays.asList(toUrl(server, "/personal/data/projects/p1"),
+                                               toUrl(server, "/personal/data/projects/p2"),
+                                               toUrl(server, "/personal/data/projects/p3"));
     }
 
     @Test
@@ -263,43 +265,6 @@ public class DataInstanceTests {
     }
 
     @Test
-    @DisplayName("Fail to remove child reference from parent instance - failure in shape tree reference lookup")
-    void failToRemoveChildReferenceLookup() throws SaiNotFoundException, SaiException {
-        URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
-        URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
-        URL milestoneGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
-        ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
-        ReadableDataGrant milestoneGrant = ReadableDataGrant.get(milestoneGrantUrl, saiSession);
-        BasicDataInstance.Builder parentBuilder = new BasicDataInstance.Builder(projectUrl, saiSession);
-        BasicDataInstance parentInstance = parentBuilder.setDataGrant(projectGrant).build();
-
-        ShapeTree mockShapeTree = mock(ShapeTree.class);
-        when(mockShapeTree.getId()).thenReturn(MISSING_TREE);
-        BasicDataInstance mockChildInstance = mock(BasicDataInstance.class);
-        when(mockChildInstance.getShapeTree()).thenReturn(mockShapeTree);
-
-        try (MockedStatic<ShapeTreeReference> mockStaticReference = Mockito.mockStatic(ShapeTreeReference.class)) {
-            mockStaticReference.when(() -> ShapeTreeReference.findChildReference(any(ShapeTree.class), any(URL.class))).thenThrow(ShapeTreeException.class);
-            assertThrows(SaiException.class, () -> parentInstance.removeChildReference(mockChildInstance));
-        }
-    }
-
-    @Test
-    @DisplayName("Fail to get child references from parent instance - failure in shape tree reference lookup")
-    void failToGetChildReferencesLookup() throws SaiNotFoundException, SaiException {
-        URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
-        URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
-        ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
-        BasicDataInstance.Builder parentBuilder = new BasicDataInstance.Builder(projectUrl, saiSession);
-        BasicDataInstance parentInstance = parentBuilder.setDataGrant(projectGrant).build();
-
-        try (MockedStatic<ShapeTreeReference> mockStaticReference = Mockito.mockStatic(ShapeTreeReference.class)) {
-            mockStaticReference.when(() -> ShapeTreeReference.findChildReference(any(ShapeTree.class), any(URL.class))).thenThrow(ShapeTreeException.class);
-            assertThrows(SaiException.class, () -> parentInstance.getChildReferences(MILESTONE_TREE));
-        }
-    }
-
-    @Test
     @DisplayName("Fail to get child instances from parent instance - failure in shape tree reference lookup")
     void failToGetChildInstancesLookup() throws SaiNotFoundException, SaiException {
         URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
@@ -313,6 +278,34 @@ public class DataInstanceTests {
             mockStaticReference.when(() -> ShapeTreeReference.getPropertyFromReference(any(ShapeTreeReference.class))).thenThrow(ShapeTreeException.class);
             assertThrows(SaiException.class, () -> parentInstance.findChildInstances(mockReference));
         }
+    }
+
+    @Test
+    @DisplayName("Get a list of basic data instances from a list of instance URLs")
+    void testGetDataInstanceList() throws SaiNotFoundException, SaiException {
+        URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
+        ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
+        Map<URL, DataInstance> instanceMap = new HashMap<>();
+        for (URL instanceUrl : PROJECT_DATA_INSTANCES) { instanceMap.put(instanceUrl, null); }
+        DataInstanceList list = new DataInstanceList(saiSession, projectGrant, instanceMap);
+        assertFalse(list.isEmpty());
+        assertEquals(3, list.size());
+        for (DataInstance instance : list) { PROJECT_DATA_INSTANCES.contains(instance.getUrl()); }
+    }
+
+    @Test
+    @DisplayName("Fail to get a list of basic data instances - instance not found")
+    void failToGetDataInstanceListMissing() throws SaiNotFoundException, SaiException {
+        URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
+        URL MISSING_PROJECT_INSTANCE = toUrl(server, "/personal/data/projects/missing-project");
+        ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
+        Map<URL, DataInstance> instanceMap = new HashMap<>();
+        instanceMap.put(MISSING_PROJECT_INSTANCE, null);  // This instance doesn't exist, so we expect to fail when iterating to get it
+        DataInstanceList list = new DataInstanceList(saiSession, projectGrant, instanceMap);
+        assertEquals(1, list.size());
+        Iterator<DataInstance> iterator = list.iterator();
+        assertTrue(iterator.hasNext());
+        assertThrows(SaiRuntimeException.class, () -> iterator.next());
     }
 
 }
