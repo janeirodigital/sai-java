@@ -118,8 +118,8 @@ public class DataInstanceTests {
         URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
         ReadableDataGrant readableDataGrant = ReadableDataGrant.get(grantUrl, saiSession);
         InheritedDataGrant milestoneGrant = (InheritedDataGrant) readableDataGrant;
-        BasicDataInstance.Builder builder = new BasicDataInstance.Builder(url, saiSession);
-        assertThrows(SaiException.class, () -> builder.setDataGrant(milestoneGrant).build());
+        BasicDataInstance.Builder builder = new BasicDataInstance.Builder(url, saiSession).setDataGrant(milestoneGrant);
+        assertThrows(SaiException.class, () -> builder.build());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class DataInstanceTests {
                 .setScopeOfGrant(SCOPE_ALL_FROM_REGISTRY).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
         ReadableDataGrant projectGrant = new ReadableDataGrant.Builder(grantUrl, saiSession).setDataset(dataGrant.getDataset()).build();
         BasicDataInstance.Builder builder = new BasicDataInstance.Builder(url, saiSession);
-        assertThrows(SaiException.class, () -> builder.setDataGrant(projectGrant).build());
+        assertThrows(SaiException.class, () -> builder.setDataGrant(projectGrant));
     }
 
     @Test
