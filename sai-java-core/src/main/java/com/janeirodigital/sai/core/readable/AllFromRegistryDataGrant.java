@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * Readable instantiation of a
- * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-consent">Data Grant</a>
+ * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-grant">Data Grant</a>
  * with a scope of <a href="https://solid.github.io/data-interoperability-panel/specification/#scope-fromregistry">AllFromRegistry</a>
  */
 @Getter

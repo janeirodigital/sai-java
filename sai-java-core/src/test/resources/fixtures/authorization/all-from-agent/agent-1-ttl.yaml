@@ -14,13 +14,13 @@ body: >
   PREFIX alice-authorization: <${SERVER_BASE}/authorization/>
 
   alice-authorization:agent-1
-    a interop:AccessConsent ;
+    a interop:AccessAuthorization ;
     interop:grantedBy alice:id ;
     interop:grantedWith jarvis:id ;
     interop:grantedAt "2020-09-05T06:15:01Z"^^xsd:dateTime ;
     interop:grantee projectron:id ;
     interop:hasAccessNeedGroup projectron:\#d8219b1f ;
-    interop:hasDataConsent
+    interop:hasDataAuthorization
       alice-authorization:agent-1-project ,
       alice-authorization:agent-1-milestone ,
       alice-authorization:agent-1-issue ,

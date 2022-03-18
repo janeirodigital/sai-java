@@ -27,7 +27,7 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-class DataConsentTests {
+class DataAuthorizationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
@@ -39,7 +39,7 @@ class DataConsentTests {
     private static URL PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE;
     private static URL PROJECTRON_PROJECT_NEED, PROJECTRON_MILESTONE_NEED, PROJECTRON_ISSUE_NEED, PROJECTRON_TASK_NEED;
     private static OffsetDateTime GRANT_TIME;
-    private static List<URL> ALL_DATA_CONSENT_URLS;
+    private static List<URL> ALL_DATA_AUTHORIZATION_URLS;
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES, READ_MODES, WRITE_MODES;
 
     @BeforeAll
@@ -61,7 +61,7 @@ class DataConsentTests {
         mockOnGet(dispatcher, "/authorization/selected-1-project", "authorization/selected-from-registry/selected-1-project-ttl");
         mockOnPut(dispatcher, "/authorization/selected-1-project", "http/201");
 
-        // GET data consent in Turtle with missing fields
+        // GET data authorization in Turtle with missing fields
         mockOnGet(dispatcher, "/missing-fields/authorization/all-1-project", "authorization/all/all-1-project-missing-fields-ttl");
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
@@ -77,7 +77,7 @@ class DataConsentTests {
         PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
         PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
-        ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/authorization/all-1-project"), toUrl(server, "/authorization/all-1-milestone"),
+        ALL_DATA_AUTHORIZATION_URLS = Arrays.asList(toUrl(server, "/authorization/all-1-project"), toUrl(server, "/authorization/all-1-milestone"),
                                               toUrl(server, "/authorization/all-1-issue"), toUrl(server, "/authorization/all-1-task"));
         PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
         MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
@@ -91,179 +91,179 @@ class DataConsentTests {
     }
 
     @Test
-    @DisplayName("Create new data consent - scope: all")
+    @DisplayName("Create new data authorization - scope: all")
     void createAll() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
-        DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID)
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID)
                                                    .setGrantee(PROJECTRON_ID)
                                                    .setRegisteredShapeTree(PROJECT_TREE)
                                                    .setAccessModes(ACCESS_MODES)
                                                    .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                                                   .setScopeOfConsent(SCOPE_ALL)
+                                                   .setScopeOfAuthorization(SCOPE_ALL)
                                                    .setAccessNeed(PROJECTRON_PROJECT_NEED)
                                                    .build();
-        assertDoesNotThrow(() -> projectConsent.create());
-        assertTrue(projectConsent.canCreate());
+        assertDoesNotThrow(() -> projectAuthorization.create());
+        assertTrue(projectAuthorization.canCreate());
     }
 
     @Test
-    @DisplayName("Create new data consent - scope: all from registry")
+    @DisplayName("Create new data authorization - scope: all from registry")
     void createAllFromRegistry() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/registry-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
-        DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                                                    .setGrantedBy(ALICE_ID)
                                                    .setGrantee(PROJECTRON_ID)
                                                    .setRegisteredShapeTree(PROJECT_TREE)
                                                    .setDataRegistration(drUrl)
                                                    .setAccessModes(WRITE_MODES)
                                                    .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                                                   .setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY)
+                                                   .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                                                    .setAccessNeed(PROJECTRON_PROJECT_NEED)
                                                    .build();
-        assertDoesNotThrow(() -> projectConsent.create());
-        assertTrue(projectConsent.canCreate());
+        assertDoesNotThrow(() -> projectAuthorization.create());
+        assertTrue(projectAuthorization.canCreate());
     }
 
     @Test
-    @DisplayName("Create new data consent - scope: selected from registry")
+    @DisplayName("Create new data authorization - scope: selected from registry")
     void createSelectedFromRegistry() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                                                 toUrl(server, "/personal/data/projects/project-2"),
                                                 toUrl(server, "/personal/data/projects/project-3"));
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
-        DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                                                     .setGrantedBy(ALICE_ID)
                                                     .setGrantee(PROJECTRON_ID)
                                                     .setRegisteredShapeTree(PROJECT_TREE)
                                                     .setDataRegistration(drUrl)
                                                     .setAccessModes(READ_MODES)
-                                                    .setScopeOfConsent(SCOPE_SELECTED_FROM_REGISTRY)
+                                                    .setScopeOfAuthorization(SCOPE_SELECTED_FROM_REGISTRY)
                                                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                                                     .setDataInstances(dataInstances)
                                                     .build();
-        assertDoesNotThrow(() -> projectConsent.create());
-        assertFalse(projectConsent.canCreate());
+        assertDoesNotThrow(() -> projectAuthorization.create());
+        assertFalse(projectAuthorization.canCreate());
     }
 
     @Test
-    @DisplayName("Create new data consent - scope: all from agent")
+    @DisplayName("Create new data authorization - scope: all from agent")
     void createAllFromAgent() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/agent-1-project");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
-        DataConsent projectConsent = projectBuilder.setDataOwner(BOB_ID)
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID)
                                                    .setGrantedBy(ALICE_ID)
                                                    .setGrantee(PROJECTRON_ID)
                                                    .setRegisteredShapeTree(PROJECT_TREE)
                                                    .setAccessModes(ACCESS_MODES)
                                                    .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                                                   .setScopeOfConsent(SCOPE_ALL_FROM_AGENT)
+                                                   .setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT)
                                                    .setAccessNeed(PROJECTRON_PROJECT_NEED)
                                                    .build();
-        assertDoesNotThrow(() -> projectConsent.create());
+        assertDoesNotThrow(() -> projectAuthorization.create());
     }
 
     @Test
-    @DisplayName("Create new data consent - scope: inherited")
+    @DisplayName("Create new data authorization - scope: inherited")
     void createInherited() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/project-1-milestone");
         URL milestoneUrl = toUrl(server, "/authorization/registry-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder milestoneBuilder = new DataConsent.Builder(milestoneUrl, saiSession);
-        DataConsent milestoneConsent = milestoneBuilder.setDataOwner(ALICE_ID)
+        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneUrl, saiSession);
+        DataAuthorization milestoneAuthorization = milestoneBuilder.setDataOwner(ALICE_ID)
                 .setGrantedBy(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
                 .setRegisteredShapeTree(MILESTONE_TREE)
                 .setDataRegistration(drUrl)
                 .setAccessModes(ACCESS_MODES)
                 .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfConsent(SCOPE_INHERITED)
+                .setScopeOfAuthorization(SCOPE_INHERITED)
                 .setAccessNeed(PROJECTRON_MILESTONE_NEED)
                 .setInheritsFrom(projectUrl)
                 .build();
-        assertDoesNotThrow(() -> milestoneConsent.create());
+        assertDoesNotThrow(() -> milestoneAuthorization.create());
     }
 
     @Test
-    @DisplayName("Create new data consent - scope: no access")
+    @DisplayName("Create new data authorization - scope: no access")
     void createNoAccess() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
-        DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantedBy(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
                 .setDataRegistration(drUrl)
                 .setAccessModes(ACCESS_MODES)
                 .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfConsent(SCOPE_NO_ACCESS)
+                .setScopeOfAuthorization(SCOPE_NO_ACCESS)
                 .setAccessNeed(PROJECTRON_PROJECT_NEED)
                 .build();
-        assertDoesNotThrow(() -> projectConsent.create());
+        assertDoesNotThrow(() -> projectAuthorization.create());
     }
 
     // Generate data grants
 
     @Test
-    @DisplayName("Fail to create new data consent - scope: invalid")
+    @DisplayName("Fail to create new data authorization - scope: invalid")
     void failToCreateInvalidScope() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-        DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+        DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantedBy(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
                 .setDataRegistration(drUrl)
                 .setAccessModes(ACCESS_MODES)
                 .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfConsent(ACCESS_GRANT)  // INVALID
+                .setScopeOfAuthorization(ACCESS_GRANT)  // INVALID
                 .setAccessNeed(PROJECTRON_PROJECT_NEED)
                 .build();
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - create privileges and no creator modes")
+    @DisplayName("Fail to create new data authorization - create privileges and no creator modes")
     void failToCreateInvalidCreator() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setDataRegistration(drUrl)
                     .setAccessModes(ACCESS_MODES)  // can create but no creator modes are set
-                    .setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY)
+                    .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .build();
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - not inherited and inherits from data consent")
+    @DisplayName("Fail to create new data authorization - not inherited and inherits from data authorization")
     void failToCreateInvalidInheritsFrom() {
         URL projectUrl = toUrl(server, "/authorization/all-1-project");
         URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setDataRegistration(drUrl)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                    .setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY)
+                    .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .setInheritsFrom(milestoneUrl)
                     .build();
@@ -271,190 +271,190 @@ class DataConsentTests {
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - selected with no instances")
+    @DisplayName("Fail to create new data authorization - selected with no instances")
     void failToCreateSelectedNoInstances() throws SaiException {
         URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setDataRegistration(drUrl)
                     .setAccessModes(READ_MODES)
-                    .setScopeOfConsent(SCOPE_SELECTED_FROM_REGISTRY)
+                    .setScopeOfAuthorization(SCOPE_SELECTED_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .build();
-            assertDoesNotThrow(() -> projectConsent.create());
-            assertFalse(projectConsent.canCreate());
+            assertDoesNotThrow(() -> projectAuthorization.create());
+            assertFalse(projectAuthorization.canCreate());
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - selected with no instances")
+    @DisplayName("Fail to create new data authorization - selected with no instances")
     void failToCreateSelectedNoRegistration() {
         URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                 toUrl(server, "/personal/data/projects/project-2"),
                 toUrl(server, "/personal/data/projects/project-3"));
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setAccessModes(READ_MODES)
-                    .setScopeOfConsent(SCOPE_SELECTED_FROM_REGISTRY)
+                    .setScopeOfAuthorization(SCOPE_SELECTED_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .setDataInstances(dataInstances)
                     .build();
-            assertDoesNotThrow(() -> projectConsent.create());
-            assertFalse(projectConsent.canCreate());
+            assertDoesNotThrow(() -> projectAuthorization.create());
+            assertFalse(projectAuthorization.canCreate());
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - has instances and no selected scope")
+    @DisplayName("Fail to create new data authorization - has instances and no selected scope")
     void failToCreateInstancesNoSelected() {
         URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                 toUrl(server, "/personal/data/projects/project-2"),
                 toUrl(server, "/personal/data/projects/project-3"));
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setDataRegistration(drUrl)
                     .setAccessModes(READ_MODES)
-                    .setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY)
+                    .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .setDataInstances(dataInstances)
                     .build();
-            assertDoesNotThrow(() -> projectConsent.create());
-            assertFalse(projectConsent.canCreate());
+            assertDoesNotThrow(() -> projectAuthorization.create());
+            assertFalse(projectAuthorization.canCreate());
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - scope of all but data registration provided")
+    @DisplayName("Fail to create new data authorization - scope of all but data registration provided")
     void failToCreateAllAndDataReg() {
         URL projectUrl = toUrl(server, "/authorization/all-1-project");
         URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setDataRegistration(drUrl)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                    .setScopeOfConsent(SCOPE_ALL)
+                    .setScopeOfAuthorization(SCOPE_ALL)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .build();
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - scope of all but data owner is set")
+    @DisplayName("Fail to create new data authorization - scope of all but data owner is set")
     void failToCreateAllAndDataOwner() {
         URL projectUrl = toUrl(server, "/authorization/all-1-project");
         URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                    .setScopeOfConsent(SCOPE_ALL)
+                    .setScopeOfAuthorization(SCOPE_ALL)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .build();
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - all from registry scope but no data registration")
+    @DisplayName("Fail to create new data authorization - all from registry scope but no data registration")
     void failToCreateAllFromRegNoDataReg() {
         URL projectUrl = toUrl(server, "/authorization/all-1-project");
         URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                    .setScopeOfConsent(SCOPE_ALL_FROM_REGISTRY)
+                    .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .build();
         });
     }
 
     @Test
-    @DisplayName("Fail to create new data consent - inherited but no inherits from")
+    @DisplayName("Fail to create new data authorization - inherited but no inherits from")
     void failToCreateInheritedNoInheritsFrom() {
         URL projectUrl = toUrl(server, "/authorization/all-1-project");
         URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
-            DataConsent projectConsent = projectBuilder.setDataOwner(BOB_ID)
+            DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
                     .setDataRegistration(drUrl)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                    .setScopeOfConsent(SCOPE_INHERITED)
+                    .setScopeOfAuthorization(SCOPE_INHERITED)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
                     .build();
         });
     }
 
     @Test
-    @DisplayName("Get data consent - scope: all")
-    void getDataConsent() throws SaiException, SaiNotFoundException {
+    @DisplayName("Get data authorization - scope: all")
+    void getDataAuthorization() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/authorization/all-1-project");
-        DataConsent dataConsent = DataConsent.get(url, saiSession);
-        assertEquals(ALICE_ID, dataConsent.getGrantedBy());
-        assertEquals(PROJECTRON_ID, dataConsent.getGrantee());
-        assertEquals(PROJECT_TREE, dataConsent.getRegisteredShapeTree());
-        for (RDFNode mode : dataConsent.getAccessModes()) { assertTrue(ACCESS_MODES.contains(mode)); }
-        for (RDFNode mode : dataConsent.getCreatorAccessModes()) { assertTrue(CREATOR_ACCESS_MODES.contains(mode)); }
-        assertEquals(SCOPE_ALL, dataConsent.getScopeOfConsent());
-        assertEquals(PROJECTRON_PROJECT_NEED, dataConsent.getAccessNeed());
+        DataAuthorization dataAuthorization = DataAuthorization.get(url, saiSession);
+        assertEquals(ALICE_ID, dataAuthorization.getGrantedBy());
+        assertEquals(PROJECTRON_ID, dataAuthorization.getGrantee());
+        assertEquals(PROJECT_TREE, dataAuthorization.getRegisteredShapeTree());
+        for (RDFNode mode : dataAuthorization.getAccessModes()) { assertTrue(ACCESS_MODES.contains(mode)); }
+        for (RDFNode mode : dataAuthorization.getCreatorAccessModes()) { assertTrue(CREATOR_ACCESS_MODES.contains(mode)); }
+        assertEquals(SCOPE_ALL, dataAuthorization.getScopeOfAuthorization());
+        assertEquals(PROJECTRON_PROJECT_NEED, dataAuthorization.getAccessNeed());
     }
 
     @Test
-    @DisplayName("Reload data consent - scope: all")
-    void reloadDataConsent() throws SaiException, SaiNotFoundException {
+    @DisplayName("Reload data authorization - scope: all")
+    void reloadDataAuthorization() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/authorization/all-1-project");
-        DataConsent dataConsent = DataConsent.get(url, saiSession);
-        DataConsent reloaded = dataConsent.reload();
+        DataAuthorization dataAuthorization = DataAuthorization.get(url, saiSession);
+        DataAuthorization reloaded = dataAuthorization.reload();
         assertEquals(ALICE_ID, reloaded.getGrantedBy());
         assertEquals(PROJECTRON_ID, reloaded.getGrantee());
         assertEquals(PROJECT_TREE, reloaded.getRegisteredShapeTree());
         for (RDFNode mode : reloaded.getAccessModes()) { assertTrue(ACCESS_MODES.contains(mode)); }
         for (RDFNode mode : reloaded.getCreatorAccessModes()) { assertTrue(CREATOR_ACCESS_MODES.contains(mode)); }
-        assertEquals(SCOPE_ALL, reloaded.getScopeOfConsent());
+        assertEquals(SCOPE_ALL, reloaded.getScopeOfAuthorization());
         assertEquals(PROJECTRON_PROJECT_NEED, reloaded.getAccessNeed());
     }
 
     @Test
-    @DisplayName("Fail to get data consent - missing required fields")
+    @DisplayName("Fail to get data authorization - missing required fields")
     void failToReadDataRegistration() {
         URL url = toUrl(server, "/missing-fields/authorization/all-1-project");
-        assertThrows(SaiException.class, () -> DataConsent.get(url, saiSession));
+        assertThrows(SaiException.class, () -> DataAuthorization.get(url, saiSession));
     }
 
 }

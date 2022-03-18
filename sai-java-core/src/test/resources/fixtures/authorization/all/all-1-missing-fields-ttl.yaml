@@ -14,6 +14,6 @@ body: >
   PREFIX alice-authorization: <${SERVER_BASE}/missing-fields/authorization/>
 
   alice-authorization:all-1
-    a interop:AccessConsent ;
+    a interop:AccessAuthorization ;
     interop:grantedWith jarvis:id ;
     interop:grantedAt "2020-09-05T06:15:01Z"^^xsd:dateTime .

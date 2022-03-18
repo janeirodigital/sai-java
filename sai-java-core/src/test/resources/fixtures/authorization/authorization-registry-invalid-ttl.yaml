@@ -11,5 +11,5 @@ body: >
 
   alice-authorization:
     a interop:AuthorizationRegistry ;
-    interop:hasAccessConsent
+    interop:hasAccessAuthorization
       "2020-09-05T06:15:01Z"^^xsd:dateTime .

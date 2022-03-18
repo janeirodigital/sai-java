@@ -16,11 +16,11 @@ body: >
   PREFIX notes-shapetrees: <http://data.example/notes/note#>
 
   alice-authorization:all-2-note
-    a interop:DataConsent ;
+    a interop:DataAuthorization ;
     interop:grantedBy alice:id ;
     interop:grantee nevernote:id ;
     interop:registeredShapeTree notes-shapetrees:NoteTree ;
     interop:accessMode acl:Read, acl:Create ;
     interop:creatorAccessMode acl:Update, acl:Delete ;
-    interop:scopeOfConsent interop:All ;
+    interop:scopeOfAuthorization interop:All ;
     interop:satisfiesAccessNeed nevernote:\#ac54ff1e .

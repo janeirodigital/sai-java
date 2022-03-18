@@ -7,7 +7,7 @@ import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
-import com.janeirodigital.sai.core.immutable.AccessConsent;
+import com.janeirodigital.sai.core.immutable.AccessAuthorization;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,7 +31,7 @@ class AuthorizationRegistryTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static List<URL> accessConsentUrls;
+    private static List<URL> accessAuthorizationUrls;
 
     @BeforeAll
     static void beforeAll() throws SaiException {
@@ -79,8 +79,8 @@ class AuthorizationRegistryTests {
         mockOnDelete(dispatcher, "/authorization/", "http/204");  // delete
         // GET authorization registry in Turtle with invalid fields
         mockOnGet(dispatcher, "/invalid-fields/authorization/", "authorization/authorization-registry-invalid-ttl");
-        // GET authorization registry in Turtle with links to consents that don't exist
-        mockOnGet(dispatcher, "/missing-consents/authorization/", "authorization/authorization-registry-missing-consents-ttl");
+        // GET authorization registry in Turtle with links to authorizations that don't exist
+        mockOnGet(dispatcher, "/missing-authorizations/authorization/", "authorization/authorization-registry-missing-authorizations-ttl");
         // GET authorization registry in JSON-LD
         mockOnGet(dispatcher, "/jsonld/authorization/", "authorization/authorization-registry-jsonld");
         mockOnPut(dispatcher, "/new/jsonld/authorization/", "http/201");  // create new
@@ -88,7 +88,7 @@ class AuthorizationRegistryTests {
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
-        accessConsentUrls = Arrays.asList(toUrl(server, "/authorization/all-1"),
+        accessAuthorizationUrls = Arrays.asList(toUrl(server, "/authorization/all-1"),
                                           toUrl(server, "/authorization/registry-1"),
                                           toUrl(server, "/authorization/agent-1"),
                                           toUrl(server, "/authorization/selected-1"));
@@ -137,24 +137,24 @@ class AuthorizationRegistryTests {
     }
 
     @Test
-    @DisplayName("Find an access consent")
-    void findAccessConsent() throws SaiException, SaiNotFoundException {
+    @DisplayName("Find an access authorization")
+    void findAccessAuthorization() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/authorization/");
         URL toFind = stringToUrl("https://projectron.example/id");
         URL toFail = stringToUrl("https://ghost.example/id");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
-        AccessConsent found = authzRegistry.getAccessConsents().find(toFind);
+        AccessAuthorization found = authzRegistry.getAccessAuthorizations().find(toFind);
         assertEquals(toFind, found.getGrantee());
-        AccessConsent fail = authzRegistry.getAccessConsents().find(toFail);
+        AccessAuthorization fail = authzRegistry.getAccessAuthorizations().find(toFail);
         assertNull(fail);
     }
 
     @Test
-    @DisplayName("Fail to iterate access consents - missing consent")
-    void failToFindAccessConsentMissing() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/missing-consents/authorization/");
+    @DisplayName("Fail to iterate access authorizations - missing authorization")
+    void failToFindAccessAuthorizationMissing() throws SaiException, SaiNotFoundException {
+        URL url = toUrl(server, "/missing-authorizations/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
-        Iterator<AccessConsent> iterator = authzRegistry.getAccessConsents().iterator();
+        Iterator<AccessAuthorization> iterator = authzRegistry.getAccessAuthorizations().iterator();
         assertThrows(SaiRuntimeException.class, () -> iterator.next());
     }
     
@@ -185,69 +185,69 @@ class AuthorizationRegistryTests {
     }
 
     @Test
-    @DisplayName("Add access consent to authorization registry")
-    void addAccessConsents() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    @DisplayName("Add access authorization to authorization registry")
+    void addAccessAuthorizations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
 
-        URL consentUrl = toUrl(server, "/authorization/all-2");
+        URL authorizationUrl = toUrl(server, "/authorization/all-2");
         URL grantee = stringToUrl("https://nevernote.example/id");
 
-        AccessConsent consent = mock(AccessConsent.class);
-        when(consent.getUrl()).thenReturn(consentUrl);
-        when(consent.getGrantee()).thenReturn(grantee);
-        authzRegistry.add(consent);
-        assertTrue(authzRegistry.getAccessConsents().isPresent(consentUrl));
+        AccessAuthorization authorization = mock(AccessAuthorization.class);
+        when(authorization.getUrl()).thenReturn(authorizationUrl);
+        when(authorization.getGrantee()).thenReturn(grantee);
+        authzRegistry.add(authorization);
+        assertTrue(authzRegistry.getAccessAuthorizations().isPresent(authorizationUrl));
     }
 
     @Test
-    @DisplayName("Replace and remove access consent from authorization registry")
-    void replaceAccessConsent() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    @DisplayName("Replace and remove access authorization from authorization registry")
+    void replaceAccessAuthorization() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
         URL registryUrl = toUrl(server, "/authorization/");
         URL originalUrl = toUrl(server, "/authorization/all-2");
         URL replacedUrl = toUrl(server, "/authorization/all-replaced-2");
 
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(registryUrl, saiSession);
-        AccessConsent original = AccessConsent.get(originalUrl, saiSession);
-        AccessConsent.Builder builder = new AccessConsent.Builder(replacedUrl, saiSession);
-        AccessConsent replaced = builder.setGrantedBy(original.getGrantedBy()).setGrantedWith(original.getGrantedWith())
+        AccessAuthorization original = AccessAuthorization.get(originalUrl, saiSession);
+        AccessAuthorization.Builder builder = new AccessAuthorization.Builder(replacedUrl, saiSession);
+        AccessAuthorization replaced = builder.setGrantedBy(original.getGrantedBy()).setGrantedWith(original.getGrantedWith())
                                         .setGrantedAt(original.getGrantedAt()).setGrantee(original.getGrantee())
                                         .setAccessNeedGroup(original.getAccessNeedGroup()).setReplaces(original.getUrl())
-                                        .setDataConsents(original.getDataConsents()).build();
+                                        .setDataAuthorizations(original.getDataAuthorizations()).build();
         authzRegistry.add(replaced);
-        assertTrue(authzRegistry.getAccessConsents().isPresent(replacedUrl));
-        assertFalse(authzRegistry.getAccessConsents().isPresent(originalUrl));
+        assertTrue(authzRegistry.getAccessAuthorizations().isPresent(replacedUrl));
+        assertFalse(authzRegistry.getAccessAuthorizations().isPresent(originalUrl));
     }
 
     @Test
-    @DisplayName("Remove access consents from authorization registry")
-    void removeAccessConsents() throws SaiException, SaiNotFoundException {
+    @DisplayName("Remove access authorizations from authorization registry")
+    void removeAccessAuthorizations() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
 
-        URL consentUrl = toUrl(server, "/authorization/all-1");
-        AccessConsent consent = mock(AccessConsent.class);
-        when(consent.getUrl()).thenReturn(consentUrl);
-        authzRegistry.remove(consent);
-        assertFalse(authzRegistry.getAccessConsents().isPresent(consentUrl));
+        URL authorizationUrl = toUrl(server, "/authorization/all-1");
+        AccessAuthorization authorization = mock(AccessAuthorization.class);
+        when(authorization.getUrl()).thenReturn(authorizationUrl);
+        authzRegistry.remove(authorization);
+        assertFalse(authzRegistry.getAccessAuthorizations().isPresent(authorizationUrl));
     }
 
     @Test
-    @DisplayName("Fail to add access consents to authorization registry - already exists")
-    void failToAddAccessConsent() throws SaiException, SaiNotFoundException {
+    @DisplayName("Fail to add access authorizations to authorization registry - already exists")
+    void failToAddAccessAuthorization() throws SaiException, SaiNotFoundException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
 
-        URL consentUrl = toUrl(server, "/authorization/all-1");
+        URL authorizationUrl = toUrl(server, "/authorization/all-1");
         URL grantee = stringToUrl("https://projectron.example/id");
-        AccessConsent consent = mock(AccessConsent.class);
-        when(consent.getUrl()).thenReturn(consentUrl);
-        when(consent.getGrantee()).thenReturn(grantee);
-        assertThrows(SaiAlreadyExistsException.class, () -> authzRegistry.add(consent));
+        AccessAuthorization authorization = mock(AccessAuthorization.class);
+        when(authorization.getUrl()).thenReturn(authorizationUrl);
+        when(authorization.getGrantee()).thenReturn(grantee);
+        assertThrows(SaiAlreadyExistsException.class, () -> authzRegistry.add(authorization));
     }
 
     private void checkRegistry(AuthorizationRegistry authzRegistry) {
         assertNotNull(authzRegistry);
-        assertTrue(accessConsentUrls.containsAll(authzRegistry.getAccessConsents().getRegistrationUrls()));
+        assertTrue(accessAuthorizationUrls.containsAll(authzRegistry.getAccessAuthorizations().getRegistrationUrls()));
     }
 }

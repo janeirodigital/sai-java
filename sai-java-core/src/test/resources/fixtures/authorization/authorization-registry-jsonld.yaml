@@ -6,5 +6,5 @@ body: >
 
   {
     "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
-    "hasAccessConsents" : ["${SERVER_BASE}/authorization/all-1", "${SERVER_BASE}/authorization/registry-1", "${SERVER_BASE}/authorization/agent-1", "${SERVER_BASE}/authorization/selected-1"]
+    "hasAccessAuthorizations" : ["${SERVER_BASE}/authorization/all-1", "${SERVER_BASE}/authorization/registry-1", "${SERVER_BASE}/authorization/agent-1", "${SERVER_BASE}/authorization/selected-1"]
   }

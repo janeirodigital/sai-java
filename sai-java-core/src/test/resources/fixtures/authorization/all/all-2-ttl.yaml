@@ -14,11 +14,11 @@ body: >
   PREFIX alice-authorization: <${SERVER_BASE}/authorization/>
 
   alice-authorization:all-2
-    a interop:AccessConsent ;
+    a interop:AccessAuthorization ;
     interop:grantedBy alice:id ;
     interop:grantedWith jarvis:id ;
     interop:grantedAt "2020-09-05T06:15:01Z"^^xsd:dateTime ;
     interop:grantee nevernote:id ;
     interop:hasAccessNeedGroup nevernote:\#d8219b1f ;
-    interop:hasDataConsent
+    interop:hasDataAuthorization
       alice-authorization:all-2-note .

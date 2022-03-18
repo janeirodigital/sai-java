@@ -17,14 +17,14 @@ body: >
   PREFIX pm-shapetrees: <${SERVER_BASE}/shapetrees/pm#>
 
   alice-authorization:agent-1-milestone
-    a interop:DataConsent ;
+    a interop:DataAuthorization ;
     interop:dataOwner bob:id ;
     interop:grantedBy alice:id ;
     interop:grantee projectron:id ;
     interop:registeredShapeTree pm-shapetrees:MilestoneTree ;
     interop:accessMode acl:Read, acl:Create ;
     interop:creatorAccessMode acl:Update, acl:Delete ;
-    interop:scopeOfConsent interop:Inherited ;
+    interop:scopeOfAuthorization interop:Inherited ;
     interop:satisfiesAccessNeed projectron:\#bd66ee2b ;
-    interop:inheritsFromConsent
+    interop:inheritsFromAuthorization
       alice-authorization:agent-1-project .

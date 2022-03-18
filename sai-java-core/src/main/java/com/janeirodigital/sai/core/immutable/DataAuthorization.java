@@ -24,10 +24,10 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**
  * Immutable instantiation of an
- * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-consent">Data Consent</a>
+ * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-authorization">Data Authorization</a>
  */
 @Getter
-public class DataConsent extends ImmutableResource {
+public class DataAuthorization extends ImmutableResource {
 
     private final URL dataOwner;
     private final URL grantedBy;
@@ -35,19 +35,19 @@ public class DataConsent extends ImmutableResource {
     private final URL registeredShapeTree;
     private final List<RDFNode> accessModes;
     private final List<RDFNode> creatorAccessModes;
-    private final RDFNode scopeOfConsent;
+    private final RDFNode scopeOfAuthorization;
     private final URL dataRegistration;
     private final List<URL> dataInstances;
     private final URL accessNeed;
     private final URL inheritsFrom;
-    private final List<DataConsent> inheritingConsents;
+    private final List<DataAuthorization> inheritingAuthorizations;
 
     /**
-     * Construct a {@link DataConsent} instance from the provided {@link Builder}.
+     * Construct a {@link DataAuthorization} instance from the provided {@link Builder}.
      * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
-    private DataConsent(Builder builder) throws SaiException {
+    private DataAuthorization(Builder builder) throws SaiException {
         super(builder);
         this.dataOwner = builder.dataOwner;
         this.grantedBy = builder.grantedBy;
@@ -55,25 +55,25 @@ public class DataConsent extends ImmutableResource {
         this.registeredShapeTree = builder.registeredShapeTree;
         this.accessModes = builder.accessModes;
         this.creatorAccessModes = builder.creatorAccessModes;
-        this.scopeOfConsent = builder.scopeOfConsent;
+        this.scopeOfAuthorization = builder.scopeOfAuthorization;
         this.dataRegistration = builder.dataRegistration;
         this.dataInstances = builder.dataInstances;
         this.accessNeed = builder.accessNeed;
         this.inheritsFrom = builder.inheritsFrom;
-        this.inheritingConsents = new ArrayList<>();
+        this.inheritingAuthorizations = new ArrayList<>();
     }
 
     /**
-     * Get a {@link DataConsent} at the provided <code>url</code>
-     * @param url URL of the {@link DataConsent} to get
+     * Get a {@link DataAuthorization} at the provided <code>url</code>
+     * @param url URL of the {@link DataAuthorization} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
-     * @return Retrieved {@link DataConsent}
+     * @return Retrieved {@link DataAuthorization}
      * @throws SaiException
      * @throws SaiNotFoundException
      */
-    public static DataConsent get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
-        DataConsent.Builder builder = new DataConsent.Builder(url, saiSession);
+    public static DataAuthorization get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+        DataAuthorization.Builder builder = new DataAuthorization.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
         }
@@ -81,68 +81,68 @@ public class DataConsent extends ImmutableResource {
 
     /**
      * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link DataConsent} to get
+     * @param url URL of the {@link DataAuthorization} to get
      * @param saiSession {@link SaiSession} to assign
-     * @return Retrieved {@link DataConsent}
+     * @return Retrieved {@link DataAuthorization}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public static DataConsent get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static DataAuthorization get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
-     * Reload a new instance of {@link DataConsent} using the attributes of the current instance
-     * @return Reloaded {@link DataConsent}
+     * Reload a new instance of {@link DataAuthorization} using the attributes of the current instance
+     * @return Reloaded {@link DataAuthorization}
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public DataConsent reload() throws SaiNotFoundException, SaiException {
+    public DataAuthorization reload() throws SaiNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
     
     /**
-     * Generate one or more {@link DataGrant}s for this {@link DataConsent}.
+     * Generate one or more {@link DataGrant}s for this {@link DataAuthorization}.
      * @return List of generated {@link DataGrant}s
      */
-    public List<DataGrant> generateGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
+    public List<DataGrant> generateGrants(AccessAuthorization accessAuthorization, AgentRegistration granteeRegistration,
                                           AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
         Objects.requireNonNull(granteeRegistration, "Must provide a grantee agent registration to generate data grants");
         Objects.requireNonNull(agentRegistry, "Must provide an agent registry to generate data grants");
         Objects.requireNonNull(dataRegistries, "Must provide data registries to generate data grants");
-        if (this.getScopeOfConsent().equals(SCOPE_INHERITED)) { throw new SaiException("A data consent with an inherited scope cannot generate data grants"); }
+        if (this.getScopeOfAuthorization().equals(SCOPE_INHERITED)) { throw new SaiException("A data authorization with an inherited scope cannot generate data grants"); }
         List<DataGrant> dataGrants = new ArrayList<>();
         if (this.getDataOwner() == null || this.getDataOwner().equals(this.getGrantedBy())) {
             // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
             // Scope: AllFromRegistry - Data owner sharing all data of a type from a data registry they own (dataOwner == grantedBy)
             // Scope: SelectedFromRegistry - Data owner sharing data instances of a type from a data registry they own (dataOwner == grantedBy)
-            dataGrants.addAll(generateSourceGrants(accessConsent, granteeRegistration, agentRegistry, dataRegistries));
+            dataGrants.addAll(generateSourceGrants(accessAuthorization, granteeRegistration, agentRegistry, dataRegistries));
         }
 
         if (this.getDataOwner() == null || !this.getDataOwner().equals(this.getGrantedBy())) {
             // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
             // Scope: AllFromAgent - Data owner sharing all data of a type shared with them (dataOwner != grantedBy)
-            dataGrants.addAll(generateDelegatedGrants(accessConsent, granteeRegistration, agentRegistry, dataRegistries));
+            dataGrants.addAll(generateDelegatedGrants(accessAuthorization, granteeRegistration, agentRegistry, dataRegistries));
         }
         return dataGrants;
     }
 
     /**
-     * Generate grants for a {@link DataConsent} where the data owner is sharing data they own directly.
+     * Generate grants for a {@link DataAuthorization} where the data owner is sharing data they own directly.
      * <br>Applies to scopes: All, AllFromRegistry, SelectedFromRegistry
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
-     * @param accessConsent {@link AccessConsent} that this {@link DataConsent} is associated with
+     * @param accessAuthorization {@link AccessAuthorization} that this {@link DataAuthorization} is associated with
      * @param granteeRegistration {@link AgentRegistration} of the grantee in data owner's {@link AgentRegistry}
      * @param agentRegistry {@link AgentRegistry} of the data owner
      * @param dataRegistries List of {@link DataRegistry} instances of the data owner
      * @return List of generated {@link DataGrant}s
      * @throws SaiException
      */
-    private List<DataGrant> generateSourceGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
+    private List<DataGrant> generateSourceGrants(AccessAuthorization accessAuthorization, AgentRegistration granteeRegistration,
                                                  AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException {
 
-        if (!this.getScopeOfConsent().equals(SCOPE_ALL) && !this.getScopeOfConsent().equals(SCOPE_ALL_FROM_REGISTRY) && !this.getScopeOfConsent().equals(SCOPE_SELECTED_FROM_REGISTRY)) {
-            throw new SaiException("Cannot generate a regular (non-delegated) data grant for a data consent with scope: " + this.getScopeOfConsent());
+        if (!this.getScopeOfAuthorization().equals(SCOPE_ALL) && !this.getScopeOfAuthorization().equals(SCOPE_ALL_FROM_REGISTRY) && !this.getScopeOfAuthorization().equals(SCOPE_SELECTED_FROM_REGISTRY)) {
+            throw new SaiException("Cannot generate a regular (non-delegated) data grant for a data authorization with scope: " + this.getScopeOfAuthorization());
         }
         // get data registrations from all registries that match the registered shape tree
         Map<DataRegistration, DataRegistry> dataRegistrations = new HashMap<>();
@@ -167,10 +167,10 @@ public class DataConsent extends ImmutableResource {
             URL dataGrantUrl = granteeRegistration.generateContainedUrl();
             DataGrant.Builder grantBuilder = new DataGrant.Builder(dataGrantUrl, this.saiSession);
             // create children if needed (generate child source grants)
-            List<DataGrant> childDataGrants = generateChildSourceGrants(accessConsent, dataGrantUrl, entry.getKey(), entry.getValue(), granteeRegistration);
+            List<DataGrant> childDataGrants = generateChildSourceGrants(accessAuthorization, dataGrantUrl, entry.getKey(), entry.getValue(), granteeRegistration);
             // build the data grant
             grantBuilder.setScopeOfGrant(SCOPE_ALL_FROM_REGISTRY); // default value in this context
-            if (this.getScopeOfConsent().equals(SCOPE_SELECTED_FROM_REGISTRY)) { grantBuilder.setScopeOfGrant(SCOPE_SELECTED_FROM_REGISTRY); }
+            if (this.getScopeOfAuthorization().equals(SCOPE_SELECTED_FROM_REGISTRY)) { grantBuilder.setScopeOfGrant(SCOPE_SELECTED_FROM_REGISTRY); }
             grantBuilder.setDataOwner(this.grantedBy);
             grantBuilder.setGrantee(this.grantee);
             grantBuilder.setRegisteredShapeTree(this.registeredShapeTree);
@@ -188,10 +188,10 @@ public class DataConsent extends ImmutableResource {
 
     /**
      * Generate inherited "child" grants for a parent {@link DataGrant}, where the data being granted is
-     * being shared by the data owner directly. Called from {@link #generateSourceGrants(AccessConsent, AgentRegistration, AgentRegistry, List)}.
+     * being shared by the data owner directly. Called from {@link #generateSourceGrants(AccessAuthorization, AgentRegistration, AgentRegistry, List)}.
      * <br>Applies to scopes: Inherited
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
-     * @param accessConsent {@link AccessConsent} that the {@link DataConsent} is associated with
+     * @param accessAuthorization {@link AccessAuthorization} that the {@link DataAuthorization} is associated with
      * @param dataGrantUrl URL of the parent {@link DataGrant} being inherited from
      * @param dataRegistration {@link DataRegistration} the data resides in
      * @param dataRegistry {@link DataRegistry} the <code>dataRegistration</code> belongs to
@@ -199,25 +199,25 @@ public class DataConsent extends ImmutableResource {
      * @return List of generated {@link DataGrant}s
      * @throws SaiException
      */
-    private List<DataGrant> generateChildSourceGrants(AccessConsent accessConsent, URL dataGrantUrl, DataRegistration dataRegistration,
+    private List<DataGrant> generateChildSourceGrants(AccessAuthorization accessAuthorization, URL dataGrantUrl, DataRegistration dataRegistration,
                                                       DataRegistry dataRegistry, AgentRegistration granteeRegistration) throws SaiException {
         List<DataGrant> childDataGrants = new ArrayList<>();
-        for (DataConsent childConsent : accessConsent.getDataConsents()) {
-            // for each child data consent that inherits from the current one (e.g. specifies it with inheritsFrom)
-            if (childConsent.getScopeOfConsent().equals(SCOPE_INHERITED) && childConsent.getInheritsFrom().equals(this.getUrl())) {
+        for (DataAuthorization childAuthorization : accessAuthorization.getDataAuthorizations()) {
+            // for each child data authorization that inherits from the current one (e.g. specifies it with inheritsFrom)
+            if (childAuthorization.getScopeOfAuthorization().equals(SCOPE_INHERITED) && childAuthorization.getInheritsFrom().equals(this.getUrl())) {
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();
-                // find the data registration for the child data consent (must be same registry as parent)
-                DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(childConsent.registeredShapeTree);
+                // find the data registration for the child data authorization (must be same registry as parent)
+                DataRegistration childRegistration = dataRegistry.getDataRegistrations().find(childAuthorization.registeredShapeTree);
                 if (childRegistration == null) { throw new SaiException("Could not find data registration " + dataRegistration.getUrl() + " in registry " + dataRegistry.getUrl()); }
                 DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession);
-                childBuilder.setDataOwner(childConsent.grantedBy);
-                childBuilder.setGrantee(childConsent.grantee);
-                childBuilder.setRegisteredShapeTree(childConsent.registeredShapeTree);
+                childBuilder.setDataOwner(childAuthorization.grantedBy);
+                childBuilder.setGrantee(childAuthorization.grantee);
+                childBuilder.setRegisteredShapeTree(childAuthorization.registeredShapeTree);
                 childBuilder.setDataRegistration(childRegistration.getUrl());
                 childBuilder.setScopeOfGrant(SCOPE_INHERITED);
-                childBuilder.setAccessModes(childConsent.accessModes);
-                childBuilder.setCreatorAccessModes(childConsent.creatorAccessModes);
-                childBuilder.setAccessNeed(childConsent.accessNeed);
+                childBuilder.setAccessModes(childAuthorization.accessModes);
+                childBuilder.setCreatorAccessModes(childAuthorization.creatorAccessModes);
+                childBuilder.setAccessNeed(childAuthorization.accessNeed);
                 childBuilder.setInheritsFrom(dataGrantUrl);
                 childDataGrants.add(childBuilder.build());
             }
@@ -234,21 +234,21 @@ public class DataConsent extends ImmutableResource {
      * <br>Applies to scopes: All, AllFromAgent
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#delegated-data-grant">Delegated Data Grant</a>
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
-     * @param accessConsent {@link AccessConsent} that the {@link DataConsent} is associated with
+     * @param accessAuthorization {@link AccessAuthorization} that the {@link DataAuthorization} is associated with
      * @param granteeRegistration {@link AgentRegistration} of the grantee receiving delegated permissions
      * @param agentRegistry {@link AgentRegistry} of the social agent delegating permission
      * @param dataRegistries {@link DataRegistry} list of the social agent delegating permission
      * @return
      */
-    private List<DataGrant> generateDelegatedGrants(AccessConsent accessConsent, AgentRegistration granteeRegistration,
+    private List<DataGrant> generateDelegatedGrants(AccessAuthorization accessAuthorization, AgentRegistration granteeRegistration,
                                                     AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
-        if (!this.getScopeOfConsent().equals(SCOPE_ALL) && !this.getScopeOfConsent().equals(SCOPE_ALL_FROM_AGENT)) {
-            throw new SaiException("Cannot generate a delegated data grant for a data consent with scope: " + this.getScopeOfConsent());
+        if (!this.getScopeOfAuthorization().equals(SCOPE_ALL) && !this.getScopeOfAuthorization().equals(SCOPE_ALL_FROM_AGENT)) {
+            throw new SaiException("Cannot generate a delegated data grant for a data authorization with scope: " + this.getScopeOfAuthorization());
         }
 
         List<DataGrant> delegatedGrants = new ArrayList<>();
         for (SocialAgentRegistration agentRegistration : agentRegistry.getSocialAgentRegistrations()) {
-            // continue if the grantee of the data consent is the registered agent of the agent registration (don't delegate to themselves)
+            // continue if the grantee of the data authorization is the registered agent of the agent registration (don't delegate to themselves)
             if (this.getGrantee().equals(agentRegistration.getRegisteredAgent())) { continue; }
             // Continue if the data owner is set (AllFromAgent) but the agent registration is not theirs (registeredAgent)
             if (this.getDataOwner() != null && !agentRegistration.getRegisteredAgent().equals(this.getDataOwner())) { continue; }
@@ -260,11 +260,11 @@ public class DataConsent extends ImmutableResource {
             if (remoteRegistration.getAccessGrantUrl() == null) { continue; }
             ReadableAccessGrant remoteGrant = ReadableAccessGrant.get(remoteRegistration.getAccessGrantUrl(), this.saiSession);
             for (ReadableDataGrant remoteDataGrant : remoteGrant.getDataGrants()) {
-                // skip data grants that don't match the shape tree of this data consent
+                // skip data grants that don't match the shape tree of this data authorization
                 if (!remoteDataGrant.getRegisteredShapeTree().equals(this.registeredShapeTree)) { continue; }
                 // filter to a given data registration if specified
                 if (this.getDataRegistration() != null) { if (!remoteDataGrant.getDataRegistration().equals(this.getDataRegistration())) { continue; } }
-                // Build the delegated data grant based on this data consent and the remote data grant
+                // Build the delegated data grant based on this data authorization and the remote data grant
                 URL grantUrl = granteeRegistration.generateContainedUrl();
                 DataGrant.Builder grantBuilder = new DataGrant.Builder(grantUrl, this.saiSession);
                 // generate child delegated data grants if necessary
@@ -276,10 +276,10 @@ public class DataConsent extends ImmutableResource {
                 grantBuilder.setScopeOfGrant(remoteDataGrant.getScopeOfGrant());
                 grantBuilder.setAccessNeed(remoteDataGrant.getAccessNeed());
                 grantBuilder.setDelegationOf(remoteDataGrant.getUrl());
-                if (!remoteDataGrant.getAccessModes().containsAll(this.accessModes)) { throw new SaiException("Data consent issues access modes that were not granted by remote social agent"); }
+                if (!remoteDataGrant.getAccessModes().containsAll(this.accessModes)) { throw new SaiException("Data authorization issues access modes that were not granted by remote social agent"); }
                 grantBuilder.setAccessModes(this.accessModes);
                 if (this.canCreate()) {
-                    if (!remoteDataGrant.getCreatorAccessModes().containsAll(this.creatorAccessModes)) { throw new SaiException("Data consent issues creator access modes that were not granted by remote social agent"); }
+                    if (!remoteDataGrant.getCreatorAccessModes().containsAll(this.creatorAccessModes)) { throw new SaiException("Data authorization issues creator access modes that were not granted by remote social agent"); }
                     grantBuilder.setCreatorAccessModes(this.creatorAccessModes);
                 }
                 grantBuilder.setDataRegistration(remoteDataGrant.getDataRegistration());
@@ -301,11 +301,11 @@ public class DataConsent extends ImmutableResource {
      */
     private List<DataGrant> generateChildDelegatedGrants(URL dataGrantUrl, ReadableDataGrant remoteDataGrant, AgentRegistration granteeRegistration) throws SaiException {
         List<DataGrant> childDataGrants = new ArrayList<>();
-        for (DataConsent childConsent : this.getInheritingConsents()) {
+        for (DataAuthorization childAuthorization : this.getInheritingAuthorizations()) {
             InheritableDataGrant remoteInheritableGrant = (InheritableDataGrant) remoteDataGrant;
             for (ReadableDataGrant remoteChildGrant: remoteInheritableGrant.getInheritingGrants()) {
-                // continue if the remote inheriting grant isn't the same shape tree as the child consent
-                if (!remoteChildGrant.getRegisteredShapeTree().equals(childConsent.getRegisteredShapeTree())) { continue; }
+                // continue if the remote inheriting grant isn't the same shape tree as the child authorization
+                if (!remoteChildGrant.getRegisteredShapeTree().equals(childAuthorization.getRegisteredShapeTree())) { continue; }
                 URL childGrantUrl = granteeRegistration.generateContainedUrl();
                 DataGrant.Builder childBuilder = new DataGrant.Builder(childGrantUrl, this.saiSession);
                 childBuilder.setDataOwner(remoteChildGrant.getDataOwner());
@@ -314,10 +314,10 @@ public class DataConsent extends ImmutableResource {
                 childBuilder.setScopeOfGrant(SCOPE_INHERITED);
                 childBuilder.setAccessNeed(remoteChildGrant.getAccessNeed());
                 childBuilder.setDataRegistration(remoteChildGrant.getDataRegistration());
-                if (!remoteChildGrant.getAccessModes().containsAll(childConsent.accessModes)) { throw new SaiException("Data consent issues access modes that were not granted by remote social agent"); }
-                childBuilder.setAccessModes(childConsent.accessModes);
-                if (childConsent.canCreate()) {
-                    if (!remoteChildGrant.getCreatorAccessModes().containsAll(childConsent.creatorAccessModes)) { throw new SaiException("Data consent issues creator access modes that were not granted by remote social agent"); }
+                if (!remoteChildGrant.getAccessModes().containsAll(childAuthorization.accessModes)) { throw new SaiException("Data authorization issues access modes that were not granted by remote social agent"); }
+                childBuilder.setAccessModes(childAuthorization.accessModes);
+                if (childAuthorization.canCreate()) {
+                    if (!remoteChildGrant.getCreatorAccessModes().containsAll(childAuthorization.creatorAccessModes)) { throw new SaiException("Data authorization issues creator access modes that were not granted by remote social agent"); }
                     childBuilder.setCreatorAccessModes(this.creatorAccessModes);
                 }
                 childBuilder.setInheritsFrom(dataGrantUrl);
@@ -337,75 +337,75 @@ public class DataConsent extends ImmutableResource {
     }
 
     /**
-     * Basic structural validations of the {@link DataConsent}
+     * Basic structural validations of the {@link DataAuthorization}
      * @throws SaiException
      */
-    private static DataConsent validate(DataConsent dataConsent) throws SaiException {
-        Objects.requireNonNull(dataConsent, "Must provide a data consent to validate");
-        validateGeneral(dataConsent);
-        if (dataConsent.scopeOfConsent.equals(SCOPE_ALL)) { validateAll(dataConsent); }
-        else if (dataConsent.scopeOfConsent.equals(SCOPE_ALL_FROM_REGISTRY)) { validateAllFromRegistry(dataConsent); }
-        else if (dataConsent.scopeOfConsent.equals(SCOPE_ALL_FROM_AGENT)) { validateAllFromAgent(dataConsent); }
-        else if (dataConsent.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY)) { validateSelectedFromRegistry(dataConsent); }
-        else if (dataConsent.scopeOfConsent.equals(SCOPE_INHERITED)) { validateInherited(dataConsent); }
-        else if (dataConsent.scopeOfConsent.equals(SCOPE_NO_ACCESS)) { validateNoAccess(dataConsent); }
-        else { throw new SaiException("Unsupported data consent scope: " + dataConsent.scopeOfConsent); }
-        return dataConsent;
+    private static DataAuthorization validate(DataAuthorization dataAuthorization) throws SaiException {
+        Objects.requireNonNull(dataAuthorization, "Must provide a data authorization to validate");
+        validateGeneral(dataAuthorization);
+        if (dataAuthorization.scopeOfAuthorization.equals(SCOPE_ALL)) { validateAll(dataAuthorization); }
+        else if (dataAuthorization.scopeOfAuthorization.equals(SCOPE_ALL_FROM_REGISTRY)) { validateAllFromRegistry(dataAuthorization); }
+        else if (dataAuthorization.scopeOfAuthorization.equals(SCOPE_ALL_FROM_AGENT)) { validateAllFromAgent(dataAuthorization); }
+        else if (dataAuthorization.scopeOfAuthorization.equals(SCOPE_SELECTED_FROM_REGISTRY)) { validateSelectedFromRegistry(dataAuthorization); }
+        else if (dataAuthorization.scopeOfAuthorization.equals(SCOPE_INHERITED)) { validateInherited(dataAuthorization); }
+        else if (dataAuthorization.scopeOfAuthorization.equals(SCOPE_NO_ACCESS)) { validateNoAccess(dataAuthorization); }
+        else { throw new SaiException("Unsupported data authorization scope: " + dataAuthorization.scopeOfAuthorization); }
+        return dataAuthorization;
     }
 
     /**
-     * Validate the data consent with criteria that isn't specific to a given scope
+     * Validate the data authorization with criteria that isn't specific to a given scope
      * @throws SaiException
      */
-    private static void validateGeneral(DataConsent dataConsent) throws SaiException {
-        if (dataConsent.canCreate() && dataConsent.creatorAccessModes.isEmpty()) {
-            throw new SaiException(buildInvalidMessage(dataConsent, "Must provide creator access modes when consent includes the ability to create resources"));
+    private static void validateGeneral(DataAuthorization dataAuthorization) throws SaiException {
+        if (dataAuthorization.canCreate() && dataAuthorization.creatorAccessModes.isEmpty()) {
+            throw new SaiException(buildInvalidMessage(dataAuthorization, "Must provide creator access modes when authorization includes the ability to create resources"));
         }
-        if (!dataConsent.scopeOfConsent.equals(SCOPE_INHERITED) && dataConsent.inheritsFrom != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot inherit from another data consent without a scope of interop:Inherited")); }
-        if (!dataConsent.scopeOfConsent.equals(SCOPE_SELECTED_FROM_REGISTRY) && !dataConsent.dataInstances.isEmpty()) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot target specific data instances without a scope of interop:SelectedFromRegistry")); }
+        if (!dataAuthorization.scopeOfAuthorization.equals(SCOPE_INHERITED) && dataAuthorization.inheritsFrom != null) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Cannot inherit from another data authorization without a scope of interop:Inherited")); }
+        if (!dataAuthorization.scopeOfAuthorization.equals(SCOPE_SELECTED_FROM_REGISTRY) && !dataAuthorization.dataInstances.isEmpty()) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Cannot target specific data instances without a scope of interop:SelectedFromRegistry")); }
     }
 
     /**
-     * Validate a data consent with scope of interop:All
+     * Validate a data authorization with scope of interop:All
      */
-    private static void validateAll(DataConsent dataConsent) throws SaiException {
-        if (dataConsent.dataOwner != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot provide a data owner with scope of interop:All")); }
-        if (dataConsent.dataRegistration != null) { throw new SaiException(buildInvalidMessage(dataConsent, "Cannot target a specific data registration with scope of interop:All")); }
+    private static void validateAll(DataAuthorization dataAuthorization) throws SaiException {
+        if (dataAuthorization.dataOwner != null) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Cannot provide a data owner with scope of interop:All")); }
+        if (dataAuthorization.dataRegistration != null) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Cannot target a specific data registration with scope of interop:All")); }
     }
 
     /**
-     * Validate a data consent with scope of interop:AllFromRegistry
+     * Validate a data authorization with scope of interop:AllFromRegistry
      */
-    private static void validateAllFromRegistry(DataConsent dataConsent) throws SaiException {
-        if (dataConsent.dataRegistration == null) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide a specific data registration with a scope of interop:AllFromRegistry")); }
+    private static void validateAllFromRegistry(DataAuthorization dataAuthorization) throws SaiException {
+        if (dataAuthorization.dataRegistration == null) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Must provide a specific data registration with a scope of interop:AllFromRegistry")); }
     }
 
     /**
-     * Validate a data consent with scope of interop:AllFromAgent
+     * Validate a data authorization with scope of interop:AllFromAgent
      */
-    private static void validateAllFromAgent(DataConsent dataConsent) {
+    private static void validateAllFromAgent(DataAuthorization dataAuthorization) {
         // Placeholder for future logic to validate all from agent scope
     }
 
     /**
-     * Validate a data consent with scope of interop:SelectedFromRegistry
+     * Validate a data authorization with scope of interop:SelectedFromRegistry
      */
-    private static void validateSelectedFromRegistry(DataConsent dataConsent) throws SaiException {
-        if (dataConsent.dataRegistration == null) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide a specific data registration with a scope of interop:SelectedFromRegistry")); }
-        if (dataConsent.getDataInstances().isEmpty()) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide specific data instances with a scope of interop:SelectedFromRegistry")); }
+    private static void validateSelectedFromRegistry(DataAuthorization dataAuthorization) throws SaiException {
+        if (dataAuthorization.dataRegistration == null) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Must provide a specific data registration with a scope of interop:SelectedFromRegistry")); }
+        if (dataAuthorization.getDataInstances().isEmpty()) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Must provide specific data instances with a scope of interop:SelectedFromRegistry")); }
     }
 
     /**
-     * Validate a data consent with scope of interop:Inherited
+     * Validate a data authorization with scope of interop:Inherited
      */
-    private static void validateInherited(DataConsent dataConsent) throws SaiException {
-        if (dataConsent.inheritsFrom == null) { throw new SaiException(buildInvalidMessage(dataConsent, "Must provide a data consent to inherit from with a scope of interop:Inherited")); }
+    private static void validateInherited(DataAuthorization dataAuthorization) throws SaiException {
+        if (dataAuthorization.inheritsFrom == null) { throw new SaiException(buildInvalidMessage(dataAuthorization, "Must provide a data authorization to inherit from with a scope of interop:Inherited")); }
     }
 
     /**
-     * Validate a data consent with scope of interop:NoAccess
+     * Validate a data authorization with scope of interop:NoAccess
      */
-    private static void validateNoAccess(DataConsent dataConsent) { 
+    private static void validateNoAccess(DataAuthorization dataAuthorization) {
         // Placeholder for future logic to validate no access scope
     }
 
@@ -414,18 +414,18 @@ public class DataConsent extends ImmutableResource {
      * @param reason reason for the validation failure
      * @return Stringified failure message
      */
-    private static String buildInvalidMessage(DataConsent dataConsent, String reason) {
+    private static String buildInvalidMessage(DataAuthorization dataAuthorization, String reason) {
         StringBuilder message = new StringBuilder();
-        message.append("Invalid data consent " + dataConsent.url);
-        message.append(" - Scope: " + dataConsent.scopeOfConsent);
-        message.append(" - Shape Tree: " + dataConsent.registeredShapeTree);
-        message.append(" - Grantee: " + dataConsent.grantee);
+        message.append("Invalid data authorization " + dataAuthorization.url);
+        message.append(" - Scope: " + dataAuthorization.scopeOfAuthorization);
+        message.append(" - Shape Tree: " + dataAuthorization.registeredShapeTree);
+        message.append(" - Grantee: " + dataAuthorization.grantee);
         message.append(" - Reason: " + reason);
         return message.toString();
     }
 
     /**
-     * Builder for {@link DataConsent} instances.
+     * Builder for {@link DataAuthorization} instances.
      */
     public static class Builder extends ImmutableResource.Builder<Builder> {
 
@@ -435,7 +435,7 @@ public class DataConsent extends ImmutableResource {
         private URL registeredShapeTree;
         private List<RDFNode> accessModes;
         private List<RDFNode> creatorAccessModes;
-        private RDFNode scopeOfConsent;
+        private RDFNode scopeOfAuthorization;
         private URL dataRegistration;
         private List<URL> dataInstances;
         private URL accessNeed;
@@ -443,7 +443,7 @@ public class DataConsent extends ImmutableResource {
 
         /**
          * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link AccessConsent} to build
+         * @param url URL of the {@link AccessAuthorization} to build
          * @param saiSession {@link SaiSession} to assign
          */
         public Builder(URL url, SaiSession saiSession) {
@@ -482,61 +482,61 @@ public class DataConsent extends ImmutableResource {
         }
 
         public Builder setGrantedBy(URL grantedBy) {
-            Objects.requireNonNull(grantedBy, "Must provide a URL for the social agent that granted the consent");
+            Objects.requireNonNull(grantedBy, "Must provide a URL for the social agent that granted the authorization");
             this.grantedBy = grantedBy;
             return this;
         }
 
         public Builder setGrantee(URL grantee) {
-            Objects.requireNonNull(grantee, "Must provide a URL for the grantee of the data consent");
+            Objects.requireNonNull(grantee, "Must provide a URL for the grantee of the data authorization");
             this.grantee = grantee;
             return this;
         }
 
         public Builder setRegisteredShapeTree(URL registeredShapeTree) {
-            Objects.requireNonNull(registeredShapeTree, "Must provide a URL for the registered shape tree of the data consent");
+            Objects.requireNonNull(registeredShapeTree, "Must provide a URL for the registered shape tree of the data authorization");
             this.registeredShapeTree = registeredShapeTree;
             return this;
         }
         
         public Builder setAccessModes(List<RDFNode> accessModes) {
-            Objects.requireNonNull(accessModes, "Must provide a list of access modes for the data consent");
+            Objects.requireNonNull(accessModes, "Must provide a list of access modes for the data authorization");
             this.accessModes = accessModes;
             return this;
         }
 
         public Builder setCreatorAccessModes(List<RDFNode> creatorAccessModes) {
-            Objects.requireNonNull(creatorAccessModes, "Must provide a list of creator access modes for the data consent");
+            Objects.requireNonNull(creatorAccessModes, "Must provide a list of creator access modes for the data authorization");
             this.creatorAccessModes = creatorAccessModes;
             return this;
         }
 
-        public Builder setScopeOfConsent(RDFNode scopeOfConsent) {
-            Objects.requireNonNull(scopeOfConsent, "Must provide a scope of consent for the data consent");
-            this.scopeOfConsent = scopeOfConsent;
+        public Builder setScopeOfAuthorization(RDFNode scopeOfAuthorization) {
+            Objects.requireNonNull(scopeOfAuthorization, "Must provide a scope of authorization for the data authorization");
+            this.scopeOfAuthorization = scopeOfAuthorization;
             return this;
         }
 
         public Builder setDataRegistration(URL dataRegistration) {
-            Objects.requireNonNull(dataRegistration, "Must provide a URL for the data registration associated with the data consent");
+            Objects.requireNonNull(dataRegistration, "Must provide a URL for the data registration associated with the data authorization");
             this.dataRegistration = dataRegistration;
             return this;
         }
 
         public Builder setDataInstances(List<URL> dataInstances) {
-            Objects.requireNonNull(dataInstances, "Must provide a URL for the data instances associated with the data consent");
+            Objects.requireNonNull(dataInstances, "Must provide a URL for the data instances associated with the data authorization");
             this.dataInstances = dataInstances;
             return this;
         }
 
         public Builder setAccessNeed(URL accessNeed) {
-            Objects.requireNonNull(accessNeed, "Must provide a URL for the access need associated with the data consent");
+            Objects.requireNonNull(accessNeed, "Must provide a URL for the access need associated with the data authorization");
             this.accessNeed = accessNeed;
             return this;
         }
 
         public Builder setInheritsFrom(URL inheritsFrom) {
-            Objects.requireNonNull(inheritsFrom, "Must provide a URL for the data consent being inherited from");
+            Objects.requireNonNull(inheritsFrom, "Must provide a URL for the data authorization being inherited from");
             this.inheritsFrom = inheritsFrom;
             return this;
         }
@@ -549,30 +549,30 @@ public class DataConsent extends ImmutableResource {
                 this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
                 this.accessModes = getRequiredObjects(this.resource, ACCESS_MODE);
                 this.creatorAccessModes = getRequiredObjects(this.resource, CREATOR_ACCESS_MODE);
-                this.scopeOfConsent = getRequiredObject(this.resource, SCOPE_OF_CONSENT);
+                this.scopeOfAuthorization = getRequiredObject(this.resource, SCOPE_OF_AUTHORIZATION);
                 this.dataRegistration = getUrlObject(this.resource, HAS_DATA_REGISTRATION);
                 this.dataInstances = getUrlObjects(this.resource, HAS_DATA_INSTANCE);
                 this.accessNeed = getRequiredUrlObject(this.resource, SATISFIES_ACCESS_NEED);
-                this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_CONSENT);
+                this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_AUTHORIZATION);
             } catch (SaiNotFoundException ex) {
-                throw new SaiException("Unable to populate immutable data consent. Missing required fields: " + ex.getMessage());
+                throw new SaiException("Unable to populate immutable data authorization. Missing required fields: " + ex.getMessage());
             }
         }
 
         private void populateDataset() throws SaiException {
-            this.resource = getNewResourceForType(this.url, DATA_CONSENT);
+            this.resource = getNewResourceForType(this.url, DATA_AUTHORIZATION);
             this.dataset = this.resource.getModel();
 
             updateObject(this.resource, GRANTED_BY, this.grantedBy);
             updateObject(this.resource, GRANTEE, this.grantee);
             updateObject(this.resource, REGISTERED_SHAPE_TREE, this.registeredShapeTree);
-            updateObject(this.resource, SCOPE_OF_CONSENT, this.scopeOfConsent);
+            updateObject(this.resource, SCOPE_OF_AUTHORIZATION, this.scopeOfAuthorization);
             updateObject(this.resource, SATISFIES_ACCESS_NEED, this.accessNeed);
 
             if (this.dataOwner != null) { updateObject(this.resource, DATA_OWNER, this.dataOwner); }
             if (this.dataRegistration != null) { updateObject(this.resource, HAS_DATA_REGISTRATION, this.dataRegistration); }
             if (!this.dataInstances.isEmpty()) { updateUrlObjects(this.resource, HAS_DATA_INSTANCE, this.dataInstances); }
-            if (this.inheritsFrom != null) { updateObject(this.resource, INHERITS_FROM_CONSENT, this.inheritsFrom); }
+            if (this.inheritsFrom != null) { updateObject(this.resource, INHERITS_FROM_AUTHORIZATION, this.inheritsFrom); }
 
             final List<URL> accessModeUrls = new ArrayList<>();
             for(RDFNode mode : this.accessModes) { accessModeUrls.add(stringToUrl(mode.asResource().getURI())); }
@@ -585,15 +585,15 @@ public class DataConsent extends ImmutableResource {
             }
         }
 
-        public DataConsent build() throws SaiException {
-            Objects.requireNonNull(this.grantedBy, "Must provide a URL for the grantee of the data consent");
-            Objects.requireNonNull(this.grantee, "Must provide a URL for the grantee of the data consent");
-            Objects.requireNonNull(this.registeredShapeTree, "Must provide a URL for the registered shape tree of the data consent");
-            Objects.requireNonNull(this.accessModes, "Must provide a list of access modes for the data consent");
-            Objects.requireNonNull(this.scopeOfConsent, "Must provide a scope of consent for the data consent");
-            Objects.requireNonNull(this.accessNeed, "Must provide a URL for the access need associated with the data consent");
+        public DataAuthorization build() throws SaiException {
+            Objects.requireNonNull(this.grantedBy, "Must provide a URL for the grantee of the data authorization");
+            Objects.requireNonNull(this.grantee, "Must provide a URL for the grantee of the data authorization");
+            Objects.requireNonNull(this.registeredShapeTree, "Must provide a URL for the registered shape tree of the data authorization");
+            Objects.requireNonNull(this.accessModes, "Must provide a list of access modes for the data authorization");
+            Objects.requireNonNull(this.scopeOfAuthorization, "Must provide a scope of authorization for the data authorization");
+            Objects.requireNonNull(this.accessNeed, "Must provide a URL for the access need associated with the data authorization");
             if (this.dataset == null) { populateDataset(); }
-            return validate(new DataConsent(this));
+            return validate(new DataAuthorization(this));
         }
     }
 }

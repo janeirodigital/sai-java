@@ -47,28 +47,28 @@ public class InteropVocabulary {
     public static final Property RECIPROCAL_REGISTRATION = model.createProperty(NS + "reciprocalRegistration");
     public static final Property HAS_ACCESS_GRANT = model.createProperty(NS + "hasAccessGrant");
 
-    // Access Consents
+    // Access Authorizations
     public static final RDFNode AUTHORIZATION_REGISTRY = model.getResource(NS + "AuthorizationRegistry");
-    public static final RDFNode ACCESS_CONSENT = model.getResource(NS + "AccessConsent");
-    public static final Property HAS_ACCESS_CONSENT = model.createProperty(NS + "hasAccessConsent");
+    public static final RDFNode ACCESS_AUTHORIZATION = model.getResource(NS + "AccessAuthorization");
+    public static final Property HAS_ACCESS_AUTHORIZATION = model.createProperty(NS + "hasAccessAuthorization");
     public static final Property GRANTED_BY = model.createProperty(NS + "grantedBy");
     public static final Property GRANTED_WITH = model.createProperty(NS + "grantedWith");
     public static final Property GRANTED_AT = model.createProperty(NS + "grantedAt");
     public static final Property GRANTEE = model.createProperty(NS + "grantee");
-    public static final Property HAS_DATA_CONSENT = model.createProperty(NS + "hasDataConsent");
+    public static final Property HAS_DATA_AUTHORIZATION = model.createProperty(NS + "hasDataAuthorization");
     public static final Property REPLACES = model.createProperty(NS + "replaces");
 
-    // Data Consents
-    public static final RDFNode DATA_CONSENT = model.getResource(NS + "DataConsent");
+    // Data Authorizations
+    public static final RDFNode DATA_AUTHORIZATION = model.getResource(NS + "DataAuthorization");
     public static final Property DATA_OWNER = model.createProperty(NS + "dataOwner");
     public static final Property REGISTERED_SHAPE_TREE = model.createProperty(NS + "registeredShapeTree");
     public static final Property ACCESS_MODE = model.createProperty(NS + "accessMode");
     public static final Property CREATOR_ACCESS_MODE = model.createProperty(NS + "creatorAccessMode");
-    public static final Property SCOPE_OF_CONSENT = model.createProperty(NS + "scopeOfConsent");
+    public static final Property SCOPE_OF_AUTHORIZATION = model.createProperty(NS + "scopeOfAuthorization");
     public static final Property SATISFIES_ACCESS_NEED = model.createProperty(NS + "satisfiesAccessNeed");
-    public static final Property INHERITS_FROM_CONSENT = model.createProperty(NS + "inheritsFromConsent");
+    public static final Property INHERITS_FROM_AUTHORIZATION = model.createProperty(NS + "inheritsFromAuthorization");
 
-    // Consent Scopes
+    // Authorization Scopes
     public static final RDFNode SCOPE_ALL = model.getResource(NS + "All");
     public static final RDFNode SCOPE_ALL_FROM_REGISTRY = model.getResource(NS + "AllFromRegistry");
     public static final RDFNode SCOPE_ALL_FROM_AGENT = model.getResource(NS + "AllFromAgent");

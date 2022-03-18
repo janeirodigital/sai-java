@@ -97,7 +97,7 @@ public class AccessGrant extends ImmutableResource {
 
         /**
          * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link AccessConsent} to build
+         * @param url URL of the {@link AccessAuthorization} to build
          * @param saiSession {@link SaiSession} to assign
          */
         public Builder(URL url, SaiSession saiSession) {
@@ -174,7 +174,7 @@ public class AccessGrant extends ImmutableResource {
         
         /**
          * Populates the fields of the {@link Builder} based on the associated Jena resource.
-         * Also retrieves and populates the associated {@link DataConsent}s.
+         * Also retrieves and populates the associated {@link DataAuthorization}s.
          * @throws SaiException
          */
         private void populateFromDataset() throws SaiException {
@@ -208,7 +208,7 @@ public class AccessGrant extends ImmutableResource {
             Objects.requireNonNull(this.grantedBy, "Must provide a URL for the social agent that granted the access grant");
             Objects.requireNonNull(this.grantee, "Must provide a URL for the grantee of the access grant");
             Objects.requireNonNull(this.accessNeedGroup, "Must provide a URL for the access need group of the access grant");
-            Objects.requireNonNull(this.dataGrants, "Must provide a list of data consents for the access grant");
+            Objects.requireNonNull(this.dataGrants, "Must provide a list of data authorizations for the access grant");
             if (this.dataset == null) { populateDataset(); }
             return new AccessGrant(this);
         }

@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
-import com.janeirodigital.sai.core.immutable.AccessConsent;
+import com.janeirodigital.sai.core.immutable.AccessAuthorization;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import lombok.Getter;
 import okhttp3.Response;
@@ -21,7 +21,7 @@ import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getNewResourceForType;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.AUTHORIZATION_REGISTRY;
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_ACCESS_CONSENT;
+import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_ACCESS_AUTHORIZATION;
 
 /**
  * Modifiable instantiation of an
@@ -30,7 +30,7 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_ACC
 @Getter
 public class AuthorizationRegistry extends CRUDResource {
 
-    private final AccessConsentList<AccessConsent> accessConsents;
+    private final AccessAuthorizationList<AccessAuthorization> accessAuthorizations;
 
     /**
      * Construct an {@link AuthorizationRegistry} instance from the provided {@link Builder}.
@@ -39,7 +39,7 @@ public class AuthorizationRegistry extends CRUDResource {
      */
     private AuthorizationRegistry(Builder builder) throws SaiException {
         super(builder);
-        this.accessConsents = builder.accessConsents;
+        this.accessAuthorizations = builder.accessAuthorizations;
     }
 
     /**
@@ -79,39 +79,39 @@ public class AuthorizationRegistry extends CRUDResource {
     }
 
     /**
-     * Indicate whether the {@link AuthorizationRegistry} has any {@link AccessConsent}s
-     * @return true if there are no access consents
+     * Indicate whether the {@link AuthorizationRegistry} has any {@link AccessAuthorization}s
+     * @return true if there are no access authorizations
      */
     public boolean isEmpty() {
-        return this.accessConsents.isEmpty();
+        return this.accessAuthorizations.isEmpty();
     }
 
     /**
-     * Add an {@link AccessConsent} to the {@link AuthorizationRegistry}. In the event that the
-     * {@link AccessConsent} replaces another, the replaced one will be removed first (as it is
+     * Add an {@link AccessAuthorization} to the {@link AuthorizationRegistry}. In the event that the
+     * {@link AccessAuthorization} replaces another, the replaced one will be removed first (as it is
      * linked by the one that is replacing it).
-     * @param accessConsent {@link AccessConsent} to add
+     * @param accessAuthorization {@link AccessAuthorization} to add
      * @throws SaiException
      * @throws SaiAlreadyExistsException
      */
-    public void add(AccessConsent accessConsent) throws SaiException, SaiAlreadyExistsException {
-        Objects.requireNonNull(accessConsent, "Cannot add a null access consent to authorization registry");
-        if (accessConsent.getReplaces() != null) { this.accessConsents.remove(accessConsent.getReplaces()); }
-        AccessConsent found = this.getAccessConsents().find(accessConsent.getGrantee());
+    public void add(AccessAuthorization accessAuthorization) throws SaiException, SaiAlreadyExistsException {
+        Objects.requireNonNull(accessAuthorization, "Cannot add a null access authorization to authorization registry");
+        if (accessAuthorization.getReplaces() != null) { this.accessAuthorizations.remove(accessAuthorization.getReplaces()); }
+        AccessAuthorization found = this.getAccessAuthorizations().find(accessAuthorization.getGrantee());
         if (found != null) {
-            throw new SaiAlreadyExistsException("Access Consent already exists for grantee " + accessConsent.getGrantee() +
-                                                " at " + found.getUrl() + " and added consent does not replace it");
+            throw new SaiAlreadyExistsException("Access Authorization already exists for grantee " + accessAuthorization.getGrantee() +
+                                                " at " + found.getUrl() + " and added authorization does not replace it");
         }
-        this.getAccessConsents().add(accessConsent.getUrl());
+        this.getAccessAuthorizations().add(accessAuthorization.getUrl());
     }
 
     /**
-     * Remove an {@link AccessConsent} from the {@link AuthorizationRegistry}
-     * @param accessConsent {@link AccessConsent} to remove
+     * Remove an {@link AccessAuthorization} from the {@link AuthorizationRegistry}
+     * @param accessAuthorization {@link AccessAuthorization} to remove
      */
-    public void remove(AccessConsent accessConsent) {
-        Objects.requireNonNull(accessConsent, "Cannot remove a null access consent from authorization registry");
-        this.accessConsents.remove(accessConsent.getUrl());
+    public void remove(AccessAuthorization accessAuthorization) {
+        Objects.requireNonNull(accessAuthorization, "Cannot remove a null access authorization from authorization registry");
+        this.accessAuthorizations.remove(accessAuthorization.getUrl());
     }
 
     /**
@@ -119,7 +119,7 @@ public class AuthorizationRegistry extends CRUDResource {
      */
     public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private AccessConsentList<AccessConsent> accessConsents;
+        private AccessAuthorizationList<AccessAuthorization> accessAuthorizations;
 
         /**
          * Initialize builder with <code>url</code> and <code>saiSession</code>
@@ -158,8 +158,8 @@ public class AuthorizationRegistry extends CRUDResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.accessConsents = new AccessConsentList<>(this.saiSession, this.resource);
-                this.accessConsents.populate();
+                this.accessAuthorizations = new AccessAuthorizationList<>(this.saiSession, this.resource);
+                this.accessAuthorizations.populate();
             } catch (SaiException ex) {
                 throw new SaiException("Failed to load authorization registry " + this.url + ": " + ex.getMessage());
             }
@@ -172,7 +172,7 @@ public class AuthorizationRegistry extends CRUDResource {
         private void populateDataset() {
             this.resource = getNewResourceForType(this.url, AUTHORIZATION_REGISTRY);
             this.dataset = this.resource.getModel();
-            // Note that access consent URLs added via setDataRegistrationUrls are automatically added to the
+            // Note that access authorization URLs added via setDataRegistrationUrls are automatically added to the
             // dataset graph, so they don't have to be added here again
         }
 
@@ -190,53 +190,53 @@ public class AuthorizationRegistry extends CRUDResource {
     }
 
     /**
-     * Class for access and iteration of {@link AccessConsent}s. Most of the capability is provided
+     * Class for access and iteration of {@link AccessAuthorization}s. Most of the capability is provided
      * through extension of {@link RegistrationList}, which requires select overrides to ensure the correct
      * types are built and returned by the iterator.
      */
-    public static class AccessConsentList<T> extends RegistrationList<T> {
+    public static class AccessAuthorizationList<T> extends RegistrationList<T> {
 
-        public AccessConsentList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_ACCESS_CONSENT); }
+        public AccessAuthorizationList(SaiSession saiSession, Resource resource) { super(saiSession, resource, HAS_ACCESS_AUTHORIZATION); }
 
         /**
-         * Override the default find in {@link RegistrationList} to lookup based on the grantee of an {@link AccessConsent}
+         * Override the default find in {@link RegistrationList} to lookup based on the grantee of an {@link AccessAuthorization}
          * @param granteeUrl URL of the grantee to find
          * @return {@link SocialAgentRegistration}
          */
         @Override
         public T find(URL granteeUrl) {
             for (T registration : this) {
-                AccessConsent consent = (AccessConsent) registration;
-                if (granteeUrl.equals(consent.getGrantee())) { return (T) consent; }
+                AccessAuthorization authorization = (AccessAuthorization) registration;
+                if (granteeUrl.equals(authorization.getGrantee())) { return (T) authorization; }
             }
             return null;
         }
 
         /**
-         * Return an iterator for {@link AccessConsent} instances
-         * @return {@link AccessConsent} Iterator
+         * Return an iterator for {@link AccessAuthorization} instances
+         * @return {@link AccessAuthorization} Iterator
          */
         @Override
-        public Iterator<T> iterator() { return new AccessConsentListIterator(this.getSaiSession(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new AccessAuthorizationListIterator(this.getSaiSession(), this.getRegistrationUrls()); }
 
         /**
-         * Custom iterator that iterates over {@link AccessConsent} URLs and gets actual instances of them
+         * Custom iterator that iterates over {@link AccessAuthorization} URLs and gets actual instances of them
          */
-        private class AccessConsentListIterator<T> extends RegistrationListIterator<T> {
+        private class AccessAuthorizationListIterator<T> extends RegistrationListIterator<T> {
 
-            public AccessConsentListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
+            public AccessAuthorizationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
 
             /**
-             * Get the {@link AccessConsent} for the next URL in the iterator
-             * @return {@link AccessConsent}
+             * Get the {@link AccessAuthorization} for the next URL in the iterator
+             * @return {@link AccessAuthorization}
              */
             @Override
             public T next() {
                 try {
                     URL registrationUrl = current.next();
-                    return (T) AccessConsent.get(registrationUrl, saiSession);
+                    return (T) AccessAuthorization.get(registrationUrl, saiSession);
                 } catch (SaiException|SaiNotFoundException ex) {
-                    throw new SaiRuntimeException("Failed to get access consent while iterating list: " + ex.getMessage());
+                    throw new SaiRuntimeException("Failed to get access authorization while iterating list: " + ex.getMessage());
                 }
             }
         }

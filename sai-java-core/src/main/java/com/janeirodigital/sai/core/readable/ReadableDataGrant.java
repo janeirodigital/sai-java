@@ -22,7 +22,7 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**
  * Readable instantiation of a
- * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-consent">Data Grant</a>
+ * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-grant">Data Grant</a>
  */
 @Getter
 public abstract class ReadableDataGrant extends ReadableResource {

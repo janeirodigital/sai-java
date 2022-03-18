@@ -10,7 +10,7 @@ body: >
 
   alice-authorization:
     a interop:AuthorizationRegistry ;
-    interop:hasAccessConsent
+    interop:hasAccessAuthorization
       alice-authorization:all-1 ,
       alice-authorization:registry-1 ,
       alice-authorization:agent-1 ,

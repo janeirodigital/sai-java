@@ -17,12 +17,12 @@ body: >
   PREFIX pm-shapetrees: <${SERVER_BASE}/shapetrees/pm#>
 
   alice-authorization:agent-1-project
-    a interop:DataConsent ;
+    a interop:DataAuthorization ;
     interop:dataOwner bob:id ;
     interop:grantedBy alice:id ;
     interop:grantee projectron:id ;
     interop:registeredShapeTree pm-shapetrees:ProjectTree ;
     interop:accessMode acl:Read, acl:Create ;
     interop:creatorAccessMode acl:Update, acl:Delete ;
-    interop:scopeOfConsent interop:AllFromAgent ;
+    interop:scopeOfAuthorization interop:AllFromAgent ;
     interop:satisfiesAccessNeed projectron:\#ac54ff1e .
