@@ -8,6 +8,6 @@ body: >
     "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
     "id" : "${SERVER_BASE}/jsonld/registries",
     "hasAgentRegistry" : "${SERVER_BASE}/jsonld/agents/",
-    "hasAccessConsentRegistry" : "${SERVER_BASE}/jsonld/consents/",
+    "hasAuthorizationRegistry" : "${SERVER_BASE}/jsonld/authorization/",
     "hasDataRegistry" : ["https://work.alice.example/data/", "https://personal.alice.example/data/"]
   }

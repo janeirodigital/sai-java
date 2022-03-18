@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;

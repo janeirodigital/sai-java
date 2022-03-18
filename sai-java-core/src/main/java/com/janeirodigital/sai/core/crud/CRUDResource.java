@@ -8,8 +8,8 @@ import okhttp3.Response;
 
 import java.net.URL;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.deleteProtectedResource;
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.putProtectedRdfResource;
+import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.deleteProtectedResource;
+import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 
 /**

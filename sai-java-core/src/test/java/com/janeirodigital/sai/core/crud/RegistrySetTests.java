@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
@@ -29,9 +29,9 @@ class RegistrySetTests {
     private static RequestMatchingFixtureDispatcher dispatcher;
 
     private static URL aliceAgentRegistry;
-    private static URL aliceAccessConsentRegistry;
+    private static URL aliceAuthorizationRegistry;
     private static URL aliceAgentRegistryJsonLd;
-    private static URL aliceAccessConsentRegistryJsonLd;
+    private static URL aliceAuthorizationRegistryJsonLd;
     private static List<URL> aliceDataRegistries;
 
     @BeforeAll
@@ -59,9 +59,9 @@ class RegistrySetTests {
         server.setDispatcher(dispatcher);
 
         aliceAgentRegistry = toUrl(server,"/ttl/agents/");
-        aliceAccessConsentRegistry = toUrl(server, "/ttl/consents/");
+        aliceAuthorizationRegistry = toUrl(server, "/ttl/authorization/");
         aliceAgentRegistryJsonLd = toUrl(server,"/jsonld/agents/");
-        aliceAccessConsentRegistryJsonLd = toUrl(server, "/jsonld/consents/");
+        aliceAuthorizationRegistryJsonLd = toUrl(server, "/jsonld/authorization/");
         aliceDataRegistries = Arrays.asList(stringToUrl("https://work.alice.example/data/"), stringToUrl("https://personal.alice.example/data/"));
     }
 
@@ -70,7 +70,7 @@ class RegistrySetTests {
     void createNewCrudRegistrySet() throws SaiException {
         URL url = toUrl(server, "/new/ttl/registries");
         RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession);
-        RegistrySet registrySet = builder.setAgentRegistry(aliceAgentRegistry).setAccessConsentRegistry(aliceAccessConsentRegistry)
+        RegistrySet registrySet = builder.setAgentRegistry(aliceAgentRegistry).setAuthorizationRegistry(aliceAuthorizationRegistry)
                                          .setDataRegistries(aliceDataRegistries).build();
         assertDoesNotThrow(() -> registrySet.update());
         assertNotNull(registrySet);
@@ -124,7 +124,7 @@ class RegistrySetTests {
         URL url = toUrl(server, "/new/jsonld/registries");
         RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession);
         RegistrySet registrySet = builder.setContentType(LD_JSON).setAgentRegistry(aliceAgentRegistry)
-                                          .setAccessConsentRegistry(aliceAccessConsentRegistry)
+                                          .setAuthorizationRegistry(aliceAuthorizationRegistry)
                                           .setDataRegistries(aliceDataRegistries).build();
         assertDoesNotThrow(() -> registrySet.update());
         assertNotNull(registrySet);
@@ -142,14 +142,14 @@ class RegistrySetTests {
     private void checkRegistrySet(RegistrySet registrySet) {
         assertNotNull(registrySet);
         assertEquals(aliceAgentRegistry, registrySet.getAgentRegistryUrl());
-        assertEquals(aliceAccessConsentRegistry, registrySet.getAccessConsentRegistryUrl());
+        assertEquals(aliceAuthorizationRegistry, registrySet.getAuthorizationRegistryUrl());
         assertTrue(aliceDataRegistries.containsAll(registrySet.getDataRegistryUrls()));
     }
 
     private void checkRegistrySetJsonLd(RegistrySet registrySet) {
         assertNotNull(registrySet);
         assertEquals(aliceAgentRegistryJsonLd, registrySet.getAgentRegistryUrl());
-        assertEquals(aliceAccessConsentRegistryJsonLd, registrySet.getAccessConsentRegistryUrl());
+        assertEquals(aliceAuthorizationRegistryJsonLd, registrySet.getAuthorizationRegistryUrl());
         assertTrue(aliceDataRegistries.containsAll(registrySet.getDataRegistryUrls()));
     }
 

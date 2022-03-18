@@ -27,7 +27,7 @@ import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 public class RegistrySet extends CRUDResource {
 
     private URL agentRegistryUrl;
-    private URL accessConsentRegistryUrl;
+    private URL authorizationRegistryUrl;
     private List<URL> dataRegistryUrls;
 
     /**
@@ -38,7 +38,7 @@ public class RegistrySet extends CRUDResource {
     private RegistrySet(Builder builder) throws SaiException {
         super(builder);
         this.agentRegistryUrl = builder.agentRegistryUrl;
-        this.accessConsentRegistryUrl = builder.accessConsentRegistryUrl;
+        this.authorizationRegistryUrl = builder.authorizationRegistryUrl;
         this.dataRegistryUrls = builder.dataRegistryUrls;
     }
 
@@ -84,7 +84,7 @@ public class RegistrySet extends CRUDResource {
     public static class Builder extends CRUDResource.Builder<Builder> {
         
         private URL agentRegistryUrl;
-        private URL accessConsentRegistryUrl;
+        private URL authorizationRegistryUrl;
         private List<URL> dataRegistryUrls;
 
         /**
@@ -131,13 +131,13 @@ public class RegistrySet extends CRUDResource {
         }
 
         /**
-         * Set the URL of the {@link AccessConsentRegistry}
-         * @param accessConsentRegistryUrl URL of the {@link AccessConsentRegistry} to set
+         * Set the URL of the {@link AuthorizationRegistry}
+         * @param authorizationRegistryUrl URL of the {@link AuthorizationRegistry} to set
          * @return {@link Builder}
          */
-        public Builder setAccessConsentRegistry(URL accessConsentRegistryUrl) {
-            Objects.requireNonNull(accessConsentRegistryUrl, "Must provide the URL of an access consent registry to the registry set builder");
-            this.accessConsentRegistryUrl = accessConsentRegistryUrl;
+        public Builder setAuthorizationRegistry(URL authorizationRegistryUrl) {
+            Objects.requireNonNull(authorizationRegistryUrl, "Must provide the URL of an authorization registry to the registry set builder");
+            this.authorizationRegistryUrl = authorizationRegistryUrl;
             return this;
         }
 
@@ -159,7 +159,7 @@ public class RegistrySet extends CRUDResource {
         private void populateFromDataset() throws SaiException {
             try {
                 this.agentRegistryUrl = getRequiredUrlObject(this.resource, HAS_AGENT_REGISTRY);
-                this.accessConsentRegistryUrl = getRequiredUrlObject(this.resource, HAS_ACCESS_CONSENT_REGISTRY);
+                this.authorizationRegistryUrl = getRequiredUrlObject(this.resource, HAS_AUTHORIZATION_REGISTRY);
                 this.dataRegistryUrls = getRequiredUrlObjects(this.resource, HAS_DATA_REGISTRY);
             } catch (SaiNotFoundException ex) {
                 throw new SaiException("Failed to load registry set " + this.url + ": " + ex.getMessage());
@@ -173,7 +173,7 @@ public class RegistrySet extends CRUDResource {
             this.resource = getNewResourceForType(this.url, REGISTRY_SET);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, HAS_AGENT_REGISTRY, agentRegistryUrl);
-            updateObject(this.resource, HAS_ACCESS_CONSENT_REGISTRY, accessConsentRegistryUrl);
+            updateObject(this.resource, HAS_AUTHORIZATION_REGISTRY, authorizationRegistryUrl);
             updateUrlObjects(this.resource, HAS_DATA_REGISTRY, this.dataRegistryUrls);
         }
 
@@ -186,7 +186,7 @@ public class RegistrySet extends CRUDResource {
          */
         public RegistrySet build() throws SaiException {
             Objects.requireNonNull(this.agentRegistryUrl, "Must provide the URL of an agent registry to the registry set builder");
-            Objects.requireNonNull(this.accessConsentRegistryUrl, "Must provide the URL of an access consent registry to the registry set builder");
+            Objects.requireNonNull(this.authorizationRegistryUrl, "Must provide the URL of an authorization registry to the registry set builder");
             Objects.requireNonNull(this.dataRegistryUrls, "Must provide the URLs of associated data registries to the registry set builder");
             if (this.dataset == null) { populateDataset(); }
             return new RegistrySet(this);

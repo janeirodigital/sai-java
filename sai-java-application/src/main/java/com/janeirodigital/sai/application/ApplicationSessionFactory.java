@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.application;
 
-import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 
 import java.util.Objects;

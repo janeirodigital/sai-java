@@ -33,7 +33,7 @@ public class InteropVocabulary {
     // Registry Set
     public static final RDFNode REGISTRY_SET = model.getResource(NS + "RegistrySet");
     public static final Property HAS_AGENT_REGISTRY = model.createProperty(NS + "hasAgentRegistry");
-    public static final Property HAS_ACCESS_CONSENT_REGISTRY = model.createProperty(NS + "hasAccessConsentRegistry");
+    public static final Property HAS_AUTHORIZATION_REGISTRY = model.createProperty(NS + "hasAuthorizationRegistry");
     public static final Property HAS_DATA_REGISTRY = model.createProperty(NS + "hasDataRegistry");
 
     // Agent Registry
@@ -48,7 +48,7 @@ public class InteropVocabulary {
     public static final Property HAS_ACCESS_GRANT = model.createProperty(NS + "hasAccessGrant");
 
     // Access Consents
-    public static final RDFNode ACCESS_CONSENT_REGISTRY = model.getResource(NS + "AccessConsentRegistry");
+    public static final RDFNode AUTHORIZATION_REGISTRY = model.getResource(NS + "AuthorizationRegistry");
     public static final RDFNode ACCESS_CONSENT = model.getResource(NS + "AccessConsent");
     public static final Property HAS_ACCESS_CONSENT = model.createProperty(NS + "hasAccessConsent");
     public static final Property GRANTED_BY = model.createProperty(NS + "grantedBy");

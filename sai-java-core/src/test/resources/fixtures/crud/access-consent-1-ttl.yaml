@@ -11,7 +11,7 @@ body: >
   PREFIX alice: <https://alice.example/>
   PREFIX jarvis: <https://jarvis.example/>
   PREFIX projectron: <https://projectron.example/>
-  PREFIX alice-consents: <${SERVER_BASE}/ttl/access/>
+  PREFIX alice-consents: <${SERVER_BASE}/ttl/authorization/>
 
   alice-consents:access-1
     a interop:AccessConsent ;

@@ -15,7 +15,7 @@ import org.apache.jena.rdf.model.Resource;
 import java.net.URL;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.getProtectedRdfResource;
+import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.buildRemoteJsonLdContext;

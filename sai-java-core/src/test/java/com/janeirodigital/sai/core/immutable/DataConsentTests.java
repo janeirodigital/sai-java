@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
@@ -50,19 +50,19 @@ class DataConsentTests {
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET agent registry in Turtle
-        mockOnGet(dispatcher, "/access/all-1-project", "access/all/all-1-project-ttl");
-        mockOnPut(dispatcher, "/access/all-1-project", "http/201");
-        mockOnGet(dispatcher, "/access/registry-1-project", "access/all-from-registry/registry-1-project-ttl");
-        mockOnPut(dispatcher, "/access/registry-1-project", "http/201");
-        mockOnGet(dispatcher, "/access/registry-1-milestone", "access/all-from-registry/registry-1-milestone-ttl");
-        mockOnPut(dispatcher, "/access/registry-1-milestone", "http/201");
-        mockOnGet(dispatcher, "/access/agent-1-project", "access/all-from-agent/agent-1-project-ttl");
-        mockOnPut(dispatcher, "/access/agent-1-project", "http/201");
-        mockOnGet(dispatcher, "/access/selected-1-project", "access/selected-from-registry/selected-1-project-ttl");
-        mockOnPut(dispatcher, "/access/selected-1-project", "http/201");
+        mockOnGet(dispatcher, "/authorization/all-1-project", "authorization/all/all-1-project-ttl");
+        mockOnPut(dispatcher, "/authorization/all-1-project", "http/201");
+        mockOnGet(dispatcher, "/authorization/registry-1-project", "authorization/all-from-registry/registry-1-project-ttl");
+        mockOnPut(dispatcher, "/authorization/registry-1-project", "http/201");
+        mockOnGet(dispatcher, "/authorization/registry-1-milestone", "authorization/all-from-registry/registry-1-milestone-ttl");
+        mockOnPut(dispatcher, "/authorization/registry-1-milestone", "http/201");
+        mockOnGet(dispatcher, "/authorization/agent-1-project", "authorization/all-from-agent/agent-1-project-ttl");
+        mockOnPut(dispatcher, "/authorization/agent-1-project", "http/201");
+        mockOnGet(dispatcher, "/authorization/selected-1-project", "authorization/selected-from-registry/selected-1-project-ttl");
+        mockOnPut(dispatcher, "/authorization/selected-1-project", "http/201");
 
         // GET data consent in Turtle with missing fields
-        mockOnGet(dispatcher, "/missing-fields/access/all-1-project", "access/all/all-1-project-missing-fields-ttl");
+        mockOnGet(dispatcher, "/missing-fields/authorization/all-1-project", "authorization/all/all-1-project-missing-fields-ttl");
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
@@ -77,8 +77,8 @@ class DataConsentTests {
         PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
         PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
-        ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/access/all-1-project"), toUrl(server, "/access/all-1-milestone"),
-                                              toUrl(server, "/access/all-1-issue"), toUrl(server, "/access/all-1-task"));
+        ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/authorization/all-1-project"), toUrl(server, "/authorization/all-1-milestone"),
+                                              toUrl(server, "/authorization/all-1-issue"), toUrl(server, "/authorization/all-1-task"));
         PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
         MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
         ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
@@ -93,7 +93,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Create new data consent - scope: all")
     void createAll() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/all-1-project");
+        URL projectUrl = toUrl(server, "/authorization/all-1-project");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID)
                                                    .setGrantee(PROJECTRON_ID)
@@ -110,7 +110,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Create new data consent - scope: all from registry")
     void createAllFromRegistry() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/registry-1-project");
+        URL projectUrl = toUrl(server, "/authorization/registry-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
@@ -130,7 +130,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Create new data consent - scope: selected from registry")
     void createSelectedFromRegistry() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/selected-1-project");
+        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                                                 toUrl(server, "/personal/data/projects/project-2"),
@@ -153,7 +153,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Create new data consent - scope: all from agent")
     void createAllFromAgent() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/agent-1-project");
+        URL projectUrl = toUrl(server, "/authorization/agent-1-project");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         DataConsent projectConsent = projectBuilder.setDataOwner(BOB_ID)
                                                    .setGrantedBy(ALICE_ID)
@@ -170,8 +170,8 @@ class DataConsentTests {
     @Test
     @DisplayName("Create new data consent - scope: inherited")
     void createInherited() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/project-1-milestone");
-        URL milestoneUrl = toUrl(server, "/access/registry-1-milestone");
+        URL projectUrl = toUrl(server, "/authorization/project-1-milestone");
+        URL milestoneUrl = toUrl(server, "/authorization/registry-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder milestoneBuilder = new DataConsent.Builder(milestoneUrl, saiSession);
         DataConsent milestoneConsent = milestoneBuilder.setDataOwner(ALICE_ID)
@@ -191,7 +191,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Create new data consent - scope: no access")
     void createNoAccess() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/selected-1-project");
+        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         DataConsent projectConsent = projectBuilder.setDataOwner(ALICE_ID)
@@ -212,7 +212,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - scope: invalid")
     void failToCreateInvalidScope() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/selected-1-project");
+        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -232,7 +232,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - create privileges and no creator modes")
     void failToCreateInvalidCreator() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/selected-1-project");
+        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -251,8 +251,8 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - not inherited and inherits from data consent")
     void failToCreateInvalidInheritsFrom() {
-        URL projectUrl = toUrl(server, "/access/all-1-project");
-        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
+        URL projectUrl = toUrl(server, "/authorization/all-1-project");
+        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -273,7 +273,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - selected with no instances")
     void failToCreateSelectedNoInstances() throws SaiException {
-        URL projectUrl = toUrl(server, "/access/selected-1-project");
+        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -294,7 +294,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - selected with no instances")
     void failToCreateSelectedNoRegistration() {
-        URL projectUrl = toUrl(server, "/access/selected-1-project");
+        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                 toUrl(server, "/personal/data/projects/project-2"),
@@ -318,7 +318,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - has instances and no selected scope")
     void failToCreateInstancesNoSelected() {
-        URL projectUrl = toUrl(server, "/access/selected-1-project");
+        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
                 toUrl(server, "/personal/data/projects/project-2"),
@@ -343,8 +343,8 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - scope of all but data registration provided")
     void failToCreateAllAndDataReg() {
-        URL projectUrl = toUrl(server, "/access/all-1-project");
-        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
+        URL projectUrl = toUrl(server, "/authorization/all-1-project");
+        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -363,8 +363,8 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - scope of all but data owner is set")
     void failToCreateAllAndDataOwner() {
-        URL projectUrl = toUrl(server, "/access/all-1-project");
-        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
+        URL projectUrl = toUrl(server, "/authorization/all-1-project");
+        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -383,8 +383,8 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - all from registry scope but no data registration")
     void failToCreateAllFromRegNoDataReg() {
-        URL projectUrl = toUrl(server, "/access/all-1-project");
-        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
+        URL projectUrl = toUrl(server, "/authorization/all-1-project");
+        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -403,8 +403,8 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to create new data consent - inherited but no inherits from")
     void failToCreateInheritedNoInheritsFrom() {
-        URL projectUrl = toUrl(server, "/access/all-1-project");
-        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
+        URL projectUrl = toUrl(server, "/authorization/all-1-project");
+        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
         URL drUrl = toUrl(server, "/personal/data/projects/");
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         assertThrows(SaiException.class, () -> {
@@ -424,7 +424,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Get data consent - scope: all")
     void getDataConsent() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/access/all-1-project");
+        URL url = toUrl(server, "/authorization/all-1-project");
         DataConsent dataConsent = DataConsent.get(url, saiSession);
         assertEquals(ALICE_ID, dataConsent.getGrantedBy());
         assertEquals(PROJECTRON_ID, dataConsent.getGrantee());
@@ -438,7 +438,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Reload data consent - scope: all")
     void reloadDataConsent() throws SaiException, SaiNotFoundException {
-        URL url = toUrl(server, "/access/all-1-project");
+        URL url = toUrl(server, "/authorization/all-1-project");
         DataConsent dataConsent = DataConsent.get(url, saiSession);
         DataConsent reloaded = dataConsent.reload();
         assertEquals(ALICE_ID, reloaded.getGrantedBy());
@@ -453,7 +453,7 @@ class DataConsentTests {
     @Test
     @DisplayName("Fail to get data consent - missing required fields")
     void failToReadDataRegistration() {
-        URL url = toUrl(server, "/missing-fields/access/all-1-project");
+        URL url = toUrl(server, "/missing-fields/authorization/all-1-project");
         assertThrows(SaiException.class, () -> DataConsent.get(url, saiSession));
     }
 

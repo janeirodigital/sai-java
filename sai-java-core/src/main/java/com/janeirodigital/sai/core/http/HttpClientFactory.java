@@ -1,8 +1,8 @@
 package com.janeirodigital.sai.core.http;
 
 import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
-import com.janeirodigital.sai.core.authorization.AccessTokenRefresher;
-import com.janeirodigital.sai.core.authorization.AuthorizedSessionAccessor;
+import com.janeirodigital.sai.core.authentication.AccessTokenRefresher;
+import com.janeirodigital.sai.core.authentication.AuthorizedSessionAccessor;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactory;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactoryManager;

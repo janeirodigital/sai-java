@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authorization.AuthorizedSession;
+import com.janeirodigital.sai.core.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.crud.AgentRegistry;
 import com.janeirodigital.sai.core.crud.ApplicationRegistration;
 import com.janeirodigital.sai.core.crud.DataRegistry;
@@ -61,17 +61,17 @@ class AccessConsentTests {
         dispatcher = new RequestMatchingFixtureDispatcher();
 
         // Scope: interop:All - GET all necessary resources across registries (used in basic crud tests as well as grant generation)
-        mockOnGet(dispatcher, "/access/all-1", "access/all/all-1-ttl");
-        mockOnGet(dispatcher, "/missing-fields/access/all-1", "access/all/all-1-missing-fields-ttl");
-        mockOnPut(dispatcher, "/access/all-1", "http/201");
-        mockOnGet(dispatcher, "/access/all-1-project", "access/all/all-1-project-ttl");
-        mockOnPut(dispatcher, "/access/all-1-project", "http/201");
-        mockOnGet(dispatcher, "/access/all-1-milestone", "access/all/all-1-milestone-ttl");
-        mockOnPut(dispatcher, "/access/all-1-milestone", "http/201");
-        mockOnGet(dispatcher, "/access/all-1-task", "access/all/all-1-task-ttl");
-        mockOnPut(dispatcher, "/access/all-1-task", "http/201");
-        mockOnGet(dispatcher, "/access/all-1-issue", "access/all/all-1-issue-ttl");
-        mockOnPut(dispatcher, "/access/all-1-issue", "http/201");
+        mockOnGet(dispatcher, "/authorization/all-1", "authorization/all/all-1-ttl");
+        mockOnGet(dispatcher, "/missing-fields/authorization/all-1", "authorization/all/all-1-missing-fields-ttl");
+        mockOnPut(dispatcher, "/authorization/all-1", "http/201");
+        mockOnGet(dispatcher, "/authorization/all-1-project", "authorization/all/all-1-project-ttl");
+        mockOnPut(dispatcher, "/authorization/all-1-project", "http/201");
+        mockOnGet(dispatcher, "/authorization/all-1-milestone", "authorization/all/all-1-milestone-ttl");
+        mockOnPut(dispatcher, "/authorization/all-1-milestone", "http/201");
+        mockOnGet(dispatcher, "/authorization/all-1-task", "authorization/all/all-1-task-ttl");
+        mockOnPut(dispatcher, "/authorization/all-1-task", "http/201");
+        mockOnGet(dispatcher, "/authorization/all-1-issue", "authorization/all/all-1-issue-ttl");
+        mockOnPut(dispatcher, "/authorization/all-1-issue", "http/201");
         mockOnGet(dispatcher, "/all-1-agents/", "agents/alice/projectron-all/all-1-agent-registry-ttl");
         mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/", "agents/alice/projectron-all/all-1-projectron-registration-ttl");
         mockOnGet(dispatcher, "/all-1-agents/all-1-bob/", "agents/alice/projectron-all/all-1-bob-registration-ttl");
@@ -97,11 +97,11 @@ class AccessConsentTests {
         mockOnGet(dispatcher, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-task", "agents/alice/projectron-all/all-1-delegated-grant-bob-task-ttl");
 
         // Scope: interop:AllFromRegistry - GET all necessary resources across registries (for testing grant generation)
-        mockOnGet(dispatcher, "/access/registry-1", "access/all-from-registry/registry-1-ttl");
-        mockOnGet(dispatcher, "/access/registry-1-project", "access/all-from-registry/registry-1-project-ttl");
-        mockOnGet(dispatcher, "/access/registry-1-milestone", "access/all-from-registry/registry-1-milestone-ttl");
-        mockOnGet(dispatcher, "/access/registry-1-task", "access/all-from-registry/registry-1-task-ttl");
-        mockOnGet(dispatcher, "/access/registry-1-issue", "access/all-from-registry/registry-1-issue-ttl");
+        mockOnGet(dispatcher, "/authorization/registry-1", "authorization/all-from-registry/registry-1-ttl");
+        mockOnGet(dispatcher, "/authorization/registry-1-project", "authorization/all-from-registry/registry-1-project-ttl");
+        mockOnGet(dispatcher, "/authorization/registry-1-milestone", "authorization/all-from-registry/registry-1-milestone-ttl");
+        mockOnGet(dispatcher, "/authorization/registry-1-task", "authorization/all-from-registry/registry-1-task-ttl");
+        mockOnGet(dispatcher, "/authorization/registry-1-issue", "authorization/all-from-registry/registry-1-issue-ttl");
         mockOnGet(dispatcher, "/registry-1-agents/", "agents/alice/projectron-all-from-registry/registry-1-agent-registry-ttl");
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/", "agents/alice/projectron-all-from-registry/registry-1-projectron-registration-ttl");
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant", "agents/alice/projectron-all-from-registry/registry-1-grant-ttl");
@@ -111,11 +111,11 @@ class AccessConsentTests {
         mockOnGet(dispatcher, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-task", "agents/alice/projectron-all-from-registry/registry-1-grant-personal-task-ttl");
 
         // Scope: interop:SelectedFromRegistry - GET all necessary resources across registries (for testing grant generation)
-        mockOnGet(dispatcher, "/access/selected-1", "access/selected-from-registry/selected-1-ttl");
-        mockOnGet(dispatcher, "/access/selected-1-project", "access/selected-from-registry/selected-1-project-ttl");
-        mockOnGet(dispatcher, "/access/selected-1-milestone", "access/selected-from-registry/selected-1-milestone-ttl");
-        mockOnGet(dispatcher, "/access/selected-1-task", "access/selected-from-registry/selected-1-task-ttl");
-        mockOnGet(dispatcher, "/access/selected-1-issue", "access/selected-from-registry/selected-1-issue-ttl");
+        mockOnGet(dispatcher, "/authorization/selected-1", "authorization/selected-from-registry/selected-1-ttl");
+        mockOnGet(dispatcher, "/authorization/selected-1-project", "authorization/selected-from-registry/selected-1-project-ttl");
+        mockOnGet(dispatcher, "/authorization/selected-1-milestone", "authorization/selected-from-registry/selected-1-milestone-ttl");
+        mockOnGet(dispatcher, "/authorization/selected-1-task", "authorization/selected-from-registry/selected-1-task-ttl");
+        mockOnGet(dispatcher, "/authorization/selected-1-issue", "authorization/selected-from-registry/selected-1-issue-ttl");
         mockOnGet(dispatcher, "/selected-1-agents/", "agents/alice/projectron-selected-from-registry/selected-1-agent-registry-ttl");
         mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/", "agents/alice/projectron-selected-from-registry/selected-1-projectron-registration-ttl");
         mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/selected-1-grant", "agents/alice/projectron-selected-from-registry/selected-1-grant-ttl");
@@ -125,11 +125,11 @@ class AccessConsentTests {
         mockOnGet(dispatcher, "/selected-1-agents/selected-1-projectron/selected-1-grant-personal-task", "agents/alice/projectron-selected-from-registry/selected-1-grant-personal-task-ttl");
         
         // Scope: interop:AllFromAgent - GET all necessary resources across registries (for testing grant generation)
-        mockOnGet(dispatcher, "/access/agent-1", "access/all-from-agent/agent-1-ttl");
-        mockOnGet(dispatcher, "/access/agent-1-project", "access/all-from-agent/agent-1-project-ttl");
-        mockOnGet(dispatcher, "/access/agent-1-milestone", "access/all-from-agent/agent-1-milestone-ttl");
-        mockOnGet(dispatcher, "/access/agent-1-task", "access/all-from-agent/agent-1-task-ttl");
-        mockOnGet(dispatcher, "/access/agent-1-issue", "access/all-from-agent/agent-1-issue-ttl");
+        mockOnGet(dispatcher, "/authorization/agent-1", "authorization/all-from-agent/agent-1-ttl");
+        mockOnGet(dispatcher, "/authorization/agent-1-project", "authorization/all-from-agent/agent-1-project-ttl");
+        mockOnGet(dispatcher, "/authorization/agent-1-milestone", "authorization/all-from-agent/agent-1-milestone-ttl");
+        mockOnGet(dispatcher, "/authorization/agent-1-task", "authorization/all-from-agent/agent-1-task-ttl");
+        mockOnGet(dispatcher, "/authorization/agent-1-issue", "authorization/all-from-agent/agent-1-issue-ttl");
         mockOnGet(dispatcher, "/agent-1-agents/", "agents/alice/projectron-all-from-agent/agent-1-agent-registry-ttl");
         mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/", "agents/alice/projectron-all-from-agent/agent-1-projectron-registration-ttl");
         mockOnGet(dispatcher, "/agent-1-agents/agent-1-projectron/agent-1-grant", "agents/alice/projectron-all-from-agent/agent-1-grant-ttl");
@@ -146,20 +146,20 @@ class AccessConsentTests {
         mockOnGet(dispatcher, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-task", "agents/alice/projectron-all-from-agent/agent-1-bob-grant-task-ttl");
 
         // MISC TEST SCENARIOS - Useful fixtures for various success and failure test scenarios related to grant generation
-        mockOnGet(dispatcher, "/scenario-agents/", "access/scenario/scenario-agent-registry-ttl");
-        mockOnGet(dispatcher, "/scenario-agents/scenario-projectron/", "access/scenario/scenario-projectron-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-agents/", "access/scenario/delegated-agent-registry-ttl");
-        mockOnGet(dispatcher, "/delegated-agents/delegated-projectron/", "access/scenario/delegated-projectron-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-agents/delegated-performchart/", "access/scenario/delegated-performchart-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-agents/delegated-bob/", "access/scenario/delegated-bob-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-agents/delegated-juan/", "access/scenario/delegated-juan-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-agents/delegated-carol/", "access/scenario/delegated-carol-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-agents/delegated-tara/", "access/scenario/delegated-tara-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/", "access/scenario/delegated-bob-alice-registration-ttl");
-        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/delegated-grant", "access/scenario/delegated-bob-alice-grant-ttl");
-        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/delegated-grant-project", "access/scenario/delegated-bob-alice-grant-project-ttl");
-        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/delegated-grant-milestone", "access/scenario/delegated-bob-alice-grant-milestone-ttl");
-        mockOnGet(dispatcher, "/delegated-tara-agents/delegated-alice/", "access/scenario/delegated-tara-alice-registration-ttl");
+        mockOnGet(dispatcher, "/scenario-agents/", "authorization/scenario/scenario-agent-registry-ttl");
+        mockOnGet(dispatcher, "/scenario-agents/scenario-projectron/", "authorization/scenario/scenario-projectron-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-agents/", "authorization/scenario/delegated-agent-registry-ttl");
+        mockOnGet(dispatcher, "/delegated-agents/delegated-projectron/", "authorization/scenario/delegated-projectron-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-agents/delegated-performchart/", "authorization/scenario/delegated-performchart-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-agents/delegated-bob/", "authorization/scenario/delegated-bob-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-agents/delegated-juan/", "authorization/scenario/delegated-juan-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-agents/delegated-carol/", "authorization/scenario/delegated-carol-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-agents/delegated-tara/", "authorization/scenario/delegated-tara-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/", "authorization/scenario/delegated-bob-alice-registration-ttl");
+        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/delegated-grant", "authorization/scenario/delegated-bob-alice-grant-ttl");
+        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/delegated-grant-project", "authorization/scenario/delegated-bob-alice-grant-project-ttl");
+        mockOnGet(dispatcher, "/delegated-bob-agents/delegated-alice/delegated-grant-milestone", "authorization/scenario/delegated-bob-alice-grant-milestone-ttl");
+        mockOnGet(dispatcher, "/delegated-tara-agents/delegated-alice/", "authorization/scenario/delegated-tara-alice-registration-ttl");
 
         // Get Alice and Bob's data registries - doesn't change across use cases
         mockOnGet(dispatcher, "/personal/data/", "data/alice/personal-data-registry-ttl");
@@ -200,8 +200,8 @@ class AccessConsentTests {
         PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
         PROJECTRON_CALENDAR_NEED = stringToUrl("https://projectron.example/#ba66ff1e");
         PROJECTRON_APPOINTMENT_NEED = stringToUrl("https://projectron.example/#aa11aa1b");
-        ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/access/all-1-project"), toUrl(server, "/access/all-1-milestone"),
-                                              toUrl(server, "/access/all-1-issue"), toUrl(server, "/access/all-1-task"));
+        ALL_DATA_CONSENT_URLS = Arrays.asList(toUrl(server, "/authorization/all-1-project"), toUrl(server, "/authorization/all-1-milestone"),
+                                              toUrl(server, "/authorization/all-1-issue"), toUrl(server, "/authorization/all-1-task"));
         PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
         MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
         ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
@@ -217,11 +217,11 @@ class AccessConsentTests {
     @Test
     @DisplayName("Create new access consent and linked data consents - scope: all")
     void createAccessConsentScopeAll() throws SaiException {
-        URL accessUrl = toUrl(server, "/access/all-1");
-        URL projectUrl = toUrl(server, "/access/all-1-project");
-        URL milestoneUrl = toUrl(server, "/access/all-1-milestone");
-        URL issueUrl = toUrl(server, "/access/all-1-issue");
-        URL taskUrl = toUrl(server, "/access/all-1-task");
+        URL accessUrl = toUrl(server, "/authorization/all-1");
+        URL projectUrl = toUrl(server, "/authorization/all-1-project");
+        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
+        URL issueUrl = toUrl(server, "/authorization/all-1-issue");
+        URL taskUrl = toUrl(server, "/authorization/all-1-task");
         
         DataConsent.Builder projectBuilder = new DataConsent.Builder(projectUrl, saiSession);
         DataConsent projectConsent = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
@@ -257,7 +257,7 @@ class AccessConsentTests {
     void testGenerateAccessGrantAll() throws SaiNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
         // be generating the grants right after generating the consents
-        URL accessUrl = toUrl(server, "/access/all-1");
+        URL accessUrl = toUrl(server, "/authorization/all-1");
         URL agentRegistryUrl = toUrl(server, "/all-1-agents/");
         URL personalDataUrl = toUrl(server, "/personal/data/");
         URL workDataUrl = toUrl(server, "/personal/data/");
@@ -276,7 +276,7 @@ class AccessConsentTests {
     void testGenerateAccessGrantAllFromRegistry() throws SaiNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
         // be generating the grants right after generating the consents
-        URL accessUrl = toUrl(server, "/access/registry-1");
+        URL accessUrl = toUrl(server, "/authorization/registry-1");
         URL agentRegistryUrl = toUrl(server, "/registry-1-agents/");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL registrationUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/");
@@ -293,7 +293,7 @@ class AccessConsentTests {
     void testGenerateAccessGrantSelectedFromRegistry() throws SaiNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
         // be generating the grants right after generating the consents
-        URL accessUrl = toUrl(server, "/access/selected-1");
+        URL accessUrl = toUrl(server, "/authorization/selected-1");
         URL agentRegistryUrl = toUrl(server, "/selected-1-agents/");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL registrationUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/");
@@ -310,7 +310,7 @@ class AccessConsentTests {
     void testGenerateAccessGrantAllFromAgent() throws SaiNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess consent, but would instead
         // be generating the grants right after generating the consents
-        URL accessUrl = toUrl(server, "/access/agent-1");
+        URL accessUrl = toUrl(server, "/authorization/agent-1");
         URL agentRegistryUrl = toUrl(server, "/agent-1-agents/");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL registrationUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/");
@@ -325,8 +325,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and associated data grants - no matching data registrations")
     void generateDataGrantsNoMatchingRegistrations() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/no-matches");
-        URL dataConsentUrl = toUrl(server, "/access/no-matches-project");
+        URL accessUrl = toUrl(server, "/authorization/no-matches");
+        URL dataConsentUrl = toUrl(server, "/authorization/no-matches-project");
         URL EVENT_TREE = toUrl(server, "/shapetrees/pm#EventTree");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
@@ -352,8 +352,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and associated data grants - read-only access modes")
     void generateDataGrantsReadOnly() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/read-only");
-        URL dataConsentUrl = toUrl(server, "/access/read-only-project");
+        URL accessUrl = toUrl(server, "/authorization/read-only");
+        URL dataConsentUrl = toUrl(server, "/authorization/read-only-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
         URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
@@ -377,8 +377,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - multiple social agents in registry")
     void generateDelegatedGrantsMultipleSocials() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -405,8 +405,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - no match for remote data registration")
     void generateDelegatedGrantsNoMatchRemote() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -434,8 +434,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - data consent includes access modes not originally granted")
     void failToGenerateDelegatedGrantsExpandedModes() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -465,9 +465,9 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - read only")
     void testGenerateDelegatedGrantsReadOnly() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
-        URL milestoneConsentUrl = toUrl(server, "/access/delegated-milestone");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
+        URL milestoneConsentUrl = toUrl(server, "/authorization/delegated-milestone");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -502,9 +502,9 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - child data consent includes access modes not originally granted")
     void failToGenerateDelegatedGrantsChildExpandedModes() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
-        URL milestoneConsentUrl = toUrl(server, "/access/delegated-milestone");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
+        URL milestoneConsentUrl = toUrl(server, "/authorization/delegated-milestone");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -541,8 +541,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - data consent includes creator access modes not originally granted")
     void failToGenerateDelegatedGrantsExpandedCreatorModes() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -572,9 +572,9 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - child data consent includes creator access modes not originally granted")
     void failToGenerateDelegatedGrantsChildExpandedCreatorModes() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
-        URL milestoneConsentUrl = toUrl(server, "/access/delegated-milestone");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
+        URL milestoneConsentUrl = toUrl(server, "/authorization/delegated-milestone");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -611,8 +611,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - no reciprocal registration")
     void generateDelegatedGrantsNoReciprocal() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -638,8 +638,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - invalid scope")
     void failToGenerateDelegatedGrantsInvalidScope() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -667,8 +667,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - no access grant at reciprocal")
     void generateDelegatedGrantsNoGrantAtReciprocal() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
-        URL accessUrl = toUrl(server, "/access/delegated-agents");
-        URL projectConsentUrl = toUrl(server, "/access/delegated-project");
+        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
+        URL projectConsentUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
         URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
@@ -694,11 +694,11 @@ class AccessConsentTests {
     @Test
     @DisplayName("Generate access grant and associated data grants - multiple parents and children")
     void generateDataGrantsMultipleParents() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/multiple-parents");
-        URL dataConsentUrl = toUrl(server, "/access/multiple-parents-project");
-        URL milestoneConsentUrl = toUrl(server, "/access/multiple-parents-milestone");
-        URL calendarConsentUrl = toUrl(server, "/access/multiple-parents-calendar");
-        URL appointmentConsentUrl = toUrl(server, "/access/multiple-parents-appointment");
+        URL accessUrl = toUrl(server, "/authorization/multiple-parents");
+        URL dataConsentUrl = toUrl(server, "/authorization/multiple-parents-project");
+        URL milestoneConsentUrl = toUrl(server, "/authorization/multiple-parents-milestone");
+        URL calendarConsentUrl = toUrl(server, "/authorization/multiple-parents-calendar");
+        URL appointmentConsentUrl = toUrl(server, "/authorization/multiple-parents-appointment");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
         URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
@@ -742,7 +742,7 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate data grants - data consent has inherited scope")
     void failToGenerateDataGrantsAccessScopeInherited() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/registry-1");
+        URL accessUrl = toUrl(server, "/authorization/registry-1");
         URL agentRegistryUrl = toUrl(server, "/registry-1-agents/");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL registrationUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/");
@@ -760,8 +760,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate data grants - data consent has invalid scope")
     void failToGenerateDataGrantsInvalidDataConsentScope() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/invalid-scope");
-        URL dataConsentUrl = toUrl(server, "/access/invalid-scope-project");
+        URL accessUrl = toUrl(server, "/authorization/invalid-scope");
+        URL dataConsentUrl = toUrl(server, "/authorization/invalid-scope-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
         URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
@@ -788,8 +788,8 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate data grants - specified data registration doesn't exist")
     void failToGenerateDataGrantsInvalidDataRegistration() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/invalid-registration");
-        URL dataConsentUrl = toUrl(server, "/access/invalid-registration-project");
+        URL accessUrl = toUrl(server, "/authorization/invalid-registration");
+        URL dataConsentUrl = toUrl(server, "/authorization/invalid-registration-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
         URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
@@ -814,9 +814,9 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to generate data grants - specified child data registration doesn't exist")
     void failToGenerateDataGrantsInvalidChildDataRegistration() throws SaiNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/access/invalid-registration");
-        URL dataConsentUrl = toUrl(server, "/access/invalid-registration-project");
-        URL eventConsentUrl = toUrl(server, "/access/invalid-registration-event");
+        URL accessUrl = toUrl(server, "/authorization/invalid-registration");
+        URL dataConsentUrl = toUrl(server, "/authorization/invalid-registration-project");
+        URL eventConsentUrl = toUrl(server, "/authorization/invalid-registration-event");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
         URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
         URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
@@ -849,7 +849,7 @@ class AccessConsentTests {
     @Test
     @DisplayName("Get an access consent and linked data consents - scope: all")
     void getAccessConsent() throws SaiNotFoundException, SaiException {
-        URL url = toUrl(server, "/access/all-1");
+        URL url = toUrl(server, "/authorization/all-1");
         AccessConsent accessConsent = AccessConsent.get(url, saiSession);
         checkAccessConsent(accessConsent);
     }
@@ -857,7 +857,7 @@ class AccessConsentTests {
     @Test
     @DisplayName("Reload an access consent and linked data consents - scope: all")
     void reloadAccessConsent() throws SaiNotFoundException, SaiException {
-        URL url = toUrl(server, "/access/all-1");
+        URL url = toUrl(server, "/authorization/all-1");
         AccessConsent accessConsent = AccessConsent.get(url, saiSession);
         AccessConsent reloaded = accessConsent.reload();
         checkAccessConsent(reloaded);
@@ -866,7 +866,7 @@ class AccessConsentTests {
     @Test
     @DisplayName("Fail to get access consent - missing required fields")
     void failToGetAccessConsentRequired() {
-        URL url = toUrl(server, "/missing-fields/access/all-1");
+        URL url = toUrl(server, "/missing-fields/authorization/all-1");
         assertThrows(SaiException.class, () -> AccessConsent.get(url, saiSession));
     }
 

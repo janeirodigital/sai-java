@@ -14,7 +14,7 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
 import static com.janeirodigital.sai.core.helpers.RdfHelper.getNewResourceForType;
-import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SOCIAL_AGENT_REGISTRATION;
+import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.APPLICATION_REGISTRATION;
 
 /**
  * Modifiable instantiation of an
@@ -108,7 +108,7 @@ public class ApplicationRegistration extends AgentRegistration {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         protected void populateDataset() {
-            this.resource = getNewResourceForType(this.url, SOCIAL_AGENT_REGISTRATION);
+            this.resource = getNewResourceForType(this.url, APPLICATION_REGISTRATION);
             this.dataset = this.resource.getModel();
             super.populateDataset();
         }
