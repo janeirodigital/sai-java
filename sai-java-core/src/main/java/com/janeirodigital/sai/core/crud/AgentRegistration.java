@@ -11,8 +11,8 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.addChildToUrlPath;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
+import static com.janeirodigital.sai.core.utils.HttpUtils.addChildToUrlPath;
+import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**

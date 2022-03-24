@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.helpers;
+package com.janeirodigital.sai.core.utils;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
@@ -33,12 +33,12 @@ import static com.janeirodigital.sai.core.enums.ContentType.TEXT_HTML;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getModelFromString;
+import static com.janeirodigital.sai.core.utils.HttpUtils.*;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getModelFromString;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
 
-class HttpHelperTests {
+class HttpUtilsTests {
 
     private static MockWebServer server;
     private static MockWebServer queuingServer;

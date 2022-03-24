@@ -10,9 +10,9 @@ import okhttp3.Response;
 import java.net.URL;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getNewResource;
+import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getNewResource;
 
 /**
  * Basic instantiation of a

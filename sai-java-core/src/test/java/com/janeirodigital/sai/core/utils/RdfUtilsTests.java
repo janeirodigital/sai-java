@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.helpers;
+package com.janeirodigital.sai.core.utils;
 
 import com.janeirodigital.sai.core.TestableVocabulary;
 import com.janeirodigital.sai.core.enums.ContentType;
@@ -35,9 +35,9 @@ import java.util.List;
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
+import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.core.utils.HttpUtils.urlToUri;
+import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;

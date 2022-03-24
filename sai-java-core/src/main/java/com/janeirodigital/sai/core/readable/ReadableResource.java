@@ -17,9 +17,9 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.buildRemoteJsonLdContext;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getResourceFromModel;
+import static com.janeirodigital.sai.core.utils.HttpUtils.*;
+import static com.janeirodigital.sai.core.utils.RdfUtils.buildRemoteJsonLdContext;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getResourceFromModel;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 /**

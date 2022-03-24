@@ -11,10 +11,10 @@ import org.apache.jena.rdf.model.Model;
 import java.net.URL;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getRequiredUrlObject;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getRequiredUrlObjects;
+import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getRequiredUrlObject;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getRequiredUrlObjects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLID_OIDC_ISSUER;
 

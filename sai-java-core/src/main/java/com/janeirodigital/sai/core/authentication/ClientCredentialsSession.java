@@ -20,7 +20,7 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.getOIDCProviderConfiguration;
 import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.translateAccessToken;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.utils.HttpUtils.*;
 
 /**
  * Implementation of {@link AuthorizedSession} for a Client Credentials authorization flow

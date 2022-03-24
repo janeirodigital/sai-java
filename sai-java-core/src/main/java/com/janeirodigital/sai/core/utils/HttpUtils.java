@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.helpers;
+package com.janeirodigital.sai.core.utils;
 
 import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.enums.HttpHeader;
@@ -23,22 +23,22 @@ import static com.janeirodigital.sai.core.enums.ContentType.*;
 import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.enums.HttpHeader.LINK;
 import static com.janeirodigital.sai.core.enums.HttpMethod.*;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
+import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 
 /**
- * Assorted helper methods related to working with HTTP requests and responses
+ * Assorted utility methods related to working with HTTP requests and responses
  * @see <a href="https://square.github.io/okhttp/4.x/okhttp/okhttp3/">OkHttp</a>
  * @see <a href="https://square.github.io/okhttp/4.x/okhttp/okhttp3/-request/">OkHttp - Request</a>
  * @see <a href="https://square.github.io/okhttp/4.x/okhttp/okhttp3/-response/">OkHttp - Response</a>
  * @see <a href="https://square.github.io/okhttp/4.x/okhttp/okhttp3/-headers/">OkHttp - Headers</a>
  * @see <a href="https://square.github.io/okhttp/4.x/okhttp/okhttp3/-response-body/">OkHttp - ResponseBody</a>
  */
-public class HttpHelper {
+public class HttpUtils {
 
     public static final Set<ContentType> RDF_CONTENT_TYPES = Set.of(TEXT_TURTLE, RDF_XML, N_TRIPLES, LD_JSON);
     public static final ContentType DEFAULT_RDF_CONTENT_TYPE = TEXT_TURTLE;
 
-    private HttpHelper() { }
+    private HttpUtils() { }
 
     /**
      * Perform an HTTP GET on the resource at <code>url</code>.

@@ -26,8 +26,8 @@ import java.util.List;
 
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getModelFromFile;
+import static com.janeirodigital.sai.core.utils.HttpUtils.urlToUri;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getModelFromFile;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 

@@ -11,9 +11,9 @@ import org.apache.jena.rdf.model.Model;
 import java.net.URL;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getNewResourceForType;
+import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getNewResourceForType;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.APPLICATION_REGISTRATION;
 
 /**

@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.helpers;
+package com.janeirodigital.sai.core.utils;
 
 import com.apicatalog.jsonld.JsonLd;
 import com.apicatalog.jsonld.JsonLdError;

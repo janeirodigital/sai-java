@@ -16,8 +16,8 @@ import org.apache.jena.rdf.model.RDFNode;
 import java.net.URL;
 import java.util.*;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
+import static com.janeirodigital.sai.core.utils.HttpUtils.*;
+import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_WRITE;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;

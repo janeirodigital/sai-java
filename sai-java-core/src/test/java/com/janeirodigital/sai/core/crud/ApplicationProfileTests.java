@@ -20,8 +20,8 @@ import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_C
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.buildRemoteJsonLdContexts;
+import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.core.utils.RdfUtils.buildRemoteJsonLdContexts;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 

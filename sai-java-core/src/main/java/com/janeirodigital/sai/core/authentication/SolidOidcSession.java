@@ -3,7 +3,7 @@ package com.janeirodigital.sai.core.authentication;
 import com.janeirodigital.sai.core.enums.HttpMethod;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.helpers.RdfUtils;
+import com.janeirodigital.sai.core.utils.RdfUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.Curve;
@@ -35,9 +35,9 @@ import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpHeader.DPOP;
 import static com.janeirodigital.sai.core.enums.HttpMethod.POST;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.uriToUrl;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.getRequiredStringObject;
+import static com.janeirodigital.sai.core.utils.HttpUtils.uriToUrl;
+import static com.janeirodigital.sai.core.utils.HttpUtils.urlToUri;
+import static com.janeirodigital.sai.core.utils.RdfUtils.getRequiredStringObject;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_REDIRECT_URIS;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_SCOPE;
 

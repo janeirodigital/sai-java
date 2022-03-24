@@ -12,7 +12,7 @@ import java.net.URL;
 
 import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.deleteProtectedResource;
 import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.core.utils.HttpUtils.*;
 
 /**
  * Represents a corresponding RDF Resource and provides create, read, and

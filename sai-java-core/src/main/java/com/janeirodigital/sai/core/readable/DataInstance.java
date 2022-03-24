@@ -13,8 +13,8 @@ import org.apache.jena.rdf.model.Property;
 import java.net.URL;
 import java.util.*;
 
-import static com.janeirodigital.sai.core.helpers.HttpHelper.addChildToUrlPath;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
+import static com.janeirodigital.sai.core.utils.HttpUtils.addChildToUrlPath;
+import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.shapetrees.core.validation.ShapeTreeReference.findChildReference;
 import static com.janeirodigital.shapetrees.core.validation.ShapeTreeReference.getPropertyFromReference;
 

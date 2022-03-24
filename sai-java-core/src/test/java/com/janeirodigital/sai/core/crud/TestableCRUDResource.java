@@ -17,8 +17,8 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.TestableVocabulary.*;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
+import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 
 @Getter @Setter
 public class TestableCRUDResource extends CRUDResource {
