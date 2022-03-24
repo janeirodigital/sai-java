@@ -13,7 +13,7 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getNewResourceForType;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getNewResourceForType;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.APPLICATION_REGISTRATION;
 
 /**

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_WRITE;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;

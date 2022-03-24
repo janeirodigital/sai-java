@@ -32,16 +32,16 @@ import java.util.Objects;
 import static org.apache.jena.datatypes.xsd.XSDDatatype.*;
 
 /**
- * Assorted helper methods related to the Jena RDF Model
+ * Assorted utility methods related to the Jena RDF Model
  * @see <a href="https://jena.apache.org/documentation/javadoc/jena/org/apache/jena/rdf/model/Model.html">Jena - Model</a>
  * @see <a href="https://jena.apache.org/documentation/javadoc/jena/org/apache/jena/rdf/model/Resource.html">Jena - Resource</a>
  * @see <a href="https://jena.apache.org/documentation/javadoc/jena/org/apache/jena/rdf/model/Statement.html">Jena - Statement</a>
  * @see <a href="https://jena.apache.org/documentation/javadoc/jena/org/apache/jena/rdf/model/Property.html">Jena - Property</a>
  * @see <a href="https://jena.apache.org/documentation/javadoc/jena/org/apache/jena/rdf/model/RDFNode.html">Jena - RDFNode</a>
  */
-public class RdfHelper {
+public class RdfUtils {
 
-    private RdfHelper() { }
+    private RdfUtils() { }
 
     /**
      * Deserializes the provided String <code>rawContent</code> into a Jena Model
@@ -58,7 +58,7 @@ public class RdfHelper {
         try {
             Model model = ModelFactory.createDefaultModel();
             StringReader reader = new StringReader(rawContent);
-            RDFDataMgr.read(model.getGraph(), reader, baseURI.toString(), RdfHelper.getLangForContentType(contentType));
+            RDFDataMgr.read(model.getGraph(), reader, baseURI.toString(), RdfUtils.getLangForContentType(contentType));
             return model;
         } catch (RiotException ex) {
             throw new SaiException("Error processing input - " + ex.getMessage());

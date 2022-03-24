@@ -18,7 +18,7 @@ import java.util.List;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.putRdfResource;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getModelFromString;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

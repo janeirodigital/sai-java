@@ -13,8 +13,8 @@ import java.time.OffsetDateTime;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getRequiredDateTimeObject;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getRequiredUrlObject;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getRequiredDateTimeObject;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getRequiredUrlObject;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**

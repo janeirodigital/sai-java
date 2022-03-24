@@ -32,7 +32,7 @@ import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.setHttpHeader;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_CLIENT_NAME;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_DEFAULT_MAX_AGE;
 import static org.junit.jupiter.api.Assertions.*;

@@ -27,8 +27,8 @@ import java.util.Set;
 import static com.janeirodigital.sai.core.enums.HttpHeader.AUTHORIZATION;
 import static com.janeirodigital.sai.core.enums.HttpMethod.*;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getRequiredUrlObject;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getResourceFromModel;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getRequiredUrlObject;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getResourceFromModel;
 import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLID_OIDC_ISSUER;
 
 /**

@@ -23,7 +23,7 @@ import static com.janeirodigital.sai.core.enums.ContentType.*;
 import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.enums.HttpHeader.LINK;
 import static com.janeirodigital.sai.core.enums.HttpMethod.*;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
 
 /**
  * Assorted helper methods related to working with HTTP requests and responses

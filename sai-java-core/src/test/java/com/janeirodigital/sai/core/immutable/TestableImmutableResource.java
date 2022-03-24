@@ -17,7 +17,7 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.TestableVocabulary.*;
 import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
 
 @Getter
 public class TestableImmutableResource extends ImmutableResource {

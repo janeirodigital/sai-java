@@ -9,7 +9,7 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**

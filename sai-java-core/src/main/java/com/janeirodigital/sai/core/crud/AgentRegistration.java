@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.addChildToUrlPath;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 
 /**

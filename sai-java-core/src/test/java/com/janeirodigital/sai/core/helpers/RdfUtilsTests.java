@@ -37,13 +37,13 @@ import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_C
 import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.stringToUrl;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-class RdfHelperTests {
+class RdfUtilsTests {
 
     private static URL resourceUrl;
     private static URI resourceUri;
@@ -485,7 +485,7 @@ class RdfHelperTests {
     void checkUpdateNodeObject() throws MalformedURLException, SaiException {
         URL url = new URL("https://solidproject.org");
         Node node = NodeFactory.createURI(url.toString());
-        RdfHelper.updateObject(updatableResource, TestableVocabulary.TESTABLE_HAS_MILESTONE, updatableModel.asRDFNode(node));
+        RdfUtils.updateObject(updatableResource, TestableVocabulary.TESTABLE_HAS_MILESTONE, updatableModel.asRDFNode(node));
         assertEquals(url, getUrlObject(updatableResource, TestableVocabulary.TESTABLE_HAS_MILESTONE));
     }
 
@@ -493,7 +493,7 @@ class RdfHelperTests {
     @DisplayName("Update string object by property")
     void checkUpdateStringObject() throws SaiException {
         String name = "Updated name";
-        RdfHelper.updateObject(updatableResource, TestableVocabulary.TESTABLE_NAME, name);
+        RdfUtils.updateObject(updatableResource, TestableVocabulary.TESTABLE_NAME, name);
         assertEquals(name, getStringObject(updatableResource, TestableVocabulary.TESTABLE_NAME));
     }
 
@@ -501,7 +501,7 @@ class RdfHelperTests {
     @DisplayName("Update URL object by property")
     void checkUpdateUrlObject() throws SaiException, MalformedURLException {
         URL milestone = new URL("https://solidproject.org/roadmap#milestone");
-        RdfHelper.updateObject(updatableResource, TestableVocabulary.TESTABLE_HAS_MILESTONE, milestone);
+        RdfUtils.updateObject(updatableResource, TestableVocabulary.TESTABLE_HAS_MILESTONE, milestone);
         assertEquals(milestone, getUrlObject(updatableResource, TestableVocabulary.TESTABLE_HAS_MILESTONE));
     }
 
@@ -509,7 +509,7 @@ class RdfHelperTests {
     @DisplayName("Update date time object by property")
     void checkUpdateDateTimeObject() throws SaiException {
         OffsetDateTime dateTime = OffsetDateTime.parse("2021-12-25T06:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME);
-        RdfHelper.updateObject(updatableResource, TestableVocabulary.TESTABLE_CREATED_AT, dateTime);
+        RdfUtils.updateObject(updatableResource, TestableVocabulary.TESTABLE_CREATED_AT, dateTime);
         assertEquals(dateTime, getDateTimeObject(updatableResource, TestableVocabulary.TESTABLE_CREATED_AT));
     }
 
@@ -517,14 +517,14 @@ class RdfHelperTests {
     @DisplayName("Update Integer object by property")
     void checkUpdateIntegerObject() throws SaiException {
         int id = 777;
-        RdfHelper.updateObject(updatableResource, TestableVocabulary.TESTABLE_ID, id);
+        RdfUtils.updateObject(updatableResource, TestableVocabulary.TESTABLE_ID, id);
         assertEquals(id, getIntegerObject(updatableResource, TestableVocabulary.TESTABLE_ID));
     }
 
     @Test
     @DisplayName("Update boolean object by property")
     void checkUpdateBooleanObject() throws SaiNotFoundException, SaiException {
-        RdfHelper.updateObject(updatableResource, TestableVocabulary.TESTABLE_ACTIVE, false);
+        RdfUtils.updateObject(updatableResource, TestableVocabulary.TESTABLE_ACTIVE, false);
         assertFalse(getBooleanObject(updatableResource, TestableVocabulary.TESTABLE_ACTIVE));
     }
 

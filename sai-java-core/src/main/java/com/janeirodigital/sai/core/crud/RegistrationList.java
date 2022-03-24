@@ -14,8 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getUrlObjects;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.updateUrlObjects;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getUrlObjects;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.updateUrlObjects;
 
 /**
  * Used by Registries as a base class to model their associated registrations. For example,

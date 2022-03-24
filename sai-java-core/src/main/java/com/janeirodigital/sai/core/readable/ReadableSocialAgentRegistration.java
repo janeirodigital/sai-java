@@ -12,7 +12,7 @@ import java.net.URL;
 
 import static com.janeirodigital.sai.core.helpers.HttpHelper.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.core.helpers.HttpHelper.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getUrlObject;
+import static com.janeirodigital.sai.core.helpers.RdfUtils.getUrlObject;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.RECIPROCAL_REGISTRATION;
 
 /**
