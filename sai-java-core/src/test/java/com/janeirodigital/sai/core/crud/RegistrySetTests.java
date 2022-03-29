@@ -1,11 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -15,10 +16,10 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -35,7 +36,7 @@ class RegistrySetTests {
     private static List<URL> aliceDataRegistries;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiHttpException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -78,7 +79,7 @@ class RegistrySetTests {
 
     @Test
     @DisplayName("Read crud registry set")
-    void readRegistrySet() throws SaiException, SaiNotFoundException {
+    void readRegistrySet() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession);
         checkRegistrySet(registrySet);
@@ -86,7 +87,7 @@ class RegistrySetTests {
 
     @Test
     @DisplayName("Reload crud registry set")
-    void reloadRegistrySet() throws SaiException, SaiNotFoundException {
+    void reloadRegistrySet() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession);
         RegistrySet reloaded = registrySet.reload();
@@ -102,7 +103,7 @@ class RegistrySetTests {
 
     @Test
     @DisplayName("Update existing crud registry set")
-    void updateRegistrySet() throws SaiException, SaiNotFoundException {
+    void updateRegistrySet() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/ttl/registries");
         RegistrySet existing = RegistrySet.get(url, saiSession);
         existing.setAgentRegistryUrl(stringToUrl("https://alice.example/otheragents/"));
@@ -112,7 +113,7 @@ class RegistrySetTests {
 
     @Test
     @DisplayName("Read existing registry set in JSON-LD")
-    void readRegistrySetJsonLd() throws SaiException, SaiNotFoundException {
+    void readRegistrySetJsonLd() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/jsonld/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession, LD_JSON);
         checkRegistrySetJsonLd(registrySet);
@@ -132,7 +133,7 @@ class RegistrySetTests {
 
     @Test
     @DisplayName("Delete crud registry set")
-    void deleteRegistrySet() throws SaiException, SaiNotFoundException {
+    void deleteRegistrySet() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession);
         assertDoesNotThrow(() -> registrySet.delete());

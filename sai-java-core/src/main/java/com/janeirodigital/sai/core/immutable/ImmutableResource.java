@@ -1,18 +1,20 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.enums.HttpHeader;
+import com.janeirodigital.sai.authentication.SaiAuthenticationException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.readable.ReadableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.HttpHeader;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
 
 import java.net.URL;
 
-import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.deleteProtectedResource;
-import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
-import static com.janeirodigital.sai.core.utils.HttpUtils.*;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.*;
 
 /**
  * Represents a corresponding RDF Resource and provides create, read, and
@@ -38,8 +40,12 @@ public class ImmutableResource extends ReadableResource {
      */
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
-        if (this.isUnprotected()) { this.createUnprotected(headers); } else {
-            checkResponse(putProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
+        try {
+            if (this.isUnprotected()) { this.createUnprotected(headers); } else {
+                checkResponse(putProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
+            }
+        } catch (SaiRdfException | SaiAuthenticationException | SaiHttpException ex) {
+            throw new SaiException("Failed to create immutable resource " + this.url, ex);
         }
         this.exists = true;
     }
@@ -47,7 +53,7 @@ public class ImmutableResource extends ReadableResource {
     /**
      * Create the corresponding resource without sending any authorization headers
      */
-    private void createUnprotected(Headers headers) throws SaiException {
+    private void createUnprotected(Headers headers) throws SaiRdfException, SaiHttpException {
         checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
     }
 
@@ -56,8 +62,12 @@ public class ImmutableResource extends ReadableResource {
      * @throws SaiException
      */
     public void delete() throws SaiException {
-        if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-            checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
+        try {
+            if (this.isUnprotected()) { this.deleteUnprotected(); } else {
+                checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
+            }
+        } catch (SaiHttpException | SaiAuthenticationException ex) {
+            throw new SaiException("Failed to delete immutable resource " + this.url, ex);
         }
         this.exists = false;
     }
@@ -65,9 +75,9 @@ public class ImmutableResource extends ReadableResource {
     /**
      * Deletes the corresponding resource over HTTP without sending any
      * authorization headers
-     * @throws SaiException
+     * @throws SaiHttpException
      */
-    private void deleteUnprotected() throws SaiException {
+    private void deleteUnprotected() throws SaiHttpException {
         checkResponse(deleteResource(this.httpClient, this.url));
     }
 
@@ -75,10 +85,10 @@ public class ImmutableResource extends ReadableResource {
      * Ensure the response to a create or delete operation is successful
      * @param response OkHttp Response to check
      * @return Response
-     * @throws SaiException
+     * @throws SaiHttpException
      */
-    private Response checkResponse(Response response) throws SaiException {
-        if (!response.isSuccessful()) { throw new SaiException("Failed to " + response.request().method() + " " + this.url + ": " + getResponseFailureMessage(response)); }
+    private Response checkResponse(Response response) throws SaiHttpException {
+        if (!response.isSuccessful()) { throw new SaiHttpException("Failed to " + response.request().method() + " " + this.url + ": " + getResponseFailureMessage(response)); }
         return response;
     }
 

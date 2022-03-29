@@ -1,15 +1,15 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.crud.AgentRegistry;
 import com.janeirodigital.sai.core.crud.ApplicationRegistration;
 import com.janeirodigital.sai.core.crud.DataRegistry;
-import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,9 +28,9 @@ import java.util.List;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPut;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,7 +53,7 @@ class AccessAuthorizationTests {
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES, READ_MODES;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException, SaiHttpException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -254,7 +254,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and associated data grants - Scope: All")
-    void testGenerateAccessGrantAll() throws SaiNotFoundException, SaiException {
+    void testGenerateAccessGrantAll() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
         URL accessUrl = toUrl(server, "/authorization/all-1");
@@ -273,7 +273,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and associated data grants - Scope: AllFromRegistry")
-    void testGenerateAccessGrantAllFromRegistry() throws SaiNotFoundException, SaiException {
+    void testGenerateAccessGrantAllFromRegistry() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
         URL accessUrl = toUrl(server, "/authorization/registry-1");
@@ -290,7 +290,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and associated data grants - Scope: SelectedFromRegistry")
-    void testGenerateAccessGrantSelectedFromRegistry() throws SaiNotFoundException, SaiException {
+    void testGenerateAccessGrantSelectedFromRegistry() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
         URL accessUrl = toUrl(server, "/authorization/selected-1");
@@ -307,7 +307,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and associated data grants - Scope: AllFromAgent")
-    void testGenerateAccessGrantAllFromAgent() throws SaiNotFoundException, SaiException {
+    void testGenerateAccessGrantAllFromAgent() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
         URL accessUrl = toUrl(server, "/authorization/agent-1");
@@ -324,7 +324,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and associated data grants - no matching data registrations")
-    void generateDataGrantsNoMatchingRegistrations() throws SaiNotFoundException, SaiException {
+    void generateDataGrantsNoMatchingRegistrations() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/no-matches");
         URL dataAuthorizationUrl = toUrl(server, "/authorization/no-matches-project");
         URL EVENT_TREE = toUrl(server, "/shapetrees/pm#EventTree");
@@ -351,7 +351,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and associated data grants - read-only access modes")
-    void generateDataGrantsReadOnly() throws SaiNotFoundException, SaiException {
+    void generateDataGrantsReadOnly() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/read-only");
         URL dataAuthorizationUrl = toUrl(server, "/authorization/read-only-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -376,7 +376,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and delegated data grants - multiple social agents in registry")
-    void generateDelegatedGrantsMultipleSocials() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
+    void generateDelegatedGrantsMultipleSocials() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -404,7 +404,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and delegated data grants - no match for remote data registration")
-    void generateDelegatedGrantsNoMatchRemote() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
+    void generateDelegatedGrantsNoMatchRemote() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -433,7 +433,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - data authorization includes access modes not originally granted")
-    void failToGenerateDelegatedGrantsExpandedModes() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
+    void failToGenerateDelegatedGrantsExpandedModes() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -464,7 +464,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and delegated data grants - read only")
-    void testGenerateDelegatedGrantsReadOnly() throws SaiNotFoundException, SaiException {
+    void testGenerateDelegatedGrantsReadOnly() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL milestoneAuthorizationUrl = toUrl(server, "/authorization/delegated-milestone");
@@ -501,7 +501,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - child data authorization includes access modes not originally granted")
-    void failToGenerateDelegatedGrantsChildExpandedModes() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
+    void failToGenerateDelegatedGrantsChildExpandedModes() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL milestoneAuthorizationUrl = toUrl(server, "/authorization/delegated-milestone");
@@ -540,7 +540,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - data authorization includes creator access modes not originally granted")
-    void failToGenerateDelegatedGrantsExpandedCreatorModes() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
+    void failToGenerateDelegatedGrantsExpandedCreatorModes() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -571,7 +571,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - child data authorization includes creator access modes not originally granted")
-    void failToGenerateDelegatedGrantsChildExpandedCreatorModes() throws SaiNotFoundException, SaiException {
+    void failToGenerateDelegatedGrantsChildExpandedCreatorModes() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL milestoneAuthorizationUrl = toUrl(server, "/authorization/delegated-milestone");
@@ -610,7 +610,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and delegated data grants - no reciprocal registration")
-    void generateDelegatedGrantsNoReciprocal() throws SaiNotFoundException, SaiException, SaiAlreadyExistsException {
+    void generateDelegatedGrantsNoReciprocal() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -637,7 +637,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - invalid scope")
-    void failToGenerateDelegatedGrantsInvalidScope() throws SaiNotFoundException, SaiException {
+    void failToGenerateDelegatedGrantsInvalidScope() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -666,7 +666,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and delegated data grants - no access grant at reciprocal")
-    void generateDelegatedGrantsNoGrantAtReciprocal() throws SaiNotFoundException, SaiException {
+    void generateDelegatedGrantsNoGrantAtReciprocal() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/delegated-agents");
         URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -693,7 +693,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Generate access grant and associated data grants - multiple parents and children")
-    void generateDataGrantsMultipleParents() throws SaiNotFoundException, SaiException {
+    void generateDataGrantsMultipleParents() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/multiple-parents");
         URL dataAuthorizationUrl = toUrl(server, "/authorization/multiple-parents-project");
         URL milestoneAuthorizationUrl = toUrl(server, "/authorization/multiple-parents-milestone");
@@ -741,7 +741,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate data grants - data authorization has inherited scope")
-    void failToGenerateDataGrantsAccessScopeInherited() throws SaiNotFoundException, SaiException {
+    void failToGenerateDataGrantsAccessScopeInherited() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/registry-1");
         URL agentRegistryUrl = toUrl(server, "/registry-1-agents/");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -759,7 +759,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate data grants - data authorization has invalid scope")
-    void failToGenerateDataGrantsInvalidDataAuthorizationScope() throws SaiNotFoundException, SaiException {
+    void failToGenerateDataGrantsInvalidDataAuthorizationScope() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/invalid-scope");
         URL dataAuthorizationUrl = toUrl(server, "/authorization/invalid-scope-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -787,7 +787,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate data grants - specified data registration doesn't exist")
-    void failToGenerateDataGrantsInvalidDataRegistration() throws SaiNotFoundException, SaiException {
+    void failToGenerateDataGrantsInvalidDataRegistration() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/invalid-registration");
         URL dataAuthorizationUrl = toUrl(server, "/authorization/invalid-registration-project");
         URL dataRegistryUrl = toUrl(server, "/personal/data/");
@@ -813,7 +813,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Fail to generate data grants - specified child data registration doesn't exist")
-    void failToGenerateDataGrantsInvalidChildDataRegistration() throws SaiNotFoundException, SaiException {
+    void failToGenerateDataGrantsInvalidChildDataRegistration() throws SaiHttpNotFoundException, SaiException {
         URL accessUrl = toUrl(server, "/authorization/invalid-registration");
         URL dataAuthorizationUrl = toUrl(server, "/authorization/invalid-registration-project");
         URL eventAuthorizationUrl = toUrl(server, "/authorization/invalid-registration-event");
@@ -848,7 +848,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Get an access authorization and linked data authorizations - scope: all")
-    void getAccessAuthorization() throws SaiNotFoundException, SaiException {
+    void getAccessAuthorization() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/authorization/all-1");
         AccessAuthorization accessAuthorization = AccessAuthorization.get(url, saiSession);
         checkAccessAuthorization(accessAuthorization);
@@ -856,7 +856,7 @@ class AccessAuthorizationTests {
 
     @Test
     @DisplayName("Reload an access authorization and linked data authorizations - scope: all")
-    void reloadAccessAuthorization() throws SaiNotFoundException, SaiException {
+    void reloadAccessAuthorization() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/authorization/all-1");
         AccessAuthorization accessAuthorization = AccessAuthorization.get(url, saiSession);
         AccessAuthorization reloaded = accessAuthorization.reload();
@@ -882,7 +882,7 @@ class AccessAuthorizationTests {
 
     // The most efficient way to ensure that the access grants and data grants generated are
     // correct is to create fixtures that are known to be correct, load them, and then compare.
-    private void checkAccessGrantAll(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+    private void checkAccessGrantAll(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
         URL baselineUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
@@ -911,7 +911,7 @@ class AccessAuthorizationTests {
         return null;
     }
 
-    private void checkAccessGrantAllFromRegistry(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+    private void checkAccessGrantAllFromRegistry(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
         URL baselineUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
@@ -929,7 +929,7 @@ class AccessAuthorizationTests {
 
     }
 
-    private void checkAccessGrantSelectedFromRegistry(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+    private void checkAccessGrantSelectedFromRegistry(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
         URL baselineUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/selected-1-grant");
@@ -947,7 +947,7 @@ class AccessAuthorizationTests {
         
     }
 
-    private void checkAccessGrantAllFromAgent(AccessGrant accessGrant) throws SaiNotFoundException, SaiException {
+    private void checkAccessGrantAllFromAgent(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
         URL baselineUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/agent-1-grant");

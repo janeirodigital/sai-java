@@ -1,19 +1,21 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
 import java.net.URL;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getUrlObject;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.RECIPROCAL_REGISTRATION;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getUrlObject;
 
 /**
  * Readable instantiation of a
@@ -41,12 +43,14 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link ReadableSocialAgentRegistration}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ReadableSocialAgentRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ReadableSocialAgentRegistration.Builder builder = new ReadableSocialAgentRegistration.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read readable social agent registration " + url, ex);
         }
     }
 
@@ -56,9 +60,9 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableSocialAgentRegistration}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentRegistration get(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
+    public static ReadableSocialAgentRegistration get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
@@ -66,10 +70,10 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
      * Reload a new instance of {@link ReadableSocialAgentRegistration} using the attributes of the
      * current instance
      * @return Reloaded {@link ReadableSocialAgentRegistration}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public ReadableSocialAgentRegistration reload() throws SaiNotFoundException, SaiException {
+    public ReadableSocialAgentRegistration reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -118,8 +122,8 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
             super.populateFromDataset();
             try {
                 this.reciprocalRegistration = getUrlObject(this.resource, RECIPROCAL_REGISTRATION);
-            } catch (SaiException ex) {
-                throw new SaiException("Failed to load readable social agent registration " + this.url + ": " + ex.getMessage());
+            } catch (SaiRdfException ex) {
+                throw new SaiException("Failed to load readable social agent registration " + this.url, ex);
             }
         }
 

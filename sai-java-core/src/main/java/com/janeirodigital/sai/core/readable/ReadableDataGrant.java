@@ -1,9 +1,13 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -13,12 +17,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_WRITE;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Readable instantiation of a
@@ -61,12 +65,14 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataGrant}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ReadableDataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ReadableDataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ReadableDataGrant.Builder builder = new ReadableDataGrant.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read readable data grant " + url, ex);
         }
     }
 
@@ -75,20 +81,20 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * @param url URL of the {@link ReadableDataGrant} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataGrant}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static ReadableDataGrant get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static ReadableDataGrant get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link ReadableDataGrant} using the attributes of the current instance
      * @return Reloaded {@link ReadableDataGrant}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public ReadableDataGrant reload() throws SaiNotFoundException, SaiException {
+    public ReadableDataGrant reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -115,7 +121,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * @throws SaiNotFoundException
      * @throws SaiException
      */
-    public abstract DataInstanceList getDataInstances() throws SaiNotFoundException, SaiException;
+    public abstract DataInstanceList getDataInstances() throws SaiHttpNotFoundException, SaiException;
 
     /**
      * Builder for {@link ReadableDataGrant} instances.
@@ -185,8 +191,8 @@ public abstract class ReadableDataGrant extends ReadableResource {
                 this.accessNeed = getRequiredUrlObject(this.resource, SATISFIES_ACCESS_NEED);
                 this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_GRANT);
                 this.delegationOf = getUrlObject(this.resource, DELEGATION_OF_GRANT);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Unable to populate immutable data grant. Missing required fields: " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Unable to populate immutable data grant. Missing required fields", ex);
             }
         }
 

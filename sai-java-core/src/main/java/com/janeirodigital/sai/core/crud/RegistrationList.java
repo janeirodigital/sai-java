@@ -4,6 +4,7 @@ import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -14,8 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.RdfUtils.getUrlObjects;
-import static com.janeirodigital.sai.core.utils.RdfUtils.updateUrlObjects;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getUrlObjects;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.updateUrlObjects;
 
 /**
  * Used by Registries as a base class to model their associated registrations. For example,
@@ -51,7 +52,11 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      * @throws SaiException
      */
     public void populate() throws SaiException {
-        this.registrationUrls = getUrlObjects(this.resource, this.linkedVia);
+        try {
+            this.registrationUrls = getUrlObjects(this.resource, this.linkedVia);
+        } catch (SaiRdfException ex) {
+            throw new SaiException("Unable to populate graph", ex);
+        }
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import lombok.Getter;
 
 import java.net.URL;
@@ -45,7 +45,7 @@ public class InheritedDataGrant extends ReadableDataGrant {
                 }
             }
             return new DataInstanceList(this.getSaiSession(), this, childInstanceUrls);
-        } catch (SaiNotFoundException ex) {
+        } catch (SaiHttpNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
         }
     }

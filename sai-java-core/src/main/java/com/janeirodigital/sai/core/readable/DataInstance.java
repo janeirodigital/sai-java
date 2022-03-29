@@ -3,6 +3,8 @@ package com.janeirodigital.sai.core.readable;
 import com.janeirodigital.sai.core.crud.CRUDResource;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import com.janeirodigital.shapetrees.core.validation.ShapeTree;
 import com.janeirodigital.shapetrees.core.validation.ShapeTreeFactory;
@@ -13,8 +15,8 @@ import org.apache.jena.rdf.model.Property;
 import java.net.URL;
 import java.util.*;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.addChildToUrlPath;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.addChildToUrlPath;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 import static com.janeirodigital.shapetrees.core.validation.ShapeTreeReference.findChildReference;
 import static com.janeirodigital.shapetrees.core.validation.ShapeTreeReference.getPropertyFromReference;
 
@@ -97,7 +99,10 @@ public class DataInstance extends CRUDResource {
         // Get the property use from the shape tree reference
         Property property = getPropertyFromShapeTreeReference(reference);
         // Get the existing references from the graph and remove the child reference
-        List<URL> urlReferences = getUrlObjects(this.resource, property);
+        List<URL> urlReferences;
+        try { urlReferences = getUrlObjects(this.resource, property); } catch (SaiRdfException ex) {
+            throw new SaiException("Unable to get existing references from graph", ex);
+        }
         urlReferences.remove(childInstance.getUrl());
         updateUrlObjects(this.resource, property, urlReferences);
         // update the instance graph
@@ -114,7 +119,9 @@ public class DataInstance extends CRUDResource {
 
     public static URL generateUrl(ReadableDataGrant dataGrant, String resourceName) throws SaiException {
         if (resourceName == null) resourceName = UUID.randomUUID().toString();
-        return addChildToUrlPath(dataGrant.getDataRegistration(), resourceName);
+        try { return addChildToUrlPath(dataGrant.getDataRegistration(), resourceName); } catch (SaiHttpException ex) {
+            throw new SaiException("Unable to add child to url path", ex);
+        }
     }
 
     public static URL generateUrl(ReadableDataGrant dataGrant) throws SaiException {
@@ -123,7 +130,9 @@ public class DataInstance extends CRUDResource {
 
     public List<URL> findChildInstances(ShapeTreeReference reference) throws SaiException {
         Property lookupVia = getPropertyFromShapeTreeReference(reference);
-        return getUrlObjects(this.resource, lookupVia);
+        try { return getUrlObjects(this.resource, lookupVia); } catch (SaiRdfException ex) {
+            throw new SaiException("Unable to lookup child instances from graph", ex);
+        }
     }
 
     public ReadableDataGrant findChildGrant(URL shapeTreeUrl) throws SaiException {
@@ -173,7 +182,7 @@ public class DataInstance extends CRUDResource {
         }
 
         /**
-         * Initialize builder with a {@DataInstance}
+         * Initialize builder with a {@link DataInstance}
          * @param dataInstance {@link DataInstance} to initialize from
          */
         public Builder(DataInstance dataInstance) throws SaiException {

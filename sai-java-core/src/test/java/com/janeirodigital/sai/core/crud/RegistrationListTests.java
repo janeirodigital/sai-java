@@ -1,12 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +39,7 @@ class RegistrationListTests {
 
     @Test
     @DisplayName("Add registrations to a registration list")
-    void addAgentRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void addAgentRegistrations() throws SaiException, SaiHttpNotFoundException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/ttl/agents/");
         URL saNewUrl = toUrl(server, "/ttl/agents/sa-66/");
         List<URL> newSaUrls = Arrays.asList(toUrl(server, "/ttl/agents/sa-67/"), toUrl(server, "/ttl/agents/sa-68/"));
@@ -52,7 +52,7 @@ class RegistrationListTests {
 
     @Test
     @DisplayName("Fail to add registrations - already exists")
-    void failToAddExistingRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void failToAddExistingRegistrations() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/");
         URL saExistsUrl = toUrl(server, "/ttl/agents/sa-4/");
         List<URL> existingSaUrls = Arrays.asList(saExistsUrl, toUrl(server, "/ttl/agents/sa-2/"));

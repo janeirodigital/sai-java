@@ -1,9 +1,9 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 
 import java.net.URL;
 import java.util.Iterator;
@@ -82,8 +82,8 @@ public class DataInstanceList implements Iterable<DataInstance> {
                 URL instanceUrl = pair.getKey();
                 DataInstance parent = pair.getValue();
                 return BasicDataInstance.get(instanceUrl, saiSession, dataGrant, parent);
-            } catch (SaiException| SaiNotFoundException ex) {
-                throw new SaiRuntimeException("Failed to get data instance: " + ex.getMessage());
+            } catch (SaiException| SaiHttpNotFoundException ex) {
+                throw new SaiRuntimeException("Failed to get data instance", ex);
             }
         }
     }

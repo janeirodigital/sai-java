@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.crud.DataRegistration;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import lombok.Getter;
 
 import java.net.URL;
@@ -39,8 +39,8 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
             Map<URL, DataInstance> dataInstanceUrls = new HashMap<>();
             for (URL dataInstanceUrl : registration.getDataInstances()) { dataInstanceUrls.put(dataInstanceUrl, null); }
             return new DataInstanceList(saiSession, this, dataInstanceUrls);
-        } catch (SaiNotFoundException ex) {
-            throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
+        } catch (SaiHttpNotFoundException ex) {
+            throw new SaiException("Failed to load data instances from " + this.getDataRegistration(), ex);
         }
     }
 

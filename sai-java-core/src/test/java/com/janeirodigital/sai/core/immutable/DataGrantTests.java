@@ -1,12 +1,13 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,9 +23,9 @@ import java.util.List;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPut;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -46,7 +47,7 @@ class DataGrantTests {
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES, READ_MODES, WRITE_MODES;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException, SaiHttpException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -300,7 +301,7 @@ class DataGrantTests {
 
     @Test
     @DisplayName("Get data grant - scope: all from registry")
-    void getDataGrant() throws SaiException, SaiNotFoundException {
+    void getDataGrant() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant dataGrant = DataGrant.get(url, saiSession);
         assertEquals(ALICE_ID, dataGrant.getDataOwner());
@@ -315,7 +316,7 @@ class DataGrantTests {
 
     @Test
     @DisplayName("Get readable read-only data grant - scope: all from registry")
-    void getReadOnlyDataGrant() throws SaiException, SaiNotFoundException {
+    void getReadOnlyDataGrant() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-readonly");
         ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
         assertFalse(dataGrant.canCreate());
@@ -323,7 +324,7 @@ class DataGrantTests {
 
     @Test
     @DisplayName("Get readable data grant with create privileges - scope: all from registry")
-    void getReadOnlyDataGrantCreate() throws SaiException, SaiNotFoundException {
+    void getReadOnlyDataGrantCreate() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-cancreate");
         ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
         assertTrue(dataGrant.canCreate());
@@ -331,7 +332,7 @@ class DataGrantTests {
 
     @Test
     @DisplayName("Get readable data grant with write privileges - scope: all from registry")
-    void getReadOnlyDataGrantWrite() throws SaiException, SaiNotFoundException {
+    void getReadOnlyDataGrantWrite() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-canwrite");
         ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
         assertTrue(dataGrant.canCreate());
@@ -339,7 +340,7 @@ class DataGrantTests {
 
     @Test
     @DisplayName("Reload data grant - scope: all from registry")
-    void reloadDataGrant() throws SaiException, SaiNotFoundException {
+    void reloadDataGrant() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         DataGrant dataGrant = DataGrant.get(url, saiSession);
         DataGrant reloaded = dataGrant.reload();
@@ -355,7 +356,7 @@ class DataGrantTests {
 
     @Test
     @DisplayName("Reload readable data grant - scope: all from registry")
-    void reloadReadableDataGrant() throws SaiException, SaiNotFoundException {
+    void reloadReadableDataGrant() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         ReadableDataGrant dataGrant = ReadableDataGrant.get(url, saiSession);
         ReadableDataGrant reloaded = dataGrant.reload();

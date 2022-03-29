@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -11,12 +14,12 @@ import org.apache.jena.rdf.model.Model;
 import java.net.URL;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getRequiredUrlObject;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getRequiredUrlObjects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLID_OIDC_ISSUER;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObject;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObjects;
 
 /**
  * Publicly readable instantiation of a
@@ -51,12 +54,14 @@ public class ReadableSocialAgentProfile extends ReadableResource {
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link ReadableSocialAgentProfile}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ReadableSocialAgentProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ReadableSocialAgentProfile.Builder builder = new ReadableSocialAgentProfile.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, true)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).setUnprotected().build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read readable social agent profile " + url, ex);
         }
     }
 
@@ -66,19 +71,19 @@ public class ReadableSocialAgentProfile extends ReadableResource {
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableSocialAgentProfile}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentProfile get(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
+    public static ReadableSocialAgentProfile get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link ReadableSocialAgentProfile} using the attributes of the current instance
      * @return Reloaded {@link ReadableSocialAgentProfile}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public ReadableSocialAgentProfile reload() throws SaiNotFoundException, SaiException {
+    public ReadableSocialAgentProfile reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -131,8 +136,8 @@ public class ReadableSocialAgentProfile extends ReadableResource {
                 this.authorizationAgentUrl = getRequiredUrlObject(this.resource, HAS_AUTHORIZATION_AGENT);
                 this.registrySetUrl = getRequiredUrlObject(this.resource, HAS_REGISTRY_SET);
                 this.accessInboxUrl = getRequiredUrlObject(this.resource, HAS_ACCESS_INBOX);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Failed to load social agent profile " + this.url + ": " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Failed to load social agent profile " + this.url, ex);
             }
         }
 

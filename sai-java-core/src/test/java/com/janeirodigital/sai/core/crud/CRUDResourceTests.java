@@ -1,11 +1,11 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,7 +29,7 @@ class CRUDResourceTests {
     private static MockWebServer server;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException, SaiHttpNotFoundException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -51,7 +51,7 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Get a CRUD resource")
-    void buildExistingCRUDResource() throws SaiException, SaiNotFoundException {
+    void buildExistingCRUDResource() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession,true);
         checkTestableGraph(testable);
@@ -72,7 +72,7 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Update a CRUD resource")
-    void updateCRUDResource() throws SaiException, SaiNotFoundException {
+    void updateCRUDResource() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession,true);
         testable.setActive(false);
@@ -94,7 +94,7 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Delete a CRUD resource")
-    void deleteCRUDResource() throws SaiException, SaiNotFoundException {
+    void deleteCRUDResource() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession, true);
         assertDoesNotThrow(() -> testable.delete());
@@ -102,7 +102,7 @@ class CRUDResourceTests {
 
     @Test
     @DisplayName("Delete a protected CRUD resource")
-    void deleteProtectedCRUDResource() throws SaiException, SaiNotFoundException {
+    void deleteProtectedCRUDResource() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession, false);
         assertDoesNotThrow(() -> testable.delete());

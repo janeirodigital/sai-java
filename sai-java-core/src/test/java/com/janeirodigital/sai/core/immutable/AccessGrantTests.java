@@ -1,12 +1,13 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.readable.*;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.shapetrees.core.contentloaders.DocumentLoaderManager;
 import com.janeirodigital.shapetrees.core.contentloaders.HttpExternalDocumentLoader;
 import okhttp3.mockwebserver.MockWebServer;
@@ -23,9 +24,9 @@ import java.util.List;
 
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_ALL_FROM_REGISTRY;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -49,7 +50,7 @@ class AccessGrantTests {
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -280,7 +281,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Get an access grant and linked data grants - scope: all")
-    void getAccessGrant() throws SaiNotFoundException, SaiException {
+    void getAccessGrant() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         AccessGrant accessGrant = AccessGrant.get(url, saiSession);
         checkAccessGrant(accessGrant);
@@ -288,7 +289,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Reload an access grant and linked data grants - scope: all")
-    void reloadAccessGrant() throws SaiNotFoundException, SaiException {
+    void reloadAccessGrant() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         AccessGrant accessGrant = AccessGrant.get(url, saiSession);
         AccessGrant reloaded = accessGrant.reload();
@@ -297,7 +298,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Get a readable access grant and linked data grants - scope: all")
-    void getReadableAccessGrant() throws SaiNotFoundException, SaiException {
+    void getReadableAccessGrant() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(url, saiSession);
         checkReadableAccessGrant(accessGrant);
@@ -312,7 +313,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Reload a readable access grant and linked data grants - scope: all")
-    void reloadReadableAccessGrant() throws SaiNotFoundException, SaiException {
+    void reloadReadableAccessGrant() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(url, saiSession);
         ReadableAccessGrant reloaded = accessGrant.reload();
@@ -335,7 +336,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Get readable access grant and associated readable data grants - Scope: All")
-    void testGetAccessGrantAll() throws SaiNotFoundException, SaiException {
+    void testGetAccessGrantAll() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
         URL bobProjectGrantUrl = toUrl(server, "/all-1-bob-agents/all-1-alice/all-1-grant-project");
         URL delegatedProjectUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-delegated-grant-bob-project");
@@ -374,7 +375,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Get readable access grant and associated readable data grants - Scope: AllFromRegistry")
-    void testGetAccessGrantAllFromRegistry() throws SaiNotFoundException, SaiException {
+    void testGetAccessGrantAllFromRegistry() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
         URL aliceProjectUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
@@ -408,7 +409,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Get readable access grant and associated readable data grants - Scope: SelectedFromRegistry")
-    void testGetAccessGrantSelectedFromRegistry() throws SaiNotFoundException, SaiException {
+    void testGetAccessGrantSelectedFromRegistry() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/selected-1-grant");
         URL aliceProjectUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/selected-1-grant-personal-project");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
@@ -443,7 +444,7 @@ class AccessGrantTests {
     // Get readable access grant and data grants for scope: all from agent
     @Test
     @DisplayName("Get readable access grant and associated readable data grants - Scope: AllFromAgent")
-    void testGetAccessGrantAllFromAgent() throws SaiNotFoundException, SaiException {
+    void testGetAccessGrantAllFromAgent() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/agent-1-grant");
         URL bobProjectGrantUrl = toUrl(server, "/agent-1-bob-agents/agent-1-alice/agent-1-grant-project");
         URL delegatedProjectUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/agent-1-delegated-grant-bob-project");
@@ -480,7 +481,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Get data instances from readable data grants - Scope: AllFromRegistry")
-    void testGetDataInstancesAllFromRegistry() throws SaiNotFoundException, SaiException {
+    void testGetDataInstancesAllFromRegistry() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
         // Grant provides access to three projects in Alice's personal data registry (/personal/data/projects/)
@@ -510,7 +511,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Fail to get data instances from readable data grant scoped with AllFromRegistry - instance missing")
-    void failToGetDataInstancesAllFromRegistryMissing() throws SaiNotFoundException, SaiException {
+    void failToGetDataInstancesAllFromRegistryMissing() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-missing");
         ReadableDataGrant dataGrant = ReadableDataGrant.get(grantUrl, saiSession);
         AllFromRegistryDataGrant projectGrant = (AllFromRegistryDataGrant) dataGrant;
@@ -519,7 +520,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Get data instances from readable data grant - Scope: Inherited")
-    void testGetDataInstancesAllFromRegistryInherited() throws SaiNotFoundException, SaiException {
+    void testGetDataInstancesAllFromRegistryInherited() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-milestone");
         List<URL> parents = Arrays.asList(PROJECT_1, PROJECT_2);
         ReadableDataGrant dataGrant = ReadableDataGrant.get(grantUrl, saiSession);
@@ -534,7 +535,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Fail to get data instances from readable data grant scoped with Inherited - instance missing")
-    void failToGetDataInstancesInheritedMissing() throws SaiNotFoundException, SaiException {
+    void failToGetDataInstancesInheritedMissing() throws SaiHttpNotFoundException, SaiException {
         URL projectGrantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-project-missing");
         URL milestoneGrantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant-personal-milestone-missing");
         ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
@@ -546,7 +547,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Create a new data instance from readable data grant")
-    void createNewDataInstanceAllFromRegistry() throws SaiNotFoundException, SaiException {
+    void createNewDataInstanceAllFromRegistry() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
         List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
@@ -572,7 +573,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Create a new child data instance from readable data grant")
-    void createNewDataInstanceInherited() throws SaiNotFoundException, SaiException {
+    void createNewDataInstanceInherited() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
         List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);
@@ -598,7 +599,7 @@ class AccessGrantTests {
 
     @Test
     @DisplayName("Delete a child data instance from a readable data grant")
-    void deleteChildDataInstance() throws SaiNotFoundException, SaiException {
+    void deleteChildDataInstance() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
         ReadableAccessGrant accessGrant = ReadableAccessGrant.get(grantUrl, saiSession);
         List<ReadableDataGrant> projectGrants = accessGrant.findDataGrants(ALICE_ID, PROJECT_TREE);

@@ -1,16 +1,19 @@
 package com.janeirodigital.sai.core.crud;
 
+import com.janeirodigital.sai.authentication.SaiAuthenticationException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.readable.ReadableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 
 import java.net.URL;
 
-import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.deleteProtectedResource;
-import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
-import static com.janeirodigital.sai.core.utils.HttpUtils.*;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.deleteProtectedResource;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
+import static com.janeirodigital.sai.httputils.HttpUtils.*;
 
 /**
  * Represents a corresponding RDF Resource and provides create, read, update,
@@ -33,8 +36,12 @@ public class CRUDResource extends ReadableResource {
      * @throws SaiException
      */
     public void update() throws SaiException {
-        if (this.isUnprotected()) { this.updateUnprotected(); } else {
-            checkResponse(putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
+        try {
+            if (this.isUnprotected()) { this.updateUnprotected(); } else {
+                checkResponse(putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
+            }
+        } catch (SaiRdfException | SaiHttpException | SaiAuthenticationException ex) {
+            throw new SaiException("Failed to update resource " + this.url, ex);
         }
         this.exists = true;
     }
@@ -44,8 +51,12 @@ public class CRUDResource extends ReadableResource {
      * @throws SaiException
      */
     public void delete() throws SaiException {
-        if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-            checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
+        try {
+            if (this.isUnprotected()) { this.deleteUnprotected(); } else {
+                checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
+            }
+        } catch (SaiHttpException | SaiAuthenticationException ex ) {
+            throw new SaiException("Failed to delete resource " + this.url, ex);
         }
         this.exists = false;
     }
@@ -55,7 +66,7 @@ public class CRUDResource extends ReadableResource {
      * <code>dataset</code> without sending any authorization headers.
      * @throws SaiException
      */
-    private void updateUnprotected() throws SaiException {
+    private void updateUnprotected() throws SaiRdfException, SaiHttpException, SaiException {
         checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
     }
 
@@ -64,7 +75,7 @@ public class CRUDResource extends ReadableResource {
      * authorization headers
      * @throws SaiException
      */
-    private void deleteUnprotected() throws SaiException {
+    private void deleteUnprotected() throws SaiException, SaiHttpException {
         checkResponse(deleteResource(this.httpClient, this.url));
     }
 

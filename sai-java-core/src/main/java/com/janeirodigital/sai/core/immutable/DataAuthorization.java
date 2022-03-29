@@ -1,13 +1,16 @@
 package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.crud.*;
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.readable.InheritableDataGrant;
 import com.janeirodigital.sai.core.readable.ReadableAccessGrant;
 import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -16,11 +19,13 @@ import org.apache.jena.rdf.model.RDFNode;
 import java.net.URL;
 import java.util.*;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.*;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
+import static com.janeirodigital.sai.core.http.UrlUtils.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_WRITE;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Immutable instantiation of an
@@ -70,12 +75,14 @@ public class DataAuthorization extends ImmutableResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link DataAuthorization}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static DataAuthorization get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static DataAuthorization get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         DataAuthorization.Builder builder = new DataAuthorization.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read data authorization at " + url, ex);
         }
     }
 
@@ -84,20 +91,20 @@ public class DataAuthorization extends ImmutableResource {
      * @param url URL of the {@link DataAuthorization} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataAuthorization}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static DataAuthorization get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static DataAuthorization get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link DataAuthorization} using the attributes of the current instance
      * @return Reloaded {@link DataAuthorization}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public DataAuthorization reload() throws SaiNotFoundException, SaiException {
+    public DataAuthorization reload() throws SaiException, SaiHttpNotFoundException {
         return get(this.url, this.saiSession, this.contentType);
     }
     
@@ -106,7 +113,7 @@ public class DataAuthorization extends ImmutableResource {
      * @return List of generated {@link DataGrant}s
      */
     public List<DataGrant> generateGrants(AccessAuthorization accessAuthorization, AgentRegistration granteeRegistration,
-                                          AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
+                                          AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiHttpNotFoundException {
         Objects.requireNonNull(granteeRegistration, "Must provide a grantee agent registration to generate data grants");
         Objects.requireNonNull(agentRegistry, "Must provide an agent registry to generate data grants");
         Objects.requireNonNull(dataRegistries, "Must provide data registries to generate data grants");
@@ -241,7 +248,7 @@ public class DataAuthorization extends ImmutableResource {
      * @return
      */
     private List<DataGrant> generateDelegatedGrants(AccessAuthorization accessAuthorization, AgentRegistration granteeRegistration,
-                                                    AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
+                                                    AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiHttpNotFoundException {
         if (!this.getScopeOfAuthorization().equals(SCOPE_ALL) && !this.getScopeOfAuthorization().equals(SCOPE_ALL_FROM_AGENT)) {
             throw new SaiException("Cannot generate a delegated data grant for a data authorization with scope: " + this.getScopeOfAuthorization());
         }
@@ -554,8 +561,8 @@ public class DataAuthorization extends ImmutableResource {
                 this.dataInstances = getUrlObjects(this.resource, HAS_DATA_INSTANCE);
                 this.accessNeed = getRequiredUrlObject(this.resource, SATISFIES_ACCESS_NEED);
                 this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_AUTHORIZATION);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Unable to populate immutable data authorization. Missing required fields: " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Unable to populate immutable data authorization. Missing required fields", ex);
             }
         }
 

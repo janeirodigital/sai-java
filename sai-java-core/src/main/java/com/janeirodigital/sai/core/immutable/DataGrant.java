@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -14,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.*;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
+import static com.janeirodigital.sai.core.http.UrlUtils.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_CREATE;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.ACL_WRITE;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Immutable instantiation of a
@@ -68,12 +73,14 @@ public class DataGrant extends ImmutableResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link DataGrant}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static DataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static DataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         DataGrant.Builder builder = new DataGrant.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read data grant " + url, ex);
         }
     }
 
@@ -82,20 +89,20 @@ public class DataGrant extends ImmutableResource {
      * @param url URL of the {@link DataGrant} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataGrant}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static DataGrant get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static DataGrant get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link DataGrant} using the attributes of the current instance
      * @return Reloaded {@link DataGrant}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public DataGrant reload() throws SaiNotFoundException, SaiException {
+    public DataGrant reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -362,8 +369,8 @@ public class DataGrant extends ImmutableResource {
                 this.accessNeed = getRequiredUrlObject(this.resource, SATISFIES_ACCESS_NEED);
                 this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_GRANT);
                 this.delegationOf = getUrlObject(this.resource, DELEGATION_OF_GRANT);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Unable to populate immutable data grant. Missing required fields: " + ex.getMessage());
+            } catch (SaiRdfNotFoundException | SaiRdfException ex) {
+                throw new SaiException("Unable to populate immutable data grant. Missing required fields", ex);
             }
         }
 

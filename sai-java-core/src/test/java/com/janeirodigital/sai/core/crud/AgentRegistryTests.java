@@ -1,13 +1,14 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -18,10 +19,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -87,7 +88,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Get an agent registry")
-    void readAgentRegistry() throws SaiException, SaiNotFoundException {
+    void readAgentRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         checkRegistry(agentRegistry, false);
@@ -96,7 +97,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Get an empty agent registry")
-    void readEmptyAgentRegistry() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void readEmptyAgentRegistry() throws SaiException, SaiHttpNotFoundException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/ttl/empty/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         checkRegistry(agentRegistry, true);
@@ -114,7 +115,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Reload agent registry")
-    void reloadAgentRegistry() throws SaiException, SaiNotFoundException {
+    void reloadAgentRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         AgentRegistry reloaded = agentRegistry.reload();
@@ -123,7 +124,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Find a social agent registration")
-    void findSocialAgentRegistration() throws SaiException, SaiNotFoundException {
+    void findSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/ttl/agents/");
         URL toFind = stringToUrl("https://bob.example/id#me");
         URL toFail = stringToUrl("https://who.example/id#nobody");
@@ -136,7 +137,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Fail to iterate social agent registrations - missing registration")
-    void failToFindSocialAgentRegistrationMissing() throws SaiException, SaiNotFoundException {
+    void failToFindSocialAgentRegistrationMissing() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/missing-registrations/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         Iterator<SocialAgentRegistration> iterator = agentRegistry.getSocialAgentRegistrations().iterator();
@@ -145,7 +146,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Find an application registration")
-    void findApplicationRegistration() throws SaiException, SaiNotFoundException {
+    void findApplicationRegistration() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/ttl/agents/");
         URL toFind = stringToUrl("https://projectron.example/id#app");
         URL toFail = stringToUrl("https://app.example/id#nothing");
@@ -158,7 +159,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Fail to iterate application registrations - missing registration")
-    void failToFindApplicationRegistrationMissing() throws SaiException, SaiNotFoundException {
+    void failToFindApplicationRegistrationMissing() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/missing-registrations/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         Iterator<ApplicationRegistration> iterator = agentRegistry.getApplicationRegistrations().iterator();
@@ -167,7 +168,7 @@ class AgentRegistryTests {
     
     @Test
     @DisplayName("Update registration in a crud agent registry")
-    void updateAgentRegistry() throws SaiException, SaiAlreadyExistsException, SaiNotFoundException {
+    void updateAgentRegistry() throws SaiException, SaiAlreadyExistsException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         agentRegistry.getSocialAgentRegistrations().remove(toUrl(server, "/ttl/agents/sa-1/"));
@@ -179,7 +180,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Read existing agent registry in JSON-LD")
-    void readAgentRegistryJsonLd() throws SaiException, SaiNotFoundException {
+    void readAgentRegistryJsonLd() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession, LD_JSON);
         checkRegistry(agentRegistry, false);
@@ -196,7 +197,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Delete crud agent registry")
-    void deleteAgentRegistry() throws SaiException, SaiNotFoundException {
+    void deleteAgentRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
         assertDoesNotThrow(() -> agentRegistry.delete());
@@ -205,7 +206,7 @@ class AgentRegistryTests {
 
     @Test
     @DisplayName("Add agent registrations to agent registry")
-    void addAgentRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void addAgentRegistrations() throws SaiException, SaiHttpNotFoundException, SaiAlreadyExistsException, SaiHttpException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
 
@@ -221,12 +222,12 @@ class AgentRegistryTests {
         ApplicationRegistration app = mock(ApplicationRegistration.class);
         when(app.getUrl()).thenReturn(appUrl);
         when(app.getRegisteredAgent()).thenReturn(appAgent);
-        agentRegistry.add(app);
+        assertDoesNotThrow(() -> agentRegistry.add(app));
     }
 
     @Test
     @DisplayName("Remove agent registrations from agent registry")
-    void removeAgentRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void removeAgentRegistrations() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
 
@@ -238,12 +239,12 @@ class AgentRegistryTests {
         URL appUrl = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration app = mock(ApplicationRegistration.class);
         when(app.getUrl()).thenReturn(appUrl);
-        agentRegistry.remove(app);
+        assertDoesNotThrow(() -> agentRegistry.remove(app));
     }
 
     @Test
     @DisplayName("Fail to add agent registrations to agent registry - already exists")
-    void failToAddSocialAgentRegistration() throws SaiException, SaiNotFoundException {
+    void failToAddSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/ttl/agents/");
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
 

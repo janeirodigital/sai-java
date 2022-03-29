@@ -1,14 +1,15 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.immutable.AccessAuthorization;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -19,10 +20,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -105,7 +106,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Get an authorization registry")
-    void readAuthorizationRegistry() throws SaiException, SaiNotFoundException {
+    void readAuthorizationRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
         checkRegistry(authzRegistry);
@@ -114,7 +115,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Get an empty authorization registry")
-    void readEmptyAuthorizationRegistry() throws SaiException, SaiNotFoundException {
+    void readEmptyAuthorizationRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/empty/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
         assertTrue(authzRegistry.isEmpty());
@@ -129,7 +130,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Reload authorization registry")
-    void reloadAuthorizationRegistry() throws SaiException, SaiNotFoundException {
+    void reloadAuthorizationRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
         AuthorizationRegistry reloaded = authzRegistry.reload();
@@ -138,7 +139,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Find an access authorization")
-    void findAccessAuthorization() throws SaiException, SaiNotFoundException {
+    void findAccessAuthorization() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/authorization/");
         URL toFind = stringToUrl("https://projectron.example/id");
         URL toFail = stringToUrl("https://ghost.example/id");
@@ -151,7 +152,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Fail to iterate access authorizations - missing authorization")
-    void failToFindAccessAuthorizationMissing() throws SaiException, SaiNotFoundException {
+    void failToFindAccessAuthorizationMissing() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/missing-authorizations/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
         Iterator<AccessAuthorization> iterator = authzRegistry.getAccessAuthorizations().iterator();
@@ -160,7 +161,7 @@ class AuthorizationRegistryTests {
     
     @Test
     @DisplayName("Read existing authorization registry in JSON-LD")
-    void readAuthorizationRegistryJsonLd() throws SaiException, SaiNotFoundException {
+    void readAuthorizationRegistryJsonLd() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/jsonld/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession, LD_JSON);
         checkRegistry(authzRegistry);
@@ -177,7 +178,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Delete crud authorization registry")
-    void deleteAuthorizationRegistry() throws SaiException, SaiNotFoundException {
+    void deleteAuthorizationRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
         assertDoesNotThrow(() -> authzRegistry.delete());
@@ -186,7 +187,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Add access authorization to authorization registry")
-    void addAccessAuthorizations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void addAccessAuthorizations() throws SaiException, SaiHttpNotFoundException, SaiAlreadyExistsException, SaiHttpException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
 
@@ -202,7 +203,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Replace and remove access authorization from authorization registry")
-    void replaceAccessAuthorization() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void replaceAccessAuthorization() throws SaiException, SaiHttpNotFoundException, SaiAlreadyExistsException {
         URL registryUrl = toUrl(server, "/authorization/");
         URL originalUrl = toUrl(server, "/authorization/all-2");
         URL replacedUrl = toUrl(server, "/authorization/all-replaced-2");
@@ -221,7 +222,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Remove access authorizations from authorization registry")
-    void removeAccessAuthorizations() throws SaiException, SaiNotFoundException {
+    void removeAccessAuthorizations() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
 
@@ -234,7 +235,7 @@ class AuthorizationRegistryTests {
 
     @Test
     @DisplayName("Fail to add access authorizations to authorization registry - already exists")
-    void failToAddAccessAuthorization() throws SaiException, SaiNotFoundException {
+    void failToAddAccessAuthorization() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/authorization/");
         AuthorizationRegistry authzRegistry = AuthorizationRegistry.get(url, saiSession);
 

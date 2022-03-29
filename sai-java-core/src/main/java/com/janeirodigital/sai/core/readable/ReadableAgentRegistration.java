@@ -1,16 +1,17 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Readable abstract base instantiation of an
@@ -83,8 +84,8 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
                 this.registeredAgent = getRequiredUrlObject(this.resource, REGISTERED_AGENT);
                 this.accessGrantUrl = getUrlObject(this.resource, HAS_ACCESS_GRANT);
-            } catch (SaiNotFoundException | SaiException ex) {
-                throw new SaiException("Failed to load agent registration " + this.url + ": " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Failed to load agent registration " + this.url, ex);
             }
         }
     }

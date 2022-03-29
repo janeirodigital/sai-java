@@ -46,6 +46,21 @@
             <version>${shapetrees.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>sai-rdf-utils-java</artifactId>
+            <version>${sai-rdf-utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>sai-http-utils-java</artifactId>
+            <version>${sai-http-utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>sai-authentication-java</artifactId>
+            <version>${sai-authentication.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
             <version>${nimbus.version}</version>

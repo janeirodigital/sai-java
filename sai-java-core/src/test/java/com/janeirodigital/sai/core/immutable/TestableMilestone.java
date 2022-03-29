@@ -1,12 +1,15 @@
 package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.crud.SocialAgentRegistration;
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.readable.DataInstance;
 import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 import okhttp3.Response;
@@ -18,9 +21,9 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.TestableVocabulary.*;
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 @Getter @Setter
 public class TestableMilestone extends DataInstance {
@@ -41,15 +44,17 @@ public class TestableMilestone extends DataInstance {
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link TestableMilestone}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static TestableMilestone get(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiNotFoundException {
+    public static TestableMilestone get(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiHttpNotFoundException {
         Objects.requireNonNull(dataGrant, "Must provide a readable data grant permitting the data instance to get");
         TestableMilestone.Builder builder = new TestableMilestone.Builder(url, saiSession);
         if (parent != null) builder.setParent(parent);
         builder.setDataGrant(dataGrant).setDraft(false);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).build();
+        } catch (SaiHttpException | SaiRdfException ex) {
+            throw new SaiException("Unable to read testable milestone " + url, ex);
         }
     }
 
@@ -58,14 +63,14 @@ public class TestableMilestone extends DataInstance {
      * @param url URL of the {@link TestableMilestone} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link TestableMilestone}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static TestableMilestone get(URL url, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiNotFoundException, SaiException {
+    public static TestableMilestone get(URL url, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE, dataGrant, parent);
     }
 
-    public static List<TestableMilestone> getAccessible(ReadableDataGrant dataGrant, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static List<TestableMilestone> getAccessible(ReadableDataGrant dataGrant, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
         Objects.requireNonNull(dataGrant, "Must provide a data grant to get accessible data instances");
         Objects.requireNonNull(saiSession, "Must provide a sai session to get accessible data instances");
         List<TestableMilestone> testableMilestones = new ArrayList<>();
@@ -76,10 +81,10 @@ public class TestableMilestone extends DataInstance {
     /**
      * Reload a new instance of {@link TestableMilestone} using the attributes of the current instance
      * @return Reloaded {@link TestableMilestone}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public TestableMilestone reload() throws SaiNotFoundException, SaiException {
+    public TestableMilestone reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType, this.getDataGrant(), this.getParent());
     }
 
@@ -143,7 +148,7 @@ public class TestableMilestone extends DataInstance {
             try {
                 this.name = getRequiredStringObject(this.resource, TESTABLE_NAME);
                 this.description = getRequiredStringObject(this.resource, TESTABLE_DESCRIPTION);
-            } catch (SaiNotFoundException ex) {
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Unable to populate testable milestone: " + ex.getMessage());
             }
         }

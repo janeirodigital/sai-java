@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 import okhttp3.Response;
@@ -13,11 +16,11 @@ import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLID_OIDC_ISSUER;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Modifiable instantiation of a
@@ -52,12 +55,14 @@ public class SocialAgentProfile extends CRUDResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link SocialAgentProfile}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static SocialAgentProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static SocialAgentProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read social agent profile " + url, ex);
         }
     }
 
@@ -67,17 +72,17 @@ public class SocialAgentProfile extends CRUDResource {
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static SocialAgentProfile get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static SocialAgentProfile get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link SocialAgentProfile} using the attributes of the current instance
      * @return Reloaded {@link SocialAgentProfile}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public SocialAgentProfile reload() throws SaiNotFoundException, SaiException {
+    public SocialAgentProfile reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -177,8 +182,8 @@ public class SocialAgentProfile extends CRUDResource {
                 this.authorizationAgentUrl = getRequiredUrlObject(this.resource, HAS_AUTHORIZATION_AGENT);
                 this.accessInboxUrl = getRequiredUrlObject(this.resource, HAS_ACCESS_INBOX);
                 this.oidcIssuerUrls = getRequiredUrlObjects(this.resource, SOLID_OIDC_ISSUER);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Failed to load social agent profile " + this.url + ": " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Failed to load social agent profile " + this.url, ex);
             }
         }
 

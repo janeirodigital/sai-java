@@ -1,10 +1,12 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
+import com.janeirodigital.sai.authentication.SaiAuthenticationException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.HttpHeader;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -15,11 +17,11 @@ import org.apache.jena.rdf.model.Resource;
 import java.net.URL;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authentication.AuthorizedSessionHelper.getProtectedRdfResource;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.getProtectedRdfResource;
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
-import static com.janeirodigital.sai.core.utils.HttpUtils.*;
-import static com.janeirodigital.sai.core.utils.RdfUtils.buildRemoteJsonLdContext;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getResourceFromModel;
+import static com.janeirodigital.sai.httputils.HttpUtils.*;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.buildRemoteJsonLdContext;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getResourceFromModel;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 /**
@@ -64,16 +66,20 @@ public class ReadableResource {
      * @param unprotected When true, does not send authorization headers
      * @return OkHttp Response
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    protected static Response read(URL url, SaiSession saiSession, ContentType contentType, boolean unprotected) throws SaiException, SaiNotFoundException {
+    protected static Response read(URL url, SaiSession saiSession, ContentType contentType, boolean unprotected) throws SaiException, SaiHttpNotFoundException {
         Objects.requireNonNull(url, "Must provide the URL of the readable social agent profile to get");
         Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable social agent profile");
         Objects.requireNonNull(contentType, "Must provide a content type to assign to the readable social agent profile");
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
         Response response;
-        if (unprotected) { response = getRdfResource(saiSession.getHttpClient(), url, headers); } else {
-            response = getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers);
+        try {
+            if (unprotected) { response = getRdfResource(saiSession.getHttpClient(), url, headers); } else {
+                response = getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers);
+            }
+        } catch (SaiHttpException | SaiAuthenticationException ex) {
+            throw new SaiException("Unable to read resource " + url, ex);
         }
         return checkReadableResponse(response);
     }
@@ -82,11 +88,11 @@ public class ReadableResource {
      * Checks the response when fetching data for a readable resource
      * @param response Response to check
      * @return Checked Response
-     * @throws SaiNotFoundException when the resource cannot be found (HTTP 404)
+     * @throws SaiHttpNotFoundException when the resource cannot be found (HTTP 404)
      * @throws SaiException when the response code is unsuccessful for any other reason
      */
-    public static Response checkReadableResponse(Response response) throws SaiNotFoundException, SaiException {
-        if (response.code() == HTTP_NOT_FOUND) { throw new SaiNotFoundException("Resource " + response.request().url() + " doesn't exist"); }
+    public static Response checkReadableResponse(Response response) throws SaiHttpNotFoundException, SaiException {
+        if (response.code() == HTTP_NOT_FOUND) { throw new SaiHttpNotFoundException("Resource " + response.request().url() + " doesn't exist"); }
         if (!response.isSuccessful()) {
             throw new SaiException("Unable to fetch data for " + response.request().url() + ": " + response.code() + " " + response.message());
         }

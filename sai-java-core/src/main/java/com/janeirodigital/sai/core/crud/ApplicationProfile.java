@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 import okhttp3.Response;
@@ -17,11 +20,10 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Modifiable instantiation of an
@@ -70,7 +72,9 @@ public class ApplicationProfile extends CRUDResource {
         this.responseTypes = builder.responseTypes;
         this.defaultMaxAge = builder.defaultMaxAge;
         this.requireAuthTime = builder.requireAuthTime;
-        this.jsonLdContext = buildRemoteJsonLdContexts(contexts);
+        try { this.jsonLdContext = buildRemoteJsonLdContexts(contexts); } catch (SaiRdfException ex) {
+            throw new SaiException("Failed to build remote JSON-LD context", ex);
+        }
     }
 
     /**
@@ -81,10 +85,12 @@ public class ApplicationProfile extends CRUDResource {
      * @return Retrieved {@link ApplicationProfile}
      * @throws SaiException
      */
-    public static ApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(LD_JSON).build();
+            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(ContentType.LD_JSON).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read application profile " + url, ex);
         }
     }
 
@@ -94,17 +100,17 @@ public class ApplicationProfile extends CRUDResource {
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static ApplicationProfile get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
-        return get(url, saiSession, LD_JSON);
+    public static ApplicationProfile get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(url, saiSession, ContentType.LD_JSON);
     }
 
     /**
      * Reload a new instance of {@link ApplicationProfile} using the attributes of the current instance
      * @return Reloaded {@link ApplicationProfile}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public ApplicationProfile reload() throws SaiNotFoundException, SaiException {
+    public ApplicationProfile reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -320,8 +326,8 @@ public class ApplicationProfile extends CRUDResource {
                 this.responseTypes = getRequiredStringObjects(this.resource, SOLID_OIDC_RESPONSE_TYPES);
                 this.defaultMaxAge = getIntegerObject(this.resource, SOLID_OIDC_DEFAULT_MAX_AGE);
                 this.requireAuthTime = getBooleanObject(this.resource, SOLID_OIDC_REQUIRE_AUTH_TIME);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Failed to load application profile " + this.url + ": " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Failed to load application profile " + this.url, ex);
             }
         }
 

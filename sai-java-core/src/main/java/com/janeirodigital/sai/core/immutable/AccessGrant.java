@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -14,10 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Immutable instantiation of an
@@ -53,12 +56,14 @@ public class AccessGrant extends ImmutableResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link AccessGrant}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static AccessGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static AccessGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         AccessGrant.Builder builder = new AccessGrant.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiHttpException | SaiRdfException ex) {
+            throw new SaiException("Unable to read access grant " + url, ex);
         }
     }
 
@@ -67,20 +72,20 @@ public class AccessGrant extends ImmutableResource {
      * @param url URL of the {@link AccessGrant} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link AccessGrant}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static AccessGrant get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static AccessGrant get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link AccessGrant} using the attributes of the current instance
      * @return Reloaded {@link AccessGrant}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public AccessGrant reload() throws SaiNotFoundException, SaiException {
+    public AccessGrant reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -186,7 +191,7 @@ public class AccessGrant extends ImmutableResource {
                 List<URL> dataGrantUrls = getRequiredUrlObjects(this.resource, HAS_DATA_GRANT);
                 for (URL url : dataGrantUrls) { this.dataGrants.add(DataGrant.get(url, this.saiSession)); }
                 organizeInheritance();
-            } catch (SaiNotFoundException | SaiException ex) {
+            } catch (SaiRdfException | SaiRdfNotFoundException | SaiHttpNotFoundException ex) {
                 throw new SaiException("Unable to populate immutable access grant resource: " + ex.getMessage());
             }
         }

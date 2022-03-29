@@ -1,11 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -15,10 +16,10 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -34,7 +35,7 @@ class ApplicationRegistrationTests {
     private static URL app1AccessGrant;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiHttpException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -91,7 +92,7 @@ class ApplicationRegistrationTests {
 
     @Test
     @DisplayName("Read crud application registration")
-    void readApplicationRegistration() throws SaiException, SaiNotFoundException {
+    void readApplicationRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         checkRegistration(registration);
@@ -99,7 +100,7 @@ class ApplicationRegistrationTests {
 
     @Test
     @DisplayName("Reload crud application registration")
-    void reloadApplicationRegistration() throws SaiException, SaiNotFoundException {
+    void reloadApplicationRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         ApplicationRegistration reloaded = registration.reload();
@@ -115,7 +116,7 @@ class ApplicationRegistrationTests {
 
     @Test
     @DisplayName("Update crud application registration")
-    void updateApplicationRegistration() throws SaiException, SaiNotFoundException {
+    void updateApplicationRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         registration.setAccessGrantUrl(toUrl(server, "/ttl/agents/app-1/access-granted"));
@@ -124,7 +125,7 @@ class ApplicationRegistrationTests {
 
     @Test
     @DisplayName("Read existing application registration in JSON-LD")
-    void readApplicationRegistrationJsonLd() throws SaiException, SaiNotFoundException {
+    void readApplicationRegistrationJsonLd() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession, LD_JSON);
         checkRegistration(registration);
@@ -145,7 +146,7 @@ class ApplicationRegistrationTests {
 
     @Test
     @DisplayName("Delete crud application registration")
-    void deleteApplicationRegistration() throws SaiException, SaiNotFoundException {
+    void deleteApplicationRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         assertDoesNotThrow(() -> registration.delete());
@@ -154,7 +155,7 @@ class ApplicationRegistrationTests {
 
     @Test
     @DisplayName("Generate URL for contained resource")
-    void generateUrlForContained() throws SaiNotFoundException, SaiException {
+    void generateUrlForContained() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ApplicationRegistration registration = ApplicationRegistration.get(url, saiSession);
         assertDoesNotThrow(() -> registration.generateContainedUrl());

@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -11,11 +14,11 @@ import org.apache.jena.rdf.model.Model;
 import java.net.URL;
 import java.time.OffsetDateTime;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getRequiredDateTimeObject;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getRequiredUrlObject;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredDateTimeObject;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObject;
 
 /**
  * Readable instantiation of a
@@ -51,12 +54,14 @@ public class ReadableDataRegistration extends ReadableResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link ReadableDataRegistration}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ReadableDataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ReadableDataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ReadableDataRegistration.Builder builder = new ReadableDataRegistration.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read readable data registration " + url, ex);
         }
     }
 
@@ -66,19 +71,19 @@ public class ReadableDataRegistration extends ReadableResource {
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataRegistration}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ReadableDataRegistration get(URL url, SaiSession saiSession) throws SaiException, SaiNotFoundException {
+    public static ReadableDataRegistration get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link ReadableDataRegistration} using the attributes of the current instance
      * @return Reloaded {@link ReadableDataRegistration}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public ReadableDataRegistration reload() throws SaiNotFoundException, SaiException {
+    public ReadableDataRegistration reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -133,8 +138,8 @@ public class ReadableDataRegistration extends ReadableResource {
                 this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
                 this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Unable to populate readable data registration resource: " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Unable to populate readable data registration resource", ex);
             }
         }
 

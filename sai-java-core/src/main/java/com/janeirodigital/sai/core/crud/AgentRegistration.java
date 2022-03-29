@@ -1,8 +1,10 @@
 package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,9 +13,9 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.addChildToUrlPath;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.addChildToUrlPath;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Abstract base instantiation of a modifiable
@@ -51,7 +53,9 @@ public abstract class AgentRegistration extends CRUDResource {
      * @throws SaiException
      */
     public URL generateContainedUrl() throws SaiException {
-        return addChildToUrlPath(this.getUrl(), UUID.randomUUID().toString());
+        try { return addChildToUrlPath(this.getUrl(), UUID.randomUUID().toString()); } catch (SaiHttpException ex) {
+            throw new SaiException("Unable to add child to url path", ex);
+        }
     }
 
     /**
@@ -163,14 +167,13 @@ public abstract class AgentRegistration extends CRUDResource {
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
                 this.registeredAgent = getRequiredUrlObject(this.resource, REGISTERED_AGENT);
                 this.accessGrantUrl = getUrlObject(this.resource, HAS_ACCESS_GRANT);
-            } catch (SaiNotFoundException | SaiException ex) {
-                throw new SaiException("Failed to load agent registration " + this.url + ": " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Failed to load agent registration " + this.url, ex);
             }
         }
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
         protected void populateDataset() {
             updateObject(this.resource, REGISTERED_BY, this.registeredBy);

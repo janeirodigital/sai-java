@@ -1,11 +1,13 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -16,11 +18,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getNewResourceForType;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.DATA_REGISTRY;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_DATA_REGISTRATION;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getNewResourceForType;
 
 /**
  * Modifiable instantiation of an
@@ -48,12 +50,14 @@ public class DataRegistry extends CRUDResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link DataRegistry}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static DataRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static DataRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         DataRegistry.Builder builder = new DataRegistry.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read data registry " + url, ex);
         }
     }
 
@@ -63,17 +67,17 @@ public class DataRegistry extends CRUDResource {
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static DataRegistry get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static DataRegistry get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link DataRegistry} using the attributes of the current instance
      * @return Reloaded {@link DataRegistry}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public DataRegistry reload() throws SaiNotFoundException, SaiException {
+    public DataRegistry reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -225,8 +229,8 @@ public class DataRegistry extends CRUDResource {
                 try {
                     URL registrationUrl = current.next();
                     return (T) DataRegistration.get(registrationUrl, saiSession);
-                } catch (SaiException|SaiNotFoundException ex) {
-                    throw new SaiRuntimeException("Failed to get data registration while iterating list: " + ex.getMessage());
+                } catch (SaiException | SaiHttpNotFoundException ex) {
+                    throw new SaiRuntimeException("Failed to get data registration while iterating list", ex);
                 }
             }
         }

@@ -1,9 +1,11 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -11,10 +13,10 @@ import org.apache.jena.rdf.model.Model;
 import java.net.URL;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getNewResourceForType;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.APPLICATION_REGISTRATION;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getNewResourceForType;
 
 /**
  * Modifiable instantiation of an
@@ -39,12 +41,14 @@ public class ApplicationRegistration extends AgentRegistration {
      * @param contentType {@link ContentType} to use for retrieval
      * @return Retrieved {@link ApplicationRegistration}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static ApplicationRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static ApplicationRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiHttpException | SaiRdfException ex) {
+            throw new SaiException("Unable to read application registration " + url, ex);
         }
     }
 
@@ -53,20 +57,20 @@ public class ApplicationRegistration extends AgentRegistration {
      * @param url URL of the {@link ApplicationRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ApplicationRegistration}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static ApplicationRegistration get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static ApplicationRegistration get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link ApplicationRegistration} using the attributes of the current instance
      * @return Reloaded {@link ApplicationRegistration}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public ApplicationRegistration reload() throws SaiNotFoundException, SaiException {
+    public ApplicationRegistration reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 

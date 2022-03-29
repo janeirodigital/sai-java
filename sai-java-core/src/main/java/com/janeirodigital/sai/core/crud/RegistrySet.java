@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 import okhttp3.Response;
@@ -14,10 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Modifiable instantiation of a
@@ -49,12 +52,14 @@ public class RegistrySet extends CRUDResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link RegistrySet}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static RegistrySet get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static RegistrySet get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read registry set " + url, ex);
         }
     }
 
@@ -64,17 +69,17 @@ public class RegistrySet extends CRUDResource {
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static RegistrySet get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static RegistrySet get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link RegistrySet} using the attributes of the current instance
      * @return Reloaded {@link RegistrySet}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public RegistrySet reload() throws SaiNotFoundException, SaiException {
+    public RegistrySet reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -161,8 +166,8 @@ public class RegistrySet extends CRUDResource {
                 this.agentRegistryUrl = getRequiredUrlObject(this.resource, HAS_AGENT_REGISTRY);
                 this.authorizationRegistryUrl = getRequiredUrlObject(this.resource, HAS_AUTHORIZATION_REGISTRY);
                 this.dataRegistryUrls = getRequiredUrlObjects(this.resource, HAS_DATA_REGISTRY);
-            } catch (SaiNotFoundException ex) {
-                throw new SaiException("Failed to load registry set " + this.url + ": " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Failed to load registry set " + this.url, ex);
             }
         }
 

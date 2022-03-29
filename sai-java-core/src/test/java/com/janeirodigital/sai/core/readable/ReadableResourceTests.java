@@ -1,11 +1,11 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -19,10 +19,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
-import static com.janeirodigital.sai.core.enums.HttpHeader.CONTENT_TYPE;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.httputils.HttpHeader.CONTENT_TYPE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -34,7 +34,7 @@ class ReadableResourceTests {
     private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -63,7 +63,7 @@ class ReadableResourceTests {
 
     @Test
     @DisplayName("Get a readable resource")
-    void getReadableResource() throws SaiException, SaiNotFoundException {
+    void getReadableResource() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/readable/readable-resource#project");
         TestableReadableResource testable = TestableReadableResource.get(url, saiSession, true);
 
@@ -83,7 +83,7 @@ class ReadableResourceTests {
 
     @Test
     @DisplayName("Get a protected readable resource")
-    void bootstrapProtectedReadableResource() throws SaiException, SaiNotFoundException {
+    void bootstrapProtectedReadableResource() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/readable/readable-resource#project");
         TestableReadableResource testable = TestableReadableResource.get(url, saiSession, false);
         // No need to test all of the accessors again
@@ -100,7 +100,7 @@ class ReadableResourceTests {
 
     @Test
     @DisplayName("Fail to get a protected readable resource - io failure")
-    void failToGetReadableResourceMalformedDocuments() throws SaiException {
+    void failToGetReadableResourceMalformedDocuments() {
         URL url = toUrl(queuingServer, "/io/readable/protected-readable");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -112,7 +112,7 @@ class ReadableResourceTests {
 
     @Test
     @DisplayName("Fail to get unprotected readable resource - io failure")
-    void failToGetReadableResourceIO() throws SaiException {
+    void failToGetReadableResourceIO() {
         URL url = toUrl(queuingServer, "/io/readable/unprotected-readable");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -126,12 +126,12 @@ class ReadableResourceTests {
     @DisplayName("Test readable response check - unsuccessful - resource not found")
     void testReadableResponseCheckNotFound() {
         URL missingUrl = toUrl(server, "/missing/readable/resource");
-        assertThrows(SaiNotFoundException.class, () -> TestableReadableResource.get(missingUrl, saiSession, false));
+        assertThrows(SaiHttpNotFoundException.class, () -> TestableReadableResource.get(missingUrl, saiSession, false));
     }
 
     @Test
     @DisplayName("Test readable response check - unsuccessful - server error")
-    void testReadableResponseCheckError() throws SaiException {
+    void testReadableResponseCheckError() {
         URL errorUrl = toUrl(queuingServer, "/io/readable/server-error-resource");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(500)

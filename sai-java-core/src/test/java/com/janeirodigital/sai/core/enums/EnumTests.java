@@ -1,9 +1,9 @@
 package com.janeirodigital.sai.core.enums;
 
-import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
-import com.janeirodigital.sai.core.enums.HttpMethod;
-import com.janeirodigital.sai.core.enums.LinkRelation;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.HttpHeader;
+import com.janeirodigital.sai.httputils.HttpMethod;
+import com.janeirodigital.sai.httputils.LinkRelation;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

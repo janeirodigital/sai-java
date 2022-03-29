@@ -1,12 +1,14 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.immutable.AccessAuthorization;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -17,11 +19,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getNewResourceForType;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.AUTHORIZATION_REGISTRY;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_ACCESS_AUTHORIZATION;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getNewResourceForType;
 
 /**
  * Modifiable instantiation of an
@@ -49,12 +51,14 @@ public class AuthorizationRegistry extends CRUDResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link AuthorizationRegistry}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static AuthorizationRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static AuthorizationRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         AuthorizationRegistry.Builder builder = new AuthorizationRegistry.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read authorization registry " + url, ex);
         }
     }
 
@@ -64,17 +68,17 @@ public class AuthorizationRegistry extends CRUDResource {
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static AuthorizationRegistry get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static AuthorizationRegistry get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link AuthorizationRegistry} using the attributes of the current instance
      * @return Reloaded {@link AuthorizationRegistry}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public AuthorizationRegistry reload() throws SaiNotFoundException, SaiException {
+    public AuthorizationRegistry reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -235,8 +239,8 @@ public class AuthorizationRegistry extends CRUDResource {
                 try {
                     URL registrationUrl = current.next();
                     return (T) AccessAuthorization.get(registrationUrl, saiSession);
-                } catch (SaiException|SaiNotFoundException ex) {
-                    throw new SaiRuntimeException("Failed to get access authorization while iterating list: " + ex.getMessage());
+                } catch (SaiException | SaiHttpNotFoundException ex) {
+                    throw new SaiRuntimeException("Failed to get access authorization while iterating list", ex);
                 }
             }
         }

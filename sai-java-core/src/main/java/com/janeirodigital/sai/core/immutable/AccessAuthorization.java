@@ -3,10 +3,13 @@ package com.janeirodigital.sai.core.immutable;
 import com.janeirodigital.sai.core.crud.AgentRegistration;
 import com.janeirodigital.sai.core.crud.AgentRegistry;
 import com.janeirodigital.sai.core.crud.DataRegistry;
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -17,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Immutable instantiation of an
@@ -60,12 +63,14 @@ public class AccessAuthorization extends ImmutableResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link AccessAuthorization}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static AccessAuthorization get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiNotFoundException {
+    public static AccessAuthorization get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         AccessAuthorization.Builder builder = new AccessAuthorization.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read " + url, ex);
         }
     }
 
@@ -74,20 +79,20 @@ public class AccessAuthorization extends ImmutableResource {
      * @param url URL of the {@link AccessAuthorization} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link AccessAuthorization}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static AccessAuthorization get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static AccessAuthorization get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link AccessAuthorization} using the attributes of the current instance
      * @return Reloaded {@link AccessAuthorization}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public AccessAuthorization reload() throws SaiNotFoundException, SaiException {
+    public AccessAuthorization reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -99,7 +104,7 @@ public class AccessAuthorization extends ImmutableResource {
      * @return Generated {@link AccessGrant}
      * @throws SaiException
      */
-    public AccessGrant generateGrant(AgentRegistration granteeRegistration, AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiNotFoundException {
+    public AccessGrant generateGrant(AgentRegistration granteeRegistration, AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiHttpNotFoundException {
         Objects.requireNonNull(granteeRegistration, "Must provide a grantee agent registration to generate an access grant");
         Objects.requireNonNull(agentRegistry, "Must provide an agent registry to generate an access grant");
         Objects.requireNonNull(dataRegistries, "Must provide data registries to generate an access grant");
@@ -238,8 +243,8 @@ public class AccessAuthorization extends ImmutableResource {
                 List<URL> dataAuthorizationUrls = getRequiredUrlObjects(this.resource, HAS_DATA_AUTHORIZATION);
                 for (URL dataAuthorizationUrl : dataAuthorizationUrls) { this.dataAuthorizations.add(DataAuthorization.get(dataAuthorizationUrl, this.saiSession)); }
                 organizeInheritance();
-            } catch (SaiNotFoundException | SaiException ex) {
-                throw new SaiException("Unable to populate immutable access authorization resource: " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException | SaiHttpNotFoundException ex) {
+                throw new SaiException("Unable to populate immutable access authorization resource", ex);
             }
         }
 

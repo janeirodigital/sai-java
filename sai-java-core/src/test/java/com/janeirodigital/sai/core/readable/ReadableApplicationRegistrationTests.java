@@ -1,11 +1,12 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -15,10 +16,10 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -34,7 +35,7 @@ class ReadableApplicationRegistrationTests {
     private static URL app1AccessGrant;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiHttpException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -67,7 +68,7 @@ class ReadableApplicationRegistrationTests {
 
     @Test
     @DisplayName("Get readable social agent registration")
-    void readSocialAgentRegistration() throws SaiException, SaiNotFoundException {
+    void readSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ReadableApplicationRegistration registration = ReadableApplicationRegistration.get(url, saiSession);
         checkRegistration(registration);
@@ -75,7 +76,7 @@ class ReadableApplicationRegistrationTests {
 
     @Test
     @DisplayName("Reload readable social agent registration")
-    void reloadSocialAgentRegistration() throws SaiException, SaiNotFoundException {
+    void reloadSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/agents/app-1/");
         ReadableApplicationRegistration registration = ReadableApplicationRegistration.get(url, saiSession);
         ReadableApplicationRegistration reloaded = registration.reload();
@@ -93,7 +94,7 @@ class ReadableApplicationRegistrationTests {
 
     @Test
     @DisplayName("Read existing social agent registration in JSON-LD")
-    void readSocialAgentRegistrationJsonLd() throws SaiException, SaiNotFoundException {
+    void readSocialAgentRegistrationJsonLd() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/jsonld/agents/app-1/");
         ReadableApplicationRegistration registration = ReadableApplicationRegistration.get(url, saiSession, LD_JSON);
         checkRegistration(registration);

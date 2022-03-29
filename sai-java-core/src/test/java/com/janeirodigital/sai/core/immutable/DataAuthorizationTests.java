@@ -1,11 +1,12 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,9 +22,9 @@ import java.util.List;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnPut;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -43,7 +44,7 @@ class DataAuthorizationTests {
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES, READ_MODES, WRITE_MODES;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException, SaiHttpException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -423,7 +424,7 @@ class DataAuthorizationTests {
 
     @Test
     @DisplayName("Get data authorization - scope: all")
-    void getDataAuthorization() throws SaiException, SaiNotFoundException {
+    void getDataAuthorization() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/authorization/all-1-project");
         DataAuthorization dataAuthorization = DataAuthorization.get(url, saiSession);
         assertEquals(ALICE_ID, dataAuthorization.getGrantedBy());
@@ -437,7 +438,7 @@ class DataAuthorizationTests {
 
     @Test
     @DisplayName("Reload data authorization - scope: all")
-    void reloadDataAuthorization() throws SaiException, SaiNotFoundException {
+    void reloadDataAuthorization() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/authorization/all-1-project");
         DataAuthorization dataAuthorization = DataAuthorization.get(url, saiSession);
         DataAuthorization reloaded = dataAuthorization.reload();

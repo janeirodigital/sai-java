@@ -1,11 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -14,10 +15,10 @@ import org.junit.jupiter.api.Test;
 import java.net.URL;
 import java.util.Arrays;
 
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -31,7 +32,7 @@ class SocialAgentProfileTests {
     private static URL aliceOidcIssuer;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiHttpException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -75,7 +76,7 @@ class SocialAgentProfileTests {
 
     @Test
     @DisplayName("Read existing crud social agent profile in turtle")
-    void readSocialAgentProfile() throws SaiException, SaiNotFoundException {
+    void readSocialAgentProfile() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
         checkProfile(profile);
@@ -83,7 +84,7 @@ class SocialAgentProfileTests {
 
     @Test
     @DisplayName("Reload crud social agent profile")
-    void reloadSocialAgentProfile() throws SaiException, SaiNotFoundException {
+    void reloadSocialAgentProfile() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
         SocialAgentProfile reloaded = profile.reload();
@@ -99,7 +100,7 @@ class SocialAgentProfileTests {
 
     @Test
     @DisplayName("Update existing crud social agent profile in turtle")
-    void updateSocialAgentProfile() throws SaiException, SaiNotFoundException {
+    void updateSocialAgentProfile() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
         profile.setAuthorizationAgentUrl(stringToUrl("https://other.example/alice/"));
@@ -109,7 +110,7 @@ class SocialAgentProfileTests {
 
     @Test
     @DisplayName("Read existing social agent profile in JSON-LD")
-    void readSocialAgentProfileJsonLd() throws SaiException, SaiNotFoundException {
+    void readSocialAgentProfileJsonLd() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
         URL url = toUrl(server, "/jsonld/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession, LD_JSON);
         checkProfile(profile);
@@ -129,14 +130,14 @@ class SocialAgentProfileTests {
 
     @Test
     @DisplayName("Delete crud social agent profile")
-    void deleteSocialAgentProfile() throws SaiException, SaiNotFoundException {
+    void deleteSocialAgentProfile() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
         assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
     }
 
-    private void checkProfile(SocialAgentProfile profile) throws SaiException {
+    private void checkProfile(SocialAgentProfile profile) throws SaiException, SaiHttpException {
         assertNotNull(profile);
         assertEquals(stringToUrl("https://trusted.example/alice/"), profile.getAuthorizationAgentUrl());
         assertEquals(aliceAccessInbox, profile.getAccessInboxUrl());

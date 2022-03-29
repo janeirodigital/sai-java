@@ -1,13 +1,14 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
-import com.janeirodigital.sai.core.enums.ContentType;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
+import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.jena.rdf.model.Model;
@@ -24,10 +25,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
-import static com.janeirodigital.sai.core.utils.HttpUtils.urlToUri;
-import static com.janeirodigital.sai.core.utils.RdfUtils.getModelFromFile;
+import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.httputils.HttpUtils.urlToUri;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getModelFromFile;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -38,7 +39,7 @@ class ImmutableResourceTests {
     private static RequestMatchingFixtureDispatcher dispatcher;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiNotFoundException {
+    static void beforeAll() throws SaiException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -58,7 +59,7 @@ class ImmutableResourceTests {
 
     @Test
     @DisplayName("Read an Immutable resource")
-    void readImmutableResource() throws SaiNotFoundException, SaiException {
+    void readImmutableResource() throws SaiHttpNotFoundException, SaiException {
         URL url = MockWebServerHelper.toUrl(server, "/immutable/immutable-resource#project");
         TestableImmutableResource testable = TestableImmutableResource.get(url, saiSession, true);
         checkTestableResource(testable);
@@ -66,7 +67,7 @@ class ImmutableResourceTests {
 
     @Test
     @DisplayName("Reload an Immutable resource")
-    void reloadImmutableResource() throws SaiNotFoundException, SaiException {
+    void reloadImmutableResource() throws SaiHttpNotFoundException, SaiException {
         URL url = MockWebServerHelper.toUrl(server, "/immutable/immutable-resource#project");
         TestableImmutableResource testable = TestableImmutableResource.get(url, saiSession, true);
         TestableImmutableResource reloaded = testable.reload();
@@ -75,7 +76,7 @@ class ImmutableResourceTests {
 
     @Test
     @DisplayName("Store an Immutable resource")
-    void storeImmutableResource() throws SaiException, SaiNotFoundException {
+    void storeImmutableResource() throws SaiException {
         URL url = MockWebServerHelper.toUrl(server, "/immutable/immutable-resource#project");
         Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", TEXT_TURTLE);
         TestableImmutableResource.Builder builder = new TestableImmutableResource.Builder(url, saiSession);
@@ -87,7 +88,7 @@ class ImmutableResourceTests {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     @DisplayName("Fail to create an immutable resource - endpoint missing")
-    void failToCreateImmutableResource(boolean unprotected) throws SaiException, SaiNotFoundException {
+    void failToCreateImmutableResource(boolean unprotected) throws SaiException {
         URL url = MockWebServerHelper.toUrl(server, "/missing/immutable/immutable-resource#project");
         Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", TEXT_TURTLE);
         TestableImmutableResource.Builder builder = new TestableImmutableResource.Builder(url, saiSession);
@@ -97,7 +98,7 @@ class ImmutableResourceTests {
 
     @Test
     @DisplayName("Store a protected Immutable resource")
-    void storeProtectedImmutableResource() throws SaiNotFoundException, SaiException {
+    void storeProtectedImmutableResource() throws SaiException {
         URL url = MockWebServerHelper.toUrl(server, "/immutable/immutable-resource#project");
         Model model = loadModel(url, "fixtures/immutable/immutable-resource.ttl", TEXT_TURTLE);
         TestableImmutableResource.Builder builder = new TestableImmutableResource.Builder(url, saiSession);
@@ -109,7 +110,7 @@ class ImmutableResourceTests {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     @DisplayName("Delete an Immutable resource")
-    void deleteImmutableResource(boolean unprotected) throws SaiException, SaiNotFoundException {
+    void deleteImmutableResource(boolean unprotected) throws SaiException, SaiHttpNotFoundException {
         URL url = MockWebServerHelper.toUrl(server, "/immutable/immutable-resource#project");
         TestableImmutableResource testable = TestableImmutableResource.get(url, saiSession, unprotected);
         testable.delete();
@@ -119,7 +120,7 @@ class ImmutableResourceTests {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     @DisplayName("Fail to delete an immutable resource - endpoint missing")
-    void failToDeleteImmutableResource(boolean unprotected) throws SaiException, SaiNotFoundException {
+    void failToDeleteImmutableResource(boolean unprotected) throws SaiException, SaiHttpNotFoundException {
         URL url = MockWebServerHelper.toUrl(server, "/delete-fails/immutable/immutable-resource#project");
         TestableImmutableResource testable = TestableImmutableResource.get(url, saiSession, unprotected);
         assertThrows(SaiException.class, () -> testable.delete());
@@ -139,8 +140,8 @@ class ImmutableResourceTests {
 
     private Model loadModel(URL url, String filePath, ContentType contentType) throws SaiException {
         try {
-            return getModelFromFile(urlToUri(url), "fixtures/immutable/immutable-resource.ttl", contentType);
-        } catch (SaiException | IOException ex) {
+            return getModelFromFile(urlToUri(url), "fixtures/immutable/immutable-resource.ttl", contentType.getValue());
+        } catch (IOException | SaiRdfException ex) {
             throw new SaiException("Failed too load test model from file: " + filePath);
         }
     }

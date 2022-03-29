@@ -1,13 +1,13 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -18,9 +18,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -76,7 +76,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Get a data registry")
-    void readDataRegistry() throws SaiException, SaiNotFoundException {
+    void readDataRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
         checkRegistry(dataRegistry);
@@ -85,7 +85,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Get an empty data registry")
-    void readEmptyDataRegistry() throws SaiException, SaiNotFoundException {
+    void readEmptyDataRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/empty/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
         assertTrue(dataRegistry.isEmpty());
@@ -100,7 +100,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Reload data registry")
-    void reloadDataRegistry() throws SaiException, SaiNotFoundException {
+    void reloadDataRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
         DataRegistry reloaded = dataRegistry.reload();
@@ -109,7 +109,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Find a data registration")
-    void findDataRegistration() throws SaiException, SaiNotFoundException {
+    void findDataRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/data/");
         URL toFind = toUrl(server, "/shapetrees/pm#ProjectTree");
         URL toFail = toUrl(server,"/shapetrees/pm#MissingTree");
@@ -122,7 +122,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Fail to iterate data registrations - missing registration")
-    void failToFindDataRegistrationMissing() throws SaiException, SaiNotFoundException {
+    void failToFindDataRegistrationMissing() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/missing-registrations/ttl/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
         Iterator<DataRegistration> iterator = dataRegistry.getDataRegistrations().iterator();
@@ -131,7 +131,7 @@ class DataRegistryTests {
     
     @Test
     @DisplayName("Read existing data registry in JSON-LD")
-    void readDataRegistryJsonLd() throws SaiException, SaiNotFoundException {
+    void readDataRegistryJsonLd() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/jsonld/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession, LD_JSON);
         checkRegistry(dataRegistry);
@@ -148,7 +148,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Delete crud data registry")
-    void deleteDataRegistry() throws SaiException, SaiNotFoundException {
+    void deleteDataRegistry() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
         assertDoesNotThrow(() -> dataRegistry.delete());
@@ -157,7 +157,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Add data registration to data registry")
-    void addAgentRegistrations() throws SaiException, SaiNotFoundException, SaiAlreadyExistsException {
+    void addAgentRegistrations() throws SaiException, SaiHttpNotFoundException, SaiAlreadyExistsException {
         URL url = toUrl(server, "/ttl/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
 
@@ -171,7 +171,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Remove data registrations from data registry")
-    void removeAgentRegistrations() throws SaiException, SaiNotFoundException {
+    void removeAgentRegistrations() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
 
@@ -183,7 +183,7 @@ class DataRegistryTests {
 
     @Test
     @DisplayName("Fail to add data registrations to data registry - already exists")
-    void failToAddDataRegistration() throws SaiException, SaiNotFoundException {
+    void failToAddDataRegistration() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/ttl/data/");
         DataRegistry dataRegistry = DataRegistry.get(url, saiSession);
 

@@ -1,9 +1,12 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.enums.ContentType;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.ContentType;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 import okhttp3.Response;
@@ -14,11 +17,11 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.utils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.core.utils.HttpUtils.getRdfModelFromResponse;
-import static com.janeirodigital.sai.core.utils.RdfUtils.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.LdpVocabulary.LDP_CONTAINS;
+import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
+import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
  * Modifiable instantiation of an
@@ -56,12 +59,14 @@ public class DataRegistration extends CRUDResource {
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link DataRegistration}
      * @throws SaiException
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      */
-    public static DataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiNotFoundException, SaiException {
+    public static DataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiHttpNotFoundException, SaiException {
         DataRegistration.Builder builder = new DataRegistration.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
             return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
+        } catch (SaiRdfException | SaiHttpException ex) {
+            throw new SaiException("Unable to read data registration " + url, ex);
         }
     }
 
@@ -70,20 +75,20 @@ public class DataRegistration extends CRUDResource {
      * @param url URL of the {@link DataRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataRegistration}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static DataRegistration get(URL url, SaiSession saiSession) throws SaiNotFoundException, SaiException {
+    public static DataRegistration get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
      * Reload a new instance of {@link DataRegistration} using the attributes of the current instance
      * @return Reloaded {@link DataRegistration}
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public DataRegistration reload() throws SaiNotFoundException, SaiException {
+    public DataRegistration reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.url, this.saiSession, this.contentType);
     }
 
@@ -195,14 +200,13 @@ public class DataRegistration extends CRUDResource {
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
                 this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
                 this.dataInstances = getUrlObjects(this.resource, LDP_CONTAINS);
-            } catch (SaiNotFoundException | SaiException ex) {
-                throw new SaiException("Unable to populate data registration: " + ex.getMessage());
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Unable to populate data registration", ex);
             }
         }
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
         private void populateDataset() {
             this.resource = getNewResourceForType(this.url, DATA_REGISTRATION);

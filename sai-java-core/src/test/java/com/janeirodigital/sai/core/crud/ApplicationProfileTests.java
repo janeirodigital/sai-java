@@ -1,11 +1,13 @@
 package com.janeirodigital.sai.core.crud;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -17,11 +19,11 @@ import java.util.List;
 
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
-import static com.janeirodigital.sai.core.enums.ContentType.LD_JSON;
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
-import static com.janeirodigital.sai.core.utils.RdfUtils.buildRemoteJsonLdContexts;
+import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.buildRemoteJsonLdContexts;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -45,7 +47,7 @@ class ApplicationProfileTests {
     private static final boolean PROJECTRON_REQUIRE_AUTH_TIME = true;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiHttpException, SaiRdfException {
 
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
@@ -111,7 +113,7 @@ class ApplicationProfileTests {
 
     @Test
     @DisplayName("Read crud application profile")
-    void readCrudApplicationProfile() throws SaiException, SaiNotFoundException {
+    void readCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/application");
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         checkProfile(profile, false);
@@ -119,7 +121,7 @@ class ApplicationProfileTests {
 
     @Test
     @DisplayName("Read crud application profile - only required fields")
-    void readCrudApplicationProfileRequired() throws SaiException, SaiNotFoundException {
+    void readCrudApplicationProfileRequired() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/required/application");
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         checkProfile(profile, true);
@@ -127,7 +129,7 @@ class ApplicationProfileTests {
 
     @Test
     @DisplayName("Reload crud application profile")
-    void reloadCrudApplicationProfile() throws SaiException, SaiNotFoundException {
+    void reloadCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/application");
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         ApplicationProfile reloaded = profile.reload();
@@ -143,7 +145,7 @@ class ApplicationProfileTests {
 
     @Test
     @DisplayName("Update crud application profile")
-    void updateCrudApplicationProfile() throws SaiException, SaiNotFoundException {
+    void updateCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/application");
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
@@ -154,7 +156,7 @@ class ApplicationProfileTests {
 
     @Test
     @DisplayName("Delete crud application profile")
-    void deleteCrudApplicationProfile() throws SaiException, SaiNotFoundException {
+    void deleteCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
         URL url = toUrl(server, "/crud/application");
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         assertDoesNotThrow(() -> profile.delete());

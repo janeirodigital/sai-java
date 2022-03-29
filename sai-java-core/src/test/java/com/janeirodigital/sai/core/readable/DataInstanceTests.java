@@ -1,13 +1,14 @@
 package com.janeirodigital.sai.core.readable;
 
-import com.janeirodigital.sai.core.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.immutable.DataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.shapetrees.core.contentloaders.DocumentLoaderManager;
 import com.janeirodigital.shapetrees.core.contentloaders.HttpExternalDocumentLoader;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
@@ -27,9 +28,9 @@ import java.util.*;
 
 import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.*;
 import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.core.utils.HttpUtils.stringToUrl;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SCOPE_ALL_FROM_REGISTRY;
+import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -50,7 +51,7 @@ public class DataInstanceTests {
 
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiException, SaiHttpException {
         // Initialize a mock sai session we can use for protected requests
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -100,7 +101,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Create a basic data instance - no dataset (empty)")
-    void createBasicDataInstance() throws SaiNotFoundException, SaiException {
+    void createBasicDataInstance() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/personal/data/projects/new-project");
         URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         ReadableDataGrant projectGrant = ReadableDataGrant.get(grantUrl, saiSession);
@@ -115,7 +116,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Fail to build a basic data instance - inherited grant with no parent")
-    void failToCreateBasicDataInstanceNoParent() throws SaiNotFoundException, SaiException {
+    void failToCreateBasicDataInstanceNoParent() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/personal/data/projects/new-project");
         URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
         ReadableDataGrant readableDataGrant = ReadableDataGrant.get(grantUrl, saiSession);
@@ -141,7 +142,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Get a basic data instance")
-    void getBasicDataInstance() throws SaiNotFoundException, SaiException {
+    void getBasicDataInstance() throws SaiHttpNotFoundException, SaiException {
         URL url = toUrl(server, "/personal/data/projects/p1");
         URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         ReadableDataGrant projectGrant = ReadableDataGrant.get(grantUrl, saiSession);
@@ -153,7 +154,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Generate data instance URL - UUID")
-    void testGenerateInstanceUrlUUID() throws SaiNotFoundException, SaiException {
+    void testGenerateInstanceUrlUUID() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         ReadableDataGrant projectGrant = ReadableDataGrant.get(grantUrl, saiSession);
         URL instanceUrl = DataInstance.generateUrl(projectGrant);
@@ -163,7 +164,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Generate data instance URL - Resource name provided")
-    void testGenerateInstanceUrlString() throws SaiNotFoundException, SaiException {
+    void testGenerateInstanceUrlString() throws SaiHttpNotFoundException, SaiException {
         URL grantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         String RESOURCE_NAME = "generated-resource";
         ReadableDataGrant projectGrant = ReadableDataGrant.get(grantUrl, saiSession);
@@ -174,7 +175,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Create, update, and delete child data instance")
-    void createChildDataInstance() throws SaiNotFoundException, SaiException {
+    void createChildDataInstance() throws SaiHttpNotFoundException, SaiException {
         URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
         URL milestoneUrl = toUrl(server, "/personal/data/projects/new-milestone");
         URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
@@ -206,7 +207,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Fail to add child reference to parent instance - no child reference in shape tree")
-    void failToAddChildReferenceNull() throws SaiNotFoundException, SaiException {
+    void failToAddChildReferenceNull() throws SaiHttpNotFoundException, SaiException {
         URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
         URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         URL milestoneGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
@@ -225,7 +226,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Fail to add child reference to parent instance - failure in shape tree reference lookup")
-    void failToAddChildReferenceLookup() throws SaiNotFoundException, SaiException {
+    void failToAddChildReferenceLookup() throws SaiHttpNotFoundException, SaiException {
         URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
         URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         URL milestoneGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
@@ -247,7 +248,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Fail to remove child reference from parent instance - no child reference in shape tree")
-    void failToRemoveChildReferenceNull() throws SaiNotFoundException, SaiException {
+    void failToRemoveChildReferenceNull() throws SaiHttpNotFoundException, SaiException {
         URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
         URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         URL milestoneGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-milestone");
@@ -266,7 +267,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Fail to get child instances from parent instance - failure in shape tree reference lookup")
-    void failToGetChildInstancesLookup() throws SaiNotFoundException, SaiException {
+    void failToGetChildInstancesLookup() throws SaiHttpNotFoundException, SaiException {
         URL projectUrl = toUrl(server, "/personal/data/projects/new-project");
         URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
@@ -282,7 +283,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Get a list of basic data instances from a list of instance URLs")
-    void testGetDataInstanceList() throws SaiNotFoundException, SaiException {
+    void testGetDataInstanceList() throws SaiHttpNotFoundException, SaiException {
         URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
         Map<URL, DataInstance> instanceMap = new HashMap<>();
@@ -295,7 +296,7 @@ public class DataInstanceTests {
 
     @Test
     @DisplayName("Fail to get a list of basic data instances - instance not found")
-    void failToGetDataInstanceListMissing() throws SaiNotFoundException, SaiException {
+    void failToGetDataInstanceListMissing() throws SaiHttpNotFoundException, SaiException {
         URL projectGrantUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant-personal-project");
         URL MISSING_PROJECT_INSTANCE = toUrl(server, "/personal/data/projects/missing-project");
         ReadableDataGrant projectGrant = ReadableDataGrant.get(projectGrantUrl, saiSession);
