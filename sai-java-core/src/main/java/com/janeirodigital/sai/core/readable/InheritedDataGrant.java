@@ -46,7 +46,7 @@ public class InheritedDataGrant extends ReadableDataGrant {
             }
             return new DataInstanceList(this.getSaiSession(), this, childInstanceUrls);
         } catch (SaiHttpNotFoundException ex) {
-            throw new SaiException("Failed to load data instances from " + this.getDataRegistration());
+            throw new SaiException("Failed to load data instances from " + this.getDataRegistration(), ex);
         }
     }
 

@@ -160,7 +160,7 @@ public class AuthorizationRegistry extends CRUDResource {
                 this.accessAuthorizations = new AccessAuthorizationList<>(this.saiSession, this.resource);
                 this.accessAuthorizations.populate();
             } catch (SaiException ex) {
-                throw new SaiException("Failed to load authorization registry " + this.url + ": " + ex.getMessage());
+                throw new SaiException("Failed to load authorization registry " + this.url, ex);
             }
         }
 

@@ -145,7 +145,7 @@ public class TestableMilestone extends DataInstance {
                 this.name = getRequiredStringObject(this.resource, TESTABLE_NAME);
                 this.description = getRequiredStringObject(this.resource, TESTABLE_DESCRIPTION);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Unable to populate testable milestone: " + ex.getMessage());
+                throw new SaiException("Unable to populate testable milestone", ex);
             }
         }
 

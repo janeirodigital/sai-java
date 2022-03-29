@@ -150,13 +150,13 @@ public class DataInstance extends CRUDResource {
 
     private ShapeTreeReference findChildShapeTreeReference(ShapeTree shapeTree, URL shapeTreeUrl) throws SaiException {
         try { return findChildReference(this.getShapeTree(), shapeTreeUrl); } catch (ShapeTreeException ex) {
-            throw new SaiException("Failed to lookup child shape tree reference: " + ex.getMessage());
+            throw new SaiException("Failed to lookup child shape tree reference", ex);
         }
     }
 
     private Property getPropertyFromShapeTreeReference(ShapeTreeReference shapeTreeReference) throws SaiException {
         try { return getPropertyFromReference(shapeTreeReference); } catch (ShapeTreeException ex) {
-            throw new SaiException("Failed to get property from shape tree reference: " + ex.getMessage());
+            throw new SaiException("Failed to get property from shape tree reference", ex);
         }
     }
 
@@ -196,7 +196,7 @@ public class DataInstance extends CRUDResource {
             Objects.requireNonNull(dataGrant, "Must provide a data grant for the data instance builder");
             this.dataGrant = dataGrant;
             try { this.shapeTree = ShapeTreeFactory.getShapeTree(dataGrant.getRegisteredShapeTree()); } catch (ShapeTreeException ex) {
-                throw new SaiException("Failed to get shape tree " + dataGrant.getRegisteredShapeTree() + " associated with data grant " + dataGrant.getUrl());
+                throw new SaiException("Failed to get shape tree " + dataGrant.getRegisteredShapeTree() + " associated with data grant " + dataGrant.getUrl(), ex);
             }
             return getThis();
         }

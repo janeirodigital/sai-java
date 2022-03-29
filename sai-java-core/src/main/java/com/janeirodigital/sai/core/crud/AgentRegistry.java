@@ -183,7 +183,7 @@ public class AgentRegistry extends CRUDResource {
                 this.socialAgentRegistrations.populate();
                 this.applicationRegistrations.populate();
             } catch (SaiException ex) {
-                throw new SaiException("Failed to load data registry " + this.url + ": " + ex.getMessage());
+                throw new SaiException("Failed to load data registry " + this.url, ex);
             }
         }
 
@@ -260,7 +260,7 @@ public class AgentRegistry extends CRUDResource {
                     URL registrationUrl = current.next();
                     return (T) SocialAgentRegistration.get(registrationUrl, saiSession);
                 } catch (SaiException | SaiHttpNotFoundException ex) {
-                    throw new SaiRuntimeException("Failed to get social agent registration while iterating list: " + ex.getMessage());
+                    throw new SaiRuntimeException("Failed to get social agent registration while iterating list", ex);
                 }
             }
         }

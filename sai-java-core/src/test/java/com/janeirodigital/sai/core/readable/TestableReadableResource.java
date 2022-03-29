@@ -92,7 +92,7 @@ public class TestableReadableResource extends ReadableResource {
                 this.tags = getUrlObjects(this.resource, TestableVocabulary.TESTABLE_HAS_TAG);
                 this.comments = getStringObjects(this.resource, TestableVocabulary.TESTABLE_HAS_COMMENT);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Unable to populate readable resource: " + ex.getMessage());
+                throw new SaiException("Unable to populate readable resource", ex);
             }
         }
 

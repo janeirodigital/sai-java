@@ -142,7 +142,7 @@ class ImmutableResourceTests {
         try {
             return getModelFromFile(urlToUri(url), "fixtures/immutable/immutable-resource.ttl", contentType.getValue());
         } catch (IOException | SaiRdfException ex) {
-            throw new SaiException("Failed too load test model from file: " + filePath);
+            throw new SaiException("Failed too load test model from file: " + filePath, ex);
         }
     }
 

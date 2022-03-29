@@ -81,7 +81,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
             this.okHttpClients.put(configuration, client);
             return client;
         } catch (NoSuchAlgorithmException|KeyManagementException ex) {
-            throw new SaiException(ex.getMessage());
+            throw new SaiException(ex.getMessage(), ex);
         }
     }
 
@@ -115,7 +115,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
             try {
                 return OkHttpValidatingClientFactory.get();
             } catch (ShapeTreeException ex) {
-                throw new SaiException(ex.getMessage());
+                throw new SaiException(ex.getMessage(), ex);
             }
         }
 

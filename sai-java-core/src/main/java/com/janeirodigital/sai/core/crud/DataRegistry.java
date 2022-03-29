@@ -153,7 +153,7 @@ public class DataRegistry extends CRUDResource {
                 this.dataRegistrations = new DataRegistrationList<>(this.saiSession, this.resource);
                 this.dataRegistrations.populate();
             } catch (SaiException ex) {
-                throw new SaiException("Failed to load data registry " + this.url + ": " + ex.getMessage());
+                throw new SaiException("Failed to load data registry " + this.url, ex);
             }
         }
 

@@ -188,7 +188,7 @@ public class AccessGrant extends ImmutableResource {
                 for (URL url : dataGrantUrls) { this.dataGrants.add(DataGrant.get(url, this.saiSession)); }
                 organizeInheritance();
             } catch (SaiRdfException | SaiRdfNotFoundException | SaiHttpNotFoundException ex) {
-                throw new SaiException("Unable to populate immutable access grant resource: " + ex.getMessage());
+                throw new SaiException("Unable to populate immutable access grant resource", ex);
             }
         }
 

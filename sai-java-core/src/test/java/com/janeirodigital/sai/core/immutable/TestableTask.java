@@ -141,7 +141,7 @@ public class TestableTask extends DataInstance {
                 this.name = getRequiredStringObject(this.resource, TESTABLE_NAME);
                 this.description = getRequiredStringObject(this.resource, TESTABLE_DESCRIPTION);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Unable to populate testable task: " + ex.getMessage());
+                throw new SaiException("Unable to populate testable task", ex);
             }
         }
 
