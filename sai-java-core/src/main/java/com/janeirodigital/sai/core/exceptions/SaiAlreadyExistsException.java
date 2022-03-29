@@ -5,9 +5,6 @@ package com.janeirodigital.sai.core.exceptions;
  * already exists
  */
 public class SaiAlreadyExistsException extends Exception {
-    public SaiAlreadyExistsException(String message, Throwable cause) {
-        super(message, cause);
-    }
     public SaiAlreadyExistsException(String message) {
         super(message);
     }

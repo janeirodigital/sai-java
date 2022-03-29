@@ -1,7 +1,6 @@
 package com.janeirodigital.sai.core.readable;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
 import com.janeirodigital.sai.httputils.SaiHttpException;
@@ -118,7 +117,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * Abstract method implemented by specific types of data grants, that allow the {@link DataInstance}s
      * permitted by that grant to be iterated.
      * @return Map of <DataInstance URL, Parent DataInstance URL>
-     * @throws SaiNotFoundException
+     * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
     public abstract DataInstanceList getDataInstances() throws SaiHttpNotFoundException, SaiException;
