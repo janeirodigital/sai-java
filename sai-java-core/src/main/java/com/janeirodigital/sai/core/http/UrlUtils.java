@@ -9,6 +9,8 @@ import java.util.Objects;
 
 public class UrlUtils {
 
+    private UrlUtils() { }
+
     /**
      * Converts a string to a URL
      * @param urlString String to convert to URL

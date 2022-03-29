@@ -7,7 +7,4 @@ public class SaiRuntimeException extends RuntimeException {
     public SaiRuntimeException(String message, Throwable cause) {
         super(message, cause);
     }
-    public SaiRuntimeException(String message) {
-        super(message);
-    }
 }

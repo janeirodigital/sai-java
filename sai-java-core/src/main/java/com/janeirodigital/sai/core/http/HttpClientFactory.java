@@ -41,7 +41,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
     public HttpClientFactory(boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens, AuthorizedSessionAccessor sessionAccessor) throws SaiException {
         this.validateSsl = validateSsl;
         this.validateShapeTrees = validateShapeTrees;
-        if (refreshTokens && sessionAccessor == null) { throw new SaiException("Must provide an authorized session accessor if when configured to refresh tokens"); }
+        if (refreshTokens && sessionAccessor == null) { throw new SaiException("Must provide an authorized session accessor when configured to refresh tokens"); }
         this.refreshTokens = refreshTokens;
         this.sessionAccessor = sessionAccessor;
         this.okHttpClients = new ConcurrentHashMap<>();

@@ -1,6 +1,7 @@
 package com.janeirodigital.sai.core.http;
 
 import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
+import com.janeirodigital.sai.authentication.AuthorizedSessionAccessor;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
@@ -46,7 +47,16 @@ class HttpClientFactoryTests {
     }
 
     @Test
-    @DisplayName("Fail to initialize HTTP factory - refresh tokens but no session accessor")
+    @DisplayName("Get an HTTP client with refresh tokens : session accessor")
+    void getHttpClientRefreshOn() throws SaiException {
+        AuthorizedSessionAccessor sessionAccessor = mock(AuthorizedSessionAccessor.class);
+        HttpClientFactory factory = new HttpClientFactory(false, false, true, sessionAccessor);
+        OkHttpClient httpClient = factory.get();
+        assertNotNull(httpClient);
+    }
+
+    @Test
+    @DisplayName("Fail to initialize HTTP factory - Refresh Tokens : No session accessor")
     void failToInitHttpFactoryNoAccessor() throws SaiException {
         assertThrows(SaiException.class, () -> new HttpClientFactory(true, true, true, null));
     }
@@ -67,6 +77,12 @@ class HttpClientFactoryTests {
         OkHttpClient httpClient = factory.get();
         assertNotNull(httpClient);
         assertEquals(httpClient, factory.get(false, true, false));
+    }
+
+    @Test
+    @DisplayName("Get an HTTP client with SSL disabled : validation enabled")
+    void failToGetHttpClientRefreshOnNoAccessor() throws SaiException {
+        assertThrows(SaiException.class, () -> new HttpClientFactory(false, false, true, null));
     }
 
     @Test
