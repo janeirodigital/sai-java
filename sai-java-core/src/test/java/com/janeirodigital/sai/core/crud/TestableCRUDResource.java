@@ -3,7 +3,6 @@ package com.janeirodigital.sai.core.crud;
 import com.janeirodigital.sai.core.TestableVocabulary;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
@@ -20,7 +19,6 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.TestableVocabulary.*;
 import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 @Getter @Setter
@@ -53,9 +51,7 @@ public class TestableCRUDResource extends CRUDResource {
         TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession);
         if (unprotected) builder.setUnprotected();
         try (Response response = read(url, saiSession, TEXT_TURTLE, unprotected)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(TEXT_TURTLE).build();
-        } catch (SaiRdfException | SaiHttpException ex) {
-            throw new SaiException("Unable to read testable crud resource " + url, ex);
+            return builder.setDataset(response).setContentType(TEXT_TURTLE).build();
         }
     }
 

@@ -3,7 +3,6 @@ package com.janeirodigital.sai.core.readable;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
@@ -18,7 +17,6 @@ import java.util.List;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.*;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
@@ -80,9 +78,7 @@ public class ReadableApplicationProfile extends ReadableResource {
     public static ReadableApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ReadableApplicationProfile.Builder builder = new ReadableApplicationProfile.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, true)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).setUnprotected().build();
-        } catch (SaiRdfException | SaiHttpException ex) {
-            throw new SaiException("Unable to read readable application profile " + url, ex);
+            return builder.setDataset(response).setContentType(contentType).setUnprotected().build();
         }
     }
 

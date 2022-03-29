@@ -5,9 +5,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
-import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -21,7 +19,6 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.DATA_REGISTRY;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_DATA_REGISTRATION;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.getNewResourceForType;
 
 /**
@@ -55,9 +52,7 @@ public class DataRegistry extends CRUDResource {
     public static DataRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         DataRegistry.Builder builder = new DataRegistry.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
-        } catch (SaiRdfException | SaiHttpException ex) {
-            throw new SaiException("Unable to read data registry " + url, ex);
+            return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 

@@ -4,7 +4,6 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.immutable.DataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
@@ -18,7 +17,6 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.RECIPROCAL_REGISTRATION;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.SOCIAL_AGENT_REGISTRATION;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
@@ -52,9 +50,7 @@ public class SocialAgentRegistration extends AgentRegistration {
     public static SocialAgentRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
-        } catch (SaiHttpException | SaiRdfException ex) {
-            throw new SaiException("Unable to read social agent registration " + url, ex);
+            return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 

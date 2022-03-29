@@ -3,7 +3,6 @@ package com.janeirodigital.sai.core.readable;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
@@ -16,7 +15,6 @@ import java.time.OffsetDateTime;
 
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredDateTimeObject;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObject;
 
@@ -59,9 +57,7 @@ public class ReadableDataRegistration extends ReadableResource {
     public static ReadableDataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ReadableDataRegistration.Builder builder = new ReadableDataRegistration.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
-        } catch (SaiRdfException | SaiHttpException ex) {
-            throw new SaiException("Unable to read readable data registration " + url, ex);
+            return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 

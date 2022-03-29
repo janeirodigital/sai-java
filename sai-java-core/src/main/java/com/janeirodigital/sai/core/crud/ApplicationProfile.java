@@ -3,7 +3,6 @@ package com.janeirodigital.sai.core.crud;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
@@ -22,7 +21,6 @@ import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEX
 import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.*;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
@@ -88,9 +86,7 @@ public class ApplicationProfile extends CRUDResource {
     public static ApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(ContentType.LD_JSON).build();
-        } catch (SaiRdfException | SaiHttpException ex) {
-            throw new SaiException("Unable to read application profile " + url, ex);
+            return builder.setDataset(response).setContentType(ContentType.LD_JSON).build();
         }
     }
 

@@ -6,7 +6,6 @@ import com.janeirodigital.sai.core.readable.DataInstance;
 import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
@@ -22,7 +21,6 @@ import java.util.Objects;
 
 import static com.janeirodigital.sai.core.TestableVocabulary.*;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 @Getter @Setter
@@ -52,9 +50,7 @@ public class TestableTask extends DataInstance {
         if (parent != null) builder.setParent(parent);
         builder.setDataGrant(dataGrant).setDraft(false);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).build();
-        } catch (SaiHttpException | SaiRdfException ex) {
-            throw new SaiException("Unable to get testable task " + url, ex);
+            return builder.setDataset(response).build();
         }
     }
 

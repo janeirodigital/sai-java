@@ -3,7 +3,6 @@ package com.janeirodigital.sai.core.crud;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
@@ -20,7 +19,6 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.LdpVocabulary.LDP_CONTAINS;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
@@ -64,9 +62,7 @@ public class DataRegistration extends CRUDResource {
     public static DataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiHttpNotFoundException, SaiException {
         DataRegistration.Builder builder = new DataRegistration.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
-        } catch (SaiRdfException | SaiHttpException ex) {
-            throw new SaiException("Unable to read data registration " + url, ex);
+            return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 

@@ -176,6 +176,21 @@ public class ReadableResource {
         }
 
         /**
+         * Extracts a Jena Model from an HTTP response and calls
+         * {@link #setDataset(Model)} after extraction
+         * @param response OkHttp Response to extract from
+         * @return {@link Builder}
+         * @throws SaiException
+         */
+        public T setDataset(Response response) throws SaiException {
+            try {
+                return setDataset(getRdfModelFromResponse(response));
+            } catch (SaiHttpException ex) {
+                throw new SaiException("Unable to get rdf graph from http response", ex);
+            }
+        }
+
+        /**
          * Set the JSON-LD context to use for the resource (as opposed to the default context by the builder
          * constructor). Note that this setting won't matter unless the {@link ContentType} of the resource is LD_JSON.
          * @param jsonLdContext JSON-LD context to set

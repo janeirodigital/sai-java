@@ -6,9 +6,7 @@ import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.immutable.AccessAuthorization;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
-import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
@@ -22,7 +20,6 @@ import java.util.Objects;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.AUTHORIZATION_REGISTRY;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.HAS_ACCESS_AUTHORIZATION;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.httputils.HttpUtils.getRdfModelFromResponse;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.getNewResourceForType;
 
 /**
@@ -56,9 +53,7 @@ public class AuthorizationRegistry extends CRUDResource {
     public static AuthorizationRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
         AuthorizationRegistry.Builder builder = new AuthorizationRegistry.Builder(url, saiSession);
         try (Response response = read(url, saiSession, contentType, false)) {
-            return builder.setDataset(getRdfModelFromResponse(response)).setContentType(contentType).build();
-        } catch (SaiRdfException | SaiHttpException ex) {
-            throw new SaiException("Unable to read authorization registry " + url, ex);
+            return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
