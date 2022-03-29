@@ -1,8 +1,8 @@
 package com.janeirodigital.sai.core.http;
 
+import com.janeirodigital.mockwebserver.DispatcherEntry;
+import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.fixtures.DispatcherEntry;
-import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import okhttp3.OkHttpClient;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URL;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.httputils.HttpUtils.putRdfResource;
 import static com.janeirodigital.sai.httputils.HttpUtils.urlToUri;

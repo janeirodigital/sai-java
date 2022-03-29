@@ -1,7 +1,7 @@
 package com.janeirodigital.sai.core.http;
 
+import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpValidatingClientFactory;
 import com.janeirodigital.shapetrees.core.exceptions.ShapeTreeException;
 import okhttp3.OkHttpClient;
@@ -15,7 +15,7 @@ import org.mockito.Mockito;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
-import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
+import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;

@@ -1,8 +1,8 @@
 package com.janeirodigital.sai.core.readable;
 
+import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
@@ -19,8 +19,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
-import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.httputils.HttpHeader.CONTENT_TYPE;
 import static org.junit.jupiter.api.Assertions.*;

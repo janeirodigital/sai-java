@@ -84,9 +84,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>mockwebserver</artifactId>
-            <version>${okhttp.version}</version>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>mockwebserverplus-ext</artifactId>
+            <version>${mockwebserverplus-ext.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

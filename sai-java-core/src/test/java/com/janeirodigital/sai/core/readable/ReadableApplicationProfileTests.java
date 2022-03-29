@@ -1,9 +1,8 @@
 package com.janeirodigital.sai.core.readable;
 
+import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.authentication.AuthorizedSession;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.fixtures.MockWebServerHelper;
-import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.SaiHttpException;
@@ -13,8 +12,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static com.janeirodigital.sai.core.fixtures.DispatcherHelper.mockOnGet;
-import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
 import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -45,14 +44,14 @@ class ReadableApplicationProfileTests {
     @Test
     @DisplayName("Get readable application profile document as json-ld")
     void getReadableApplicationProfileAsJsonLd() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        ReadableApplicationProfile profile = ReadableApplicationProfile.get(MockWebServerHelper.toUrl(server, "/jsonld/projectron/id"), saiSession);
+        ReadableApplicationProfile profile = ReadableApplicationProfile.get(toUrl(server, "/jsonld/projectron/id"), saiSession);
         checkProfile(profile);
     }
 
     @Test
     @DisplayName("Reload readable application profile document as json-ld")
     void reloadReadableApplicationProfileAsJsonLd() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        ReadableApplicationProfile profile = ReadableApplicationProfile.get(MockWebServerHelper.toUrl(server, "/jsonld/projectron/id"), saiSession);
+        ReadableApplicationProfile profile = ReadableApplicationProfile.get(toUrl(server, "/jsonld/projectron/id"), saiSession);
         ReadableApplicationProfile reloaded = profile.reload();
         assertNotEquals(profile, reloaded);
         checkProfile(profile);
@@ -62,7 +61,7 @@ class ReadableApplicationProfileTests {
     @Test
     @DisplayName("Fail to get readable application profile document - missing fields")
     void failToGetReadableApplicationProfileMissingFields() {
-        assertThrows(SaiException.class, () -> ReadableApplicationProfile.get(MockWebServerHelper.toUrl(server, "/missing-fields/jsonld/projectron/id"), saiSession));
+        assertThrows(SaiException.class, () -> ReadableApplicationProfile.get(toUrl(server, "/missing-fields/jsonld/projectron/id"), saiSession));
     }
 
     private void checkProfile(ReadableApplicationProfile profile) throws SaiHttpException {
