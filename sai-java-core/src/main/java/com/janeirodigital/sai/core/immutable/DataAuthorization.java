@@ -119,13 +119,13 @@ public class DataAuthorization extends ImmutableResource {
             // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
             // Scope: AllFromRegistry - Data owner sharing all data of a type from a data registry they own (dataOwner == grantedBy)
             // Scope: SelectedFromRegistry - Data owner sharing data instances of a type from a data registry they own (dataOwner == grantedBy)
-            dataGrants.addAll(generateSourceGrants(accessAuthorization, granteeRegistration, agentRegistry, dataRegistries));
+            dataGrants.addAll(generateSourceGrants(accessAuthorization, granteeRegistration, dataRegistries));
         }
 
         if (this.getDataOwner() == null || !this.getDataOwner().equals(this.getGrantedBy())) {
             // Scope: All - Data owner is sharing across their data and data shared with them (dataOwner == null)
             // Scope: AllFromAgent - Data owner sharing all data of a type shared with them (dataOwner != grantedBy)
-            dataGrants.addAll(generateDelegatedGrants(accessAuthorization, granteeRegistration, agentRegistry, dataRegistries));
+            dataGrants.addAll(generateDelegatedGrants(granteeRegistration, agentRegistry));
         }
         return dataGrants;
     }
@@ -136,13 +136,12 @@ public class DataAuthorization extends ImmutableResource {
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
      * @param accessAuthorization {@link AccessAuthorization} that this {@link DataAuthorization} is associated with
      * @param granteeRegistration {@link AgentRegistration} of the grantee in data owner's {@link AgentRegistry}
-     * @param agentRegistry {@link AgentRegistry} of the data owner
      * @param dataRegistries List of {@link DataRegistry} instances of the data owner
      * @return List of generated {@link DataGrant}s
      * @throws SaiException
      */
     private List<DataGrant> generateSourceGrants(AccessAuthorization accessAuthorization, AgentRegistration granteeRegistration,
-                                                 AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException {
+                                                 List<DataRegistry> dataRegistries) throws SaiException {
 
         if (!this.getScopeOfAuthorization().equals(SCOPE_ALL) && !this.getScopeOfAuthorization().equals(SCOPE_ALL_FROM_REGISTRY) && !this.getScopeOfAuthorization().equals(SCOPE_SELECTED_FROM_REGISTRY)) {
             throw new SaiException("Cannot generate a regular (non-delegated) data grant for a data authorization with scope: " + this.getScopeOfAuthorization());
@@ -191,7 +190,7 @@ public class DataAuthorization extends ImmutableResource {
 
     /**
      * Generate inherited "child" grants for a parent {@link DataGrant}, where the data being granted is
-     * being shared by the data owner directly. Called from {@link #generateSourceGrants(AccessAuthorization, AgentRegistration, AgentRegistry, List)}.
+     * being shared by the data owner directly. Called from {@link #generateSourceGrants(AccessAuthorization, AgentRegistration, List)}.
      * <br>Applies to scopes: Inherited
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
      * @param accessAuthorization {@link AccessAuthorization} that the {@link DataAuthorization} is associated with
@@ -237,14 +236,11 @@ public class DataAuthorization extends ImmutableResource {
      * <br>Applies to scopes: All, AllFromAgent
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#delegated-data-grant">Delegated Data Grant</a>
      * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-scopes">Data Access Scopes</a>
-     * @param accessAuthorization {@link AccessAuthorization} that the {@link DataAuthorization} is associated with
      * @param granteeRegistration {@link AgentRegistration} of the grantee receiving delegated permissions
      * @param agentRegistry {@link AgentRegistry} of the social agent delegating permission
-     * @param dataRegistries {@link DataRegistry} list of the social agent delegating permission
      * @return
      */
-    private List<DataGrant> generateDelegatedGrants(AccessAuthorization accessAuthorization, AgentRegistration granteeRegistration,
-                                                    AgentRegistry agentRegistry, List<DataRegistry> dataRegistries) throws SaiException, SaiHttpNotFoundException {
+    private List<DataGrant> generateDelegatedGrants(AgentRegistration granteeRegistration, AgentRegistry agentRegistry) throws SaiException, SaiHttpNotFoundException {
         if (!this.getScopeOfAuthorization().equals(SCOPE_ALL) && !this.getScopeOfAuthorization().equals(SCOPE_ALL_FROM_AGENT)) {
             throw new SaiException("Cannot generate a delegated data grant for a data authorization with scope: " + this.getScopeOfAuthorization());
         }
@@ -266,7 +262,7 @@ public class DataAuthorization extends ImmutableResource {
                 // skip data grants that don't match the shape tree of this data authorization
                 if (!remoteDataGrant.getRegisteredShapeTree().equals(this.registeredShapeTree)) { continue; }
                 // filter to a given data registration if specified
-                if (this.getDataRegistration() != null) { if (!remoteDataGrant.getDataRegistration().equals(this.getDataRegistration())) { continue; } }
+                if (this.getDataRegistration() != null && !remoteDataGrant.getDataRegistration().equals(this.getDataRegistration())) { continue; }
                 // Build the delegated data grant based on this data authorization and the remote data grant
                 URL grantUrl = granteeRegistration.generateContainedUrl();
                 DataGrant.Builder grantBuilder = new DataGrant.Builder(grantUrl, this.saiSession);

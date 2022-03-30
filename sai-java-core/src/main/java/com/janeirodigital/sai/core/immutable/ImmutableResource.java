@@ -6,14 +6,14 @@ import com.janeirodigital.sai.core.readable.ReadableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.HttpHeader;
 import com.janeirodigital.sai.httputils.SaiHttpException;
-import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
 
 import java.net.URL;
 
-import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.*;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.deleteProtectedResource;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
 import static com.janeirodigital.sai.httputils.HttpUtils.*;
 
 /**
@@ -44,7 +44,7 @@ public class ImmutableResource extends ReadableResource {
             if (this.isUnprotected()) { this.createUnprotected(headers); } else {
                 checkResponse(putProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
             }
-        } catch (SaiRdfException | SaiAuthenticationException | SaiHttpException ex) {
+        } catch (SaiAuthenticationException | SaiHttpException ex) {
             throw new SaiException("Failed to create immutable resource " + this.url, ex);
         }
         this.exists = true;
@@ -53,7 +53,7 @@ public class ImmutableResource extends ReadableResource {
     /**
      * Create the corresponding resource without sending any authorization headers
      */
-    private void createUnprotected(Headers headers) throws SaiRdfException, SaiHttpException {
+    private void createUnprotected(Headers headers) throws SaiHttpException {
         checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
     }
 

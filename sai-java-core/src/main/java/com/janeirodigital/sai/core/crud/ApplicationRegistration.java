@@ -106,6 +106,7 @@ public class ApplicationRegistration extends AgentRegistration {
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
          */
+        @Override
         protected void populateDataset() {
             this.resource = getNewResourceForType(this.url, APPLICATION_REGISTRATION);
             this.dataset = this.resource.getModel();

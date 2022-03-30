@@ -32,8 +32,7 @@ public class DataInstance extends CRUDResource {
     private final ShapeTree shapeTree;
     private boolean draft;
 
-
-    protected DataInstance(Builder builder) throws SaiException {
+    protected DataInstance(Builder<?> builder) throws SaiException {
         super(builder);
         Objects.requireNonNull(builder.dataGrant, "Must provide a data grant to construct a data instance");
         Objects.requireNonNull(builder.shapeTree, "Must provide a shape tree to construct a data instance");
@@ -82,7 +81,7 @@ public class DataInstance extends CRUDResource {
 
     public void addChildReference(DataInstance childInstance) throws SaiException {
         // Lookup the shape tree reference for the child instance
-        ShapeTreeReference reference = findChildShapeTreeReference(this.getShapeTree(), childInstance.getShapeTree().getId());
+        ShapeTreeReference reference = findChildShapeTreeReference(childInstance.getShapeTree().getId());
         if (reference == null) { throw new SaiException("Cannot find a child reference to shape tree " + this.getShapeTree().getId() + " to add to parent data instance: " + this.getUrl()); }
         // Get the property use from the shape tree reference
         Property property = getPropertyFromShapeTreeReference(reference);
@@ -94,7 +93,7 @@ public class DataInstance extends CRUDResource {
 
     public void removeChildReference(DataInstance childInstance) throws SaiException {
         // Lookup the shape tree reference for the child instance
-        ShapeTreeReference reference = findChildShapeTreeReference(this.getShapeTree(), childInstance.getShapeTree().getId());
+        ShapeTreeReference reference = findChildShapeTreeReference(childInstance.getShapeTree().getId());
         if (reference == null) { throw new SaiException("Cannot find a child reference to shape tree " + this.getShapeTree().getId() + " to remove from parent data instance: " + this.getUrl()); }
         // Get the property use from the shape tree reference
         Property property = getPropertyFromShapeTreeReference(reference);
@@ -111,7 +110,7 @@ public class DataInstance extends CRUDResource {
 
     public List<URL> getChildReferences(URL shapeTreeUrl) throws SaiException {
         List<URL> childUrls = new ArrayList<>();
-        ShapeTreeReference reference = findChildShapeTreeReference(this.getShapeTree(), shapeTreeUrl);
+        ShapeTreeReference reference = findChildShapeTreeReference(shapeTreeUrl);
         List<URL> foundUrls = findChildInstances(reference);
         if (!foundUrls.isEmpty()) { childUrls.addAll(foundUrls); }
         return childUrls;
@@ -148,7 +147,7 @@ public class DataInstance extends CRUDResource {
         return findChildGrant(shapeTreeUrl) != null;
     }
 
-    private ShapeTreeReference findChildShapeTreeReference(ShapeTree shapeTree, URL shapeTreeUrl) throws SaiException {
+    private ShapeTreeReference findChildShapeTreeReference(URL shapeTreeUrl) throws SaiException {
         try { return findChildReference(this.getShapeTree(), shapeTreeUrl); } catch (ShapeTreeException ex) {
             throw new SaiException("Failed to lookup child shape tree reference", ex);
         }

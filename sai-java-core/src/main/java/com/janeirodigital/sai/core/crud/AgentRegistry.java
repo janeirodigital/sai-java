@@ -189,7 +189,6 @@ public class AgentRegistry extends CRUDResource {
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
         private void populateDataset() {
             this.resource = getNewResourceForType(this.url, AGENT_REGISTRY);
@@ -231,7 +230,7 @@ public class AgentRegistry extends CRUDResource {
         public T find(URL agentUrl) {
             for (T registration : this) {
                 SocialAgentRegistration social = (SocialAgentRegistration) registration;
-                if (agentUrl.equals(social.getRegisteredAgent())) { return (T) social; }
+                if (agentUrl.equals(social.getRegisteredAgent())) { return registration; }
             }
             return null;
         }
@@ -246,7 +245,7 @@ public class AgentRegistry extends CRUDResource {
         /**
          * Custom iterator that iterates over {@link SocialAgentRegistration} URLs and gets actual instances of them
          */
-        private class SocialAgentRegistrationListIterator<T> extends RegistrationListIterator<T> {
+        private static class SocialAgentRegistrationListIterator<T> extends RegistrationListIterator<T> {
 
             public SocialAgentRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
 
@@ -300,7 +299,7 @@ public class AgentRegistry extends CRUDResource {
         /**
          * Custom iterator that iterates over {@link ApplicationRegistration} URLs and gets actual instances of them
          */
-        private class ApplicationRegistrationListIterator<T> extends RegistrationListIterator<T> {
+        private static class ApplicationRegistrationListIterator<T> extends RegistrationListIterator<T> {
 
             public ApplicationRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
 

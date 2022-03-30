@@ -64,7 +64,7 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      * @param registrationUrl URL of the registration to add
      * @throws SaiAlreadyExistsException if the registration already exists
      */
-    public void add(URL registrationUrl) throws SaiException, SaiAlreadyExistsException {
+    public void add(URL registrationUrl) throws SaiAlreadyExistsException {
         Objects.requireNonNull(registrationUrl, "Must provide the URL of the registration to add to registry");
         if (this.isPresent(registrationUrl)) {
             throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists");

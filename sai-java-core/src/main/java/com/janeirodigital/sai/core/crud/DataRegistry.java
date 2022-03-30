@@ -198,7 +198,7 @@ public class DataRegistry extends CRUDResource {
         public T find(URL shapeTreeUrl) {
             for (T registration : this) {
                 DataRegistration dataRegistration = (DataRegistration) registration;
-                if (shapeTreeUrl.equals(dataRegistration.getRegisteredShapeTree())) { return (T) dataRegistration; }
+                if (shapeTreeUrl.equals(dataRegistration.getRegisteredShapeTree())) { return registration; }
             }
             return null;
         }
@@ -208,7 +208,7 @@ public class DataRegistry extends CRUDResource {
          * @return {@link DataRegistration} Iterator
          */
         @Override
-        public Iterator<T> iterator() { return new DataRegistrationListIterator(this.getSaiSession(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new DataRegistrationListIterator<>(this.getSaiSession(), this.getRegistrationUrls()); }
 
         /**
          * Custom iterator that iterates over {@link DataRegistration} URLs and gets actual instances of them

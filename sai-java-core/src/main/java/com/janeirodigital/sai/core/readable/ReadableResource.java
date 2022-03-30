@@ -121,7 +121,7 @@ public class ReadableResource {
          * @param url URL of the resource to build
          * @param saiSession {@link SaiSession} to use
          */
-        public Builder(URL url, SaiSession saiSession) {
+        protected Builder(URL url, SaiSession saiSession) {
             Objects.requireNonNull(url, "Must provide a URL to the resource builder");
             Objects.requireNonNull(saiSession, "Must provide a sai session to the resource builder");
             this.url = url;

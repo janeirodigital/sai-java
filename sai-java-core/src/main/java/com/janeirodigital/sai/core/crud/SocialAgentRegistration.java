@@ -128,6 +128,7 @@ public class SocialAgentRegistration extends AgentRegistration {
          * Populates the fields of the {@link Builder} based on the associated Jena resource.
          * @throws SaiException
          */
+        @Override
         protected void populateFromDataset() throws SaiException {
             try {
                 this.reciprocalRegistration = getUrlObject(this.resource, RECIPROCAL_REGISTRATION);
@@ -140,6 +141,7 @@ public class SocialAgentRegistration extends AgentRegistration {
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
          */
+        @Override
         protected void populateDataset() {
             this.resource = getNewResourceForType(this.url, SOCIAL_AGENT_REGISTRATION);
             this.dataset = this.resource.getModel();

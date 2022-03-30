@@ -5,7 +5,6 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.readable.ReadableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.SaiHttpException;
-import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import lombok.Getter;
 import okhttp3.Response;
 
@@ -40,7 +39,7 @@ public class CRUDResource extends ReadableResource {
             if (this.isUnprotected()) { this.updateUnprotected(); } else {
                 checkResponse(putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
             }
-        } catch (SaiRdfException | SaiHttpException | SaiAuthenticationException ex) {
+        } catch (SaiHttpException | SaiAuthenticationException ex) {
             throw new SaiException("Failed to update resource " + this.url, ex);
         }
         this.exists = true;
@@ -66,7 +65,7 @@ public class CRUDResource extends ReadableResource {
      * <code>dataset</code> without sending any authorization headers.
      * @throws SaiException
      */
-    private void updateUnprotected() throws SaiRdfException, SaiHttpException, SaiException {
+    private void updateUnprotected() throws SaiHttpException, SaiException {
         checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
     }
 

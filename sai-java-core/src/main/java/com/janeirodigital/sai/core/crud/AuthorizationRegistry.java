@@ -61,7 +61,7 @@ public class AuthorizationRegistry extends CRUDResource {
      * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
      * @param url URL of the {@link AuthorizationRegistry}
      * @param saiSession {@link SaiSession} to assign
-     * @return
+     * @return Retrieved {@link AuthorizationRegistry}
      */
     public static AuthorizationRegistry get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
@@ -166,7 +166,6 @@ public class AuthorizationRegistry extends CRUDResource {
 
         /**
          * Populates the Jena dataset graph with the attributes from the Builder
-         * @throws SaiException
          */
         private void populateDataset() {
             this.resource = getNewResourceForType(this.url, AUTHORIZATION_REGISTRY);
@@ -206,7 +205,7 @@ public class AuthorizationRegistry extends CRUDResource {
         public T find(URL granteeUrl) {
             for (T registration : this) {
                 AccessAuthorization authorization = (AccessAuthorization) registration;
-                if (granteeUrl.equals(authorization.getGrantee())) { return (T) authorization; }
+                if (granteeUrl.equals(authorization.getGrantee())) { return registration; }
             }
             return null;
         }
@@ -216,12 +215,12 @@ public class AuthorizationRegistry extends CRUDResource {
          * @return {@link AccessAuthorization} Iterator
          */
         @Override
-        public Iterator<T> iterator() { return new AccessAuthorizationListIterator(this.getSaiSession(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new AccessAuthorizationListIterator<>(this.getSaiSession(), this.getRegistrationUrls()); }
 
         /**
          * Custom iterator that iterates over {@link AccessAuthorization} URLs and gets actual instances of them
          */
-        private class AccessAuthorizationListIterator<T> extends RegistrationListIterator<T> {
+        private static class AccessAuthorizationListIterator<T> extends RegistrationListIterator<T> {
 
             public AccessAuthorizationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
 
