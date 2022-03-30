@@ -1,0 +1,25 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice: <https://alice.example/>
+  PREFIX jarvis: <https://jarvis.example/>
+  PREFIX alice-personal: <${SERVER_BASE}/personal/data/>
+  PREFIX pm: <${SERVER_BASE}/shapetrees/pm#>
+  PREFIX ldp: <http://www.w3.org/ns/ldp#>
+  PREFIX testable: <http://testable.example/ns/testable#>
+  PREFIX alice-personal-projects: <${SERVER_BASE}/personal/data/projects/>
+  PREFIX alice-personal-milestones: <${SERVER_BASE}/personal/data/milestones/>
+  PREFIX alice-personal-tasks: <${SERVER_BASE}/personal/data/tasks/>
+  PREFIX alice-personal-issues: <${SERVER_BASE}/personal/data/issues/>
+
+  alice-personal-projects:p3
+    a testable:TestableProject ;
+    testable:id 3 ;
+    testable:name "Project with no children" ;
+    testable:description "Project that doesn't have any children linked to it yet" .

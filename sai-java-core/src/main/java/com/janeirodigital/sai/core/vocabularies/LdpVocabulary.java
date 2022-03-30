@@ -20,8 +20,8 @@ public final class LdpVocabulary {
     public static final Resource NAMESPACE = model.createResource(LDP_NS);
 
     // Properties and Classes
-    public static final Property CONTAINER = model.createProperty(LDP_NS + "Container");
-    public static final Property BASIC_CONTAINER = model.createProperty(LDP_NS + "BasicContainer");
-    public static final Property CONTAINS = model.createProperty(LDP_NS + "contains");
+    public static final Property LDP_CONTAINER = model.createProperty(LDP_NS + "Container");
+    public static final Property LDP_BASIC_CONTAINER = model.createProperty(LDP_NS + "BasicContainer");
+    public static final Property LDP_CONTAINS = model.createProperty(LDP_NS + "contains");
 
 }

@@ -25,11 +25,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>${okhttp.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>apache-jena-libs</artifactId>
             <type>pom</type>
@@ -46,9 +41,19 @@
             <version>${shapetrees.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>${nimbus.version}</version>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>sai-rdf-utils-java</artifactId>
+            <version>${sai-rdf-utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>sai-http-utils-java</artifactId>
+            <version>${sai-http-utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>sai-authentication-java</artifactId>
+            <version>${sai-authentication.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -69,9 +74,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>mockwebserver</artifactId>
-            <version>${okhttp.version}</version>
+            <groupId>com.janeirodigital</groupId>
+            <artifactId>mockwebserverplus-ext</artifactId>
+            <version>${mockwebserverplus-ext.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -1,0 +1,10 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:application/ld+json'
+body: >
+
+  {
+    "@context": "https://solid.github.io/data-interoperability-panel/specification/interop.jsonld",
+    "hasAccessAuthorizations" : ["${SERVER_BASE}/authorization/all-1", "${SERVER_BASE}/authorization/registry-1", "${SERVER_BASE}/authorization/agent-1", "${SERVER_BASE}/authorization/selected-1"]
+  }

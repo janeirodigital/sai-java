@@ -1,0 +1,43 @@
+package com.janeirodigital.sai.core.readable;
+
+import com.janeirodigital.sai.core.exceptions.SaiException;
+import lombok.Getter;
+
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Readable instantiation of a
+ * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-grant">Data Grant</a>
+ * with a scope of <a href="https://solid.github.io/data-interoperability-panel/specification/#scope-selected">SelectedFromRegistry</a>
+ */
+@Getter
+public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
+
+    List<URL> dataInstances;
+
+    /**
+     * Construct a {@link SelectedFromRegistryDataGrant} from the provided {@link ReadableDataGrant.Builder}.
+     * @param builder {@link ReadableDataGrant.Builder} to construct with
+     * @throws SaiException
+     */
+    protected SelectedFromRegistryDataGrant(ReadableDataGrant.Builder builder) throws SaiException {
+        super(builder);
+        this.dataInstances = builder.dataInstances;
+    }
+
+    /**
+     * Returns a {@link DataInstanceList} that iterates over the list of {@link DataInstance}s
+     * specifically selected as part of the SelectedFromRegistry data access scope
+     * @return {@link DataInstanceList}
+     */
+    @Override
+    public DataInstanceList getDataInstances() {
+        Map<URL, DataInstance> dataInstanceUrls = new HashMap<>();
+        for (URL dataInstanceUrl : this.dataInstances) { dataInstanceUrls.put(dataInstanceUrl, null); }
+        return new DataInstanceList(saiSession, this, dataInstanceUrls);
+    }
+
+}

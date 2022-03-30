@@ -1,0 +1,15 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice-authorization: <${SERVER_BASE}/invalid-fields/authorization/>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+  alice-authorization:
+    a interop:AuthorizationRegistry ;
+    interop:hasAccessAuthorization
+      "2020-09-05T06:15:01Z"^^xsd:dateTime .

@@ -1,60 +1,35 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.enums.ContentType;
-import com.janeirodigital.sai.core.enums.HttpHeader;
+import com.janeirodigital.sai.authentication.SaiAuthenticationException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.factories.DataFactory;
+import com.janeirodigital.sai.core.readable.ReadableResource;
+import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.HttpHeader;
+import com.janeirodigital.sai.httputils.SaiHttpException;
 import lombok.Getter;
 import okhttp3.Headers;
-import okhttp3.OkHttpClient;
 import okhttp3.Response;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 
 import java.net.URL;
-import java.util.Objects;
 
-import static com.janeirodigital.sai.core.authorization.AuthorizedSessionHelper.putProtectedRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.*;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.deleteProtectedResource;
+import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
+import static com.janeirodigital.sai.httputils.HttpUtils.*;
 
 /**
  * Represents a corresponding RDF Resource and provides create, read, and
  * delete capabilities. Immutable resources don't provide an update capability.
  */
 @Getter
-public class ImmutableResource {
-
-    protected final URL url;
-    protected final DataFactory dataFactory;
-    protected final OkHttpClient httpClient;
-    protected Model dataset;
-    protected Resource resource;
-    protected ContentType contentType;
-    protected String jsonLdContext;
-    protected boolean unprotected;
+public class ImmutableResource extends ReadableResource {
 
     /**
-     * Construct an immutable resource for <code>resourceUrl</code> based on the dataset
-     * from the provided Jena <code>resource</code>.
-     * @param resourceUrl URL of the immutable resource
-     * @param dataFactory Data factory to assign
-     * @param resource Jena resource to populate with
-     * @param contentType {@link ContentType} to use
-     * @param unprotected When true no authorization credentials will be sent in requests to this resource
+     * Construct an Immutable resource using the provided {@link Builder}.
+     * @param builder {@link Builder} or an instance of an inheriting subclass
      */
-    public ImmutableResource(URL resourceUrl, DataFactory dataFactory, Resource resource, ContentType contentType, boolean unprotected) throws SaiException {
-        Objects.requireNonNull(resourceUrl, "Must provide a URL for the target resource");
-        Objects.requireNonNull(dataFactory, "Must provide a data factory");
-        Objects.requireNonNull(dataFactory.getHttpClient(), "Must provide a valid HTTP client");
-        Objects.requireNonNull(resource, "Must provide a resource and model to populate an immutable resource");
-        Objects.requireNonNull(contentType, "Must provide a contentType to write an immutable resource");
-        this.url = resourceUrl;
-        this.dataFactory = dataFactory;
-        this.httpClient = dataFactory.getHttpClient();
-        this.dataset = resource.getModel();
-        this.resource = resource;
-        this.unprotected = unprotected;
-        this.contentType = contentType;
+    public ImmutableResource(Builder<?> builder) throws SaiException {
+        super(builder);
+        this.exists = false; // assume the resource doesn't exist until it's bootstrapped
     }
 
     /**
@@ -65,17 +40,71 @@ public class ImmutableResource {
      */
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
-        if (this.isUnprotected()) { this.createUnprotected(headers); } else {
-            Response response = putProtectedRdfResource(this.dataFactory.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
-            if (!response.isSuccessful()) { throw new SaiException("Failed to create " + this.url + ": " + getResponseFailureMessage(response)); }
+        try {
+            if (this.isUnprotected()) { this.createUnprotected(headers); } else {
+                checkResponse(putProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
+            }
+        } catch (SaiAuthenticationException | SaiHttpException ex) {
+            throw new SaiException("Failed to create immutable resource " + this.url, ex);
         }
+        this.exists = true;
     }
 
     /**
      * Create the corresponding resource without sending any authorization headers
      */
-    private void createUnprotected(Headers headers) throws SaiException {
-        putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers);
+    private void createUnprotected(Headers headers) throws SaiHttpException {
+        checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
     }
 
+    /**
+     * Deletes the corresponding resource over HTTP
+     * @throws SaiException
+     */
+    public void delete() throws SaiException {
+        try {
+            if (this.isUnprotected()) { this.deleteUnprotected(); } else {
+                checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
+            }
+        } catch (SaiHttpException | SaiAuthenticationException ex) {
+            throw new SaiException("Failed to delete immutable resource " + this.url, ex);
+        }
+        this.exists = false;
+    }
+
+    /**
+     * Deletes the corresponding resource over HTTP without sending any
+     * authorization headers
+     * @throws SaiHttpException
+     */
+    private void deleteUnprotected() throws SaiHttpException {
+        checkResponse(deleteResource(this.httpClient, this.url));
+    }
+
+    /**
+     * Ensure the response to a create or delete operation is successful
+     * @param response OkHttp Response to check
+     * @return Response
+     * @throws SaiHttpException
+     */
+    private Response checkResponse(Response response) throws SaiHttpException {
+        if (!response.isSuccessful()) { throw new SaiHttpException("Failed to " + response.request().method() + " " + this.url + ": " + getResponseFailureMessage(response)); }
+        return response;
+    }
+
+    /**
+     * Generic builder which is extended by Immutable resource builders. Extends and incorporates the
+     * {@link ReadableResource.Builder} as a base.
+     * @param <T> Parameterized type of an inheriting builder
+     */
+    protected abstract static class Builder<T extends ReadableResource.Builder<T>> extends ReadableResource.Builder<T> {
+
+        /**
+         * Base builder for Immutable resource types. Use setters for all further configuration
+         * @param url URL of the resource to build
+         * @param saiSession {@link SaiSession} to use
+         */
+        protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+
+    }
 }

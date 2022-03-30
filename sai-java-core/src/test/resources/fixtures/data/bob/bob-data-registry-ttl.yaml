@@ -1,0 +1,19 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX bob-data: <${SERVER_BASE}/bob/data/>
+
+  bob-data:
+    a interop:DataRegistry ;
+    interop:hasDataRegistration 
+      bob-data:projects\/ ,
+      bob-data:milestones\/ ,
+      bob-data:tasks\/ ,
+      bob-data:issues\/ ,
+      bob-data:calendars\/ ,
+      bob-data:appointments\/ .

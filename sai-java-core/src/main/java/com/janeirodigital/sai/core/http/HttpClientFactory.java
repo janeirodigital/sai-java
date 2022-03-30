@@ -1,8 +1,8 @@
 package com.janeirodigital.sai.core.http;
 
+import com.janeirodigital.sai.authentication.AccessTokenRefresher;
+import com.janeirodigital.sai.authentication.AuthorizedSessionAccessor;
 import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
-import com.janeirodigital.sai.core.authorization.AccessTokenRefresher;
-import com.janeirodigital.sai.core.authorization.AuthorizedSessionAccessor;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactory;
 import com.janeirodigital.shapetrees.client.okhttp.OkHttpClientFactoryManager;
@@ -41,7 +41,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
     public HttpClientFactory(boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens, AuthorizedSessionAccessor sessionAccessor) throws SaiException {
         this.validateSsl = validateSsl;
         this.validateShapeTrees = validateShapeTrees;
-        if (refreshTokens && sessionAccessor == null) { throw new SaiException("Must provide an authorized session accessor if when configured to refresh tokens"); }
+        if (refreshTokens && sessionAccessor == null) { throw new SaiException("Must provide an authorized session accessor when configured to refresh tokens"); }
         this.refreshTokens = refreshTokens;
         this.sessionAccessor = sessionAccessor;
         this.okHttpClients = new ConcurrentHashMap<>();
@@ -81,7 +81,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
             this.okHttpClients.put(configuration, client);
             return client;
         } catch (NoSuchAlgorithmException|KeyManagementException ex) {
-            throw new SaiException(ex.getMessage());
+            throw new SaiException(ex.getMessage(), ex);
         }
     }
 
@@ -115,7 +115,7 @@ public class HttpClientFactory implements OkHttpClientFactory {
             try {
                 return OkHttpValidatingClientFactory.get();
             } catch (ShapeTreeException ex) {
-                throw new SaiException(ex.getMessage());
+                throw new SaiException(ex.getMessage(), ex);
             }
         }
 

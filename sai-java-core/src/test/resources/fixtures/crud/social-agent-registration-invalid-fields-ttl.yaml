@@ -1,0 +1,20 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice-agents-sa1: <${SERVER_BASE}/invalid-fields/ttl/agents/sa-1/>
+
+  alice-agents-sa1:
+    a interop:SocialAgentRegistration ;
+    interop:registeredBy <https://alice.example/id#me> ;
+    interop:registeredWith <https://trusted.example/id#app> ;
+    interop:registeredAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
+    interop:registeredAgent <https://bob.example/id#me> ;
+    interop:updatedAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
+    interop:hasAccessGrant alice-agents-sa1:access-grant ;
+    interop:reciprocalRegistration "2021-04-04T20:15:47.000Z"^^xsd:dateTime .

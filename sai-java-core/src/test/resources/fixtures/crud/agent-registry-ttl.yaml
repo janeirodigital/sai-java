@@ -18,5 +18,4 @@ body: >
     interop:hasApplicationRegistration 
       alice-agents:app-1\/ ,
       alice-agents:app-2\/ ,
-      alice-agents:app-3\/ ,
-      alice-agents:app-4\/ .
+      alice-agents:app-3\/ .

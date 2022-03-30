@@ -38,9 +38,9 @@ class VocabularyTests {
 
         final String ns = "http://www.w3.org/ns/ldp#";
         assertEquals(ns, LdpVocabulary.NAMESPACE.getURI());
-        assertEquals(ns + "Container", LdpVocabulary.CONTAINER.getURI());
-        assertEquals(ns + "BasicContainer", LdpVocabulary.BASIC_CONTAINER.getURI());
-        assertEquals(ns + "contains", LdpVocabulary.CONTAINS.getURI());
+        assertEquals(ns + "Container", LdpVocabulary.LDP_CONTAINER.getURI());
+        assertEquals(ns + "BasicContainer", LdpVocabulary.LDP_BASIC_CONTAINER.getURI());
+        assertEquals(ns + "contains", LdpVocabulary.LDP_CONTAINS.getURI());
 
     }
 

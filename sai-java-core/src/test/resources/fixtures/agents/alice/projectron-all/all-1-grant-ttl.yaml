@@ -1,0 +1,32 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice: <https://alice.example/>
+  PREFIX projectron: <https://projectron.example/>
+  PREFIX alice-agents-projectron: <${SERVER_BASE}/all-1-agents/all-1-projectron/>
+
+  alice-agents-projectron:all-1-grant
+    a interop:AccessGrant ;
+    interop:grantedBy alice:id ;
+    interop:grantedAt "2020-09-05T06:15:01Z"^^xsd:dateTime ;
+    interop:grantee projectron:id ;
+    interop:hasAccessNeedGroup projectron:\#d8219b1f ;
+    interop:hasDataGrant
+      alice-agents-projectron:all-1-grant-personal-project ,
+      alice-agents-projectron:all-1-grant-personal-milestone ,
+      alice-agents-projectron:all-1-grant-personal-issue ,
+      alice-agents-projectron:all-1-grant-personal-task ,
+      alice-agents-projectron:all-1-grant-work-project ,
+      alice-agents-projectron:all-1-grant-work-milestone ,
+      alice-agents-projectron:all-1-grant-work-issue ,
+      alice-agents-projectron:all-1-grant-work-task ,
+      alice-agents-projectron:all-1-delegated-grant-bob-project ,
+      alice-agents-projectron:all-1-delegated-grant-bob-milestone ,
+      alice-agents-projectron:all-1-delegated-grant-bob-issue ,
+      alice-agents-projectron:all-1-delegated-grant-bob-task .

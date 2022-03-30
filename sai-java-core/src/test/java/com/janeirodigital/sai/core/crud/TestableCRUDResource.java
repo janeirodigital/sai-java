@@ -2,22 +2,29 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.sai.core.TestableVocabulary;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.exceptions.SaiNotFoundException;
-import com.janeirodigital.sai.core.factories.DataFactory;
-import com.janeirodigital.sai.core.helpers.RdfHelper;
+import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
+import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
-import org.apache.jena.rdf.model.Resource;
+import lombok.Setter;
+import okhttp3.Response;
+import org.apache.jena.rdf.model.Model;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import static com.janeirodigital.sai.core.helpers.RdfHelper.*;
+import static com.janeirodigital.sai.core.TestableVocabulary.*;
+import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
-@Getter
+@Getter @Setter
 public class TestableCRUDResource extends CRUDResource {
 
-    private final String TESTABLE_RDF_TYPE = "https://graph.example/ns/terms#testable";
+    private static final String TESTABLE_RDF_TYPE = "https://graph.example/ns/terms#testable";
 
     private int id;
     private String name;
@@ -27,94 +34,129 @@ public class TestableCRUDResource extends CRUDResource {
     private List<URL> tags;
     private List<String> comments;
 
-    public TestableCRUDResource(URL resourceUrl, DataFactory dataFactory, boolean unprotected) throws SaiException {
-        super(resourceUrl, dataFactory, unprotected);
+    public TestableCRUDResource(Builder builder) throws SaiException {
+        super(builder);
+        this.id = builder.id;
+        this.name = builder.name;
+        this.createdAt = builder.createdAt;
+        this.milestone = builder.milestone;
+        this.active = builder.active;
+        this.tags = builder.tags;
+        this.comments = builder.comments;
     }
 
-    /**
-     * Build a TestableCRUDResource. If a Jena Resource is supplied, it will be override any existing graph that
-     * may exist remotely. If it is not, the remote graph will be loaded. If it doesn't exist remotely, it will
-     * be initialized to an empty resource of TESTABLE_RDF_TYPE
-     */
-    public static TestableCRUDResource build(URL url, DataFactory dataFactory, Resource resource, boolean unprotected) throws SaiException {
-        TestableCRUDResource testable = new TestableCRUDResource(url, dataFactory, unprotected);
-        if (resource != null) {
-            testable.resource = resource;
-            testable.dataset = resource.getModel();
+    public static TestableCRUDResource get(URL url, SaiSession saiSession, boolean unprotected) throws SaiHttpNotFoundException, SaiException {
+        Objects.requireNonNull(url, "Must provide a URL to get");
+        Objects.requireNonNull(saiSession, "Must provide a sai session to assign");
+        TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession);
+        if (unprotected) builder.setUnprotected();
+        try (Response response = read(url, saiSession, TEXT_TURTLE, unprotected)) {
+            return builder.setDataset(response).setContentType(TEXT_TURTLE).build();
         }
-        testable.bootstrap();
-        return testable;
     }
 
-    /**
-     * Build a TestableCRUDResource without supplying a Jena resource to populate it with
-     */
-    public static TestableCRUDResource build(URL url, DataFactory dataFactory, boolean unprotected) throws SaiException {
-        return build(url, dataFactory, null, unprotected);
+    public TestableCRUDResource reload() throws SaiHttpNotFoundException, SaiException {
+        return get(this.url, this.saiSession, this.unprotected);
     }
 
-    public void setId(int id) throws SaiException {
-        this.id = id;
-        RdfHelper.updateObject(this.resource, TestableVocabulary.TESTABLE_ID, id);
-    }
+    public static class Builder extends CRUDResource.Builder<Builder>  {
 
-    public void setName(String name) throws SaiException {
-        this.name = name;
-        RdfHelper.updateObject(this.resource, TestableVocabulary.TESTABLE_NAME, name);
-    }
+        private int id;
+        private String name;
+        private OffsetDateTime createdAt;
+        private URL milestone;
+        private boolean active;
+        private List<URL> tags;
+        private List<String> comments;
 
-    public void setCreatedAt(OffsetDateTime createdAt) throws SaiException {
-        this.createdAt = createdAt;
-        RdfHelper.updateObject(this.resource, TestableVocabulary.TESTABLE_CREATED_AT, createdAt);
-    }
+        public Builder(URL url, SaiSession saiSession) {
+            super(url, saiSession);
+            this.tags = new ArrayList<>();
+            this.comments = new ArrayList<>();
+        }
 
-    public void setActive(boolean isActive) throws SaiException {
-        this.active = isActive;
-        RdfHelper.updateObject(this.resource, TestableVocabulary.TESTABLE_ACTIVE, isActive);
-    }
+        @Override
+        public Builder getThis() { return this; }
 
-    public void setMilestone(URL milestone) throws SaiException {
-        this.milestone = milestone;
-        RdfHelper.updateObject(this.resource, TestableVocabulary.TESTABLE_HAS_MILESTONE, milestone);
-    }
+        @Override
+        public Builder setDataset(Model dataset) throws SaiException {
+            super.setDataset(dataset);
+            populateFromDataset();
+            this.exists = true;
+            return this;
+        }
 
-    public void setTags(List<URL> tags) throws SaiException {
-        this.tags = tags;
-        updateUrlObjects(this.resource, TestableVocabulary.TESTABLE_HAS_TAG, tags);
-    }
+        public Builder setId(int id) {
+            this.id = id;
+            return this;
+        }
 
-    public void setComments(List<String> comments) throws SaiException {
-        this.comments = comments;
-        updateStringObjects(this.resource, TestableVocabulary.TESTABLE_HAS_COMMENT, comments);
-    }
+        public Builder setName(String name) {
+            Objects.requireNonNull(name, "Must provide a name");
+            this.name = name;
+            return this;
+        }
 
-    private void bootstrap() throws SaiException {
-        // A Jena resource provided to the factory overrides any remote graph so no need to fetch it
-        if (this.resource != null) { populate(); } else {
+        public Builder setCreatedAt(OffsetDateTime createdAt) {
+            Objects.requireNonNull(createdAt, "Must provide created at");
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder setMilestone(URL milestone) {
+            Objects.requireNonNull(milestone, "Must provide milestone");
+            this.milestone = milestone;
+            return this;
+        }
+
+        public Builder setActive(boolean active) {
+            this.active = active;
+            return this;
+        }
+
+        public Builder setTags(List<URL> tags) {
+            Objects.requireNonNull(tags, "Must provide tags");
+            this.tags = tags;
+            return this;
+        }
+
+        public Builder setComments(List<String> comments) {
+            Objects.requireNonNull(comments, "Must provide comments");
+            this.comments = comments;
+            return this;
+        }
+
+        private void populateFromDataset() throws SaiException {
             try {
-                // Fetch the remote resource and populate
-                this.fetchData();
-                populate();
-            } catch (SaiNotFoundException ex) {
-                // Remote resource didn't exist, initialize one
-                this.resource = getNewResourceForType(this.url, TESTABLE_RDF_TYPE);
-                this.dataset = resource.getModel();
+                this.id = getRequiredIntegerObject(this.resource, TestableVocabulary.TESTABLE_ID);
+                this.name = getRequiredStringObject(this.resource, TestableVocabulary.TESTABLE_NAME);
+                this.createdAt = getRequiredDateTimeObject(this.resource, TestableVocabulary.TESTABLE_CREATED_AT);
+                this.milestone = getRequiredUrlObject(this.resource, TestableVocabulary.TESTABLE_HAS_MILESTONE);
+                this.active = getBooleanObject(this.resource, TestableVocabulary.TESTABLE_ACTIVE);
+                this.tags = getUrlObjects(this.resource, TestableVocabulary.TESTABLE_HAS_TAG);
+                this.comments = getStringObjects(this.resource, TestableVocabulary.TESTABLE_HAS_COMMENT);
+            } catch (SaiRdfException | SaiRdfNotFoundException ex) {
+                throw new SaiException("Unable to bootstrap testable crud resource. Missing required fields", ex);
             }
         }
-    }
 
-    private void populate() throws SaiException {
-        try {
-            this.id = getRequiredIntegerObject(this.resource, TestableVocabulary.TESTABLE_ID);
-            this.name = getRequiredStringObject(this.resource, TestableVocabulary.TESTABLE_NAME);
-            this.createdAt = getRequiredDateTimeObject(this.resource, TestableVocabulary.TESTABLE_CREATED_AT);
-            this.milestone = getRequiredUrlObject(this.resource, TestableVocabulary.TESTABLE_HAS_MILESTONE);
-            this.active = getBooleanObject(this.resource, TestableVocabulary.TESTABLE_ACTIVE);
-            this.tags = getUrlObjects(this.resource, TestableVocabulary.TESTABLE_HAS_TAG);
-            this.comments = getStringObjects(this.resource, TestableVocabulary.TESTABLE_HAS_COMMENT);
-        } catch (SaiNotFoundException ex) {
-            throw new SaiException("Unable to bootstrap testable crud resource. Missing required fields: " + ex.getMessage());
+        private void populateDataset() {
+            this.resource = getNewResourceForType(this.url, TESTABLE_RDF_TYPE);
+            this.dataset = this.resource.getModel();
+            updateObject(this.resource, TESTABLE_ID, this.id);
+            updateObject(this.resource, TESTABLE_NAME, this.name);
+            updateObject(this.resource, TESTABLE_CREATED_AT, this.createdAt);
+            updateObject(this.resource, TESTABLE_HAS_MILESTONE, this.milestone);
+            updateObject(this.resource, TESTABLE_ACTIVE, this.active);
+            updateUrlObjects(this.resource, TESTABLE_HAS_TAG, this.tags);
+            updateStringObjects(this.resource, TESTABLE_HAS_COMMENT, this.comments);
         }
+
+        public TestableCRUDResource build() throws SaiException {
+            if (this.dataset == null) { populateDataset(); }
+            return new TestableCRUDResource(this);
+        }
+
     }
 
 }

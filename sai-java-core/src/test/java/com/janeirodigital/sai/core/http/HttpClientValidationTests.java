@@ -1,8 +1,10 @@
 package com.janeirodigital.sai.core.http;
 
+import com.janeirodigital.mockwebserver.DispatcherEntry;
+import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.fixtures.DispatcherEntry;
-import com.janeirodigital.sai.core.fixtures.RequestMatchingFixtureDispatcher;
+import com.janeirodigital.sai.httputils.SaiHttpException;
+import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import okhttp3.mockwebserver.MockWebServer;
@@ -15,11 +17,11 @@ import org.junit.jupiter.api.Test;
 import java.net.URL;
 import java.util.List;
 
-import static com.janeirodigital.sai.core.enums.ContentType.TEXT_TURTLE;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.putRdfResource;
-import static com.janeirodigital.sai.core.helpers.HttpHelper.urlToUri;
-import static com.janeirodigital.sai.core.helpers.RdfHelper.getModelFromString;
-import static com.janeirodigital.sai.core.fixtures.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
+import static com.janeirodigital.sai.httputils.HttpUtils.putRdfResource;
+import static com.janeirodigital.sai.httputils.HttpUtils.urlToUri;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getModelFromString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,7 +34,7 @@ class HttpClientValidationTests {
     private static Resource invalidResource;
 
     @BeforeAll
-    static void beforeAll() throws SaiException {
+    static void beforeAll() throws SaiRdfException {
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(
                 new DispatcherEntry(List.of("http/validating-resource-ttl"), "GET", "/http/validating-resource", null),
                 new DispatcherEntry(List.of("http/put-update-resource"), "PUT", "/http/validating-resource", null),
@@ -45,16 +47,16 @@ class HttpClientValidationTests {
 
         validatingUrl = toUrl(server, "/http/validating-resource");
         // Valid dataset
-        Model validModel = getModelFromString(urlToUri(validatingUrl), getValidResourceBody(), TEXT_TURTLE);
+        Model validModel = getModelFromString(urlToUri(validatingUrl), getValidResourceBody(), TEXT_TURTLE.getValue());
         validResource = validModel.getResource(validatingUrl.toString() + "#testable");
         // Invalid dataset
-        Model invalidModel = getModelFromString(urlToUri(validatingUrl), getInvalidResourceBody(), TEXT_TURTLE);
+        Model invalidModel = getModelFromString(urlToUri(validatingUrl), getInvalidResourceBody(), TEXT_TURTLE.getValue());
         invalidResource = invalidModel.getResource(validatingUrl.toString() + "#testable");
     }
 
     @Test
     @DisplayName("Client shape tree validation allows valid data")
-    void clientValidatesValidData() throws SaiException {
+    void clientValidatesValidData() throws SaiException, SaiRdfException, SaiHttpException {
         factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
         Response response = putRdfResource(validatingClient, validatingUrl, validResource, TEXT_TURTLE);
@@ -63,7 +65,7 @@ class HttpClientValidationTests {
 
     @Test
     @DisplayName("Client shape tree validation fails invalid data")
-    void clientFailsInvalidData() throws SaiException {
+    void clientFailsInvalidData() throws SaiException, SaiRdfException, SaiHttpException {
         factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
         Response response = putRdfResource(validatingClient, validatingUrl, invalidResource, TEXT_TURTLE);
@@ -72,7 +74,7 @@ class HttpClientValidationTests {
 
     @Test
     @DisplayName("Disabled client shape tree validation allows invalid data")
-    void disabledClientAllowInvalidData() throws SaiException {
+    void disabledClientAllowInvalidData() throws SaiException, SaiRdfException, SaiHttpException {
         factory = new HttpClientFactory(false, false, false);
         OkHttpClient validatingClient = factory.get();
         Response response = putRdfResource(validatingClient, validatingUrl, invalidResource, TEXT_TURTLE);

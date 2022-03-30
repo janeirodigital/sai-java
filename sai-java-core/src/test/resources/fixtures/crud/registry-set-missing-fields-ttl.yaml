@@ -12,7 +12,7 @@ body: >
 
   alice:registries
     a interop:RegistrySet ;
-    interop:hasAccessConsentRegistry alice:consents\/ ;
+    interop:hasAuthorizationRegistry alice:authorization\/ ;
     interop:hasDataRegistry
       alice-work:data\/ ,
       alice-personal:data\/ .

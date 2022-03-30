@@ -1,0 +1,18 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice-agents: <${SERVER_BASE}/missing-registrations/ttl/agents/>
+
+  alice-agents:
+    a interop:AgentRegistry ;
+    interop:hasSocialAgentRegistration 
+      alice-agents:sa-345\/ ,
+      alice-agents:sa-754\/ ;
+    interop:hasApplicationRegistration
+      alice-agents:app-154\/ ,
+      alice-agents:app-21\/ .

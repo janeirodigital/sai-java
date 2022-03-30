@@ -1,0 +1,22 @@
+statusCode : 200
+delay: 0
+headers:
+  - 'Content-type:text/turtle'
+body: >
+
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  PREFIX interop: <http://www.w3.org/ns/solid/interop#>
+  PREFIX solid: <http://www.w3.org/ns/solid/terms#>
+  PREFIX alice: <https://alice.example/>
+  PREFIX jarvis: <https://jarvis.example/>
+  PREFIX projectron: <https://projectron.example/>
+  PREFIX alice-agents-projectron: <${SERVER_BASE}/all-1-agents/all-1-projectron/>
+
+  alice-agents-projectron:
+    a interop:ApplicationRegistration ;
+    interop:registeredBy alice:id ;
+    interop:registeredWith jarvis:id ;
+    interop:registeredAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
+    interop:updatedAt "2021-04-04T20:15:47.000Z"^^xsd:dateTime ;
+    interop:registeredAgent projectron:id ;
+    interop:hasAccessGrant alice-agents-projectron:all-1-grant .
