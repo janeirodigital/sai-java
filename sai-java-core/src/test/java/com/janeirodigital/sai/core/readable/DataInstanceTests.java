@@ -231,7 +231,7 @@ class DataInstanceTests {
         BasicDataInstance mockChildInstance = mock(BasicDataInstance.class);
         when(mockChildInstance.getShapeTree()).thenReturn(mockShapeTree);
 
-        assertThrows(SaiException.class, () -> parentInstance.addChildReference(mockChildInstance));
+        assertThrows(SaiException.class, () -> parentInstance.addChildInstance(mockChildInstance));
     }
 
     @Test
@@ -250,7 +250,7 @@ class DataInstanceTests {
 
         try (MockedStatic<ShapeTreeReference> mockStaticReference = Mockito.mockStatic(ShapeTreeReference.class)) {
             mockStaticReference.when(() -> ShapeTreeReference.findChildReference(any(ShapeTree.class), any(URL.class))).thenThrow(ShapeTreeException.class);
-            assertThrows(SaiException.class, () -> parentInstance.addChildReference(mockChildInstance));
+            assertThrows(SaiException.class, () -> parentInstance.addChildInstance(mockChildInstance));
         }
     }
 
@@ -268,7 +268,7 @@ class DataInstanceTests {
         BasicDataInstance mockChildInstance = mock(BasicDataInstance.class);
         when(mockChildInstance.getShapeTree()).thenReturn(mockShapeTree);
 
-        assertThrows(SaiException.class, () -> parentInstance.removeChildReference(mockChildInstance));
+        assertThrows(SaiException.class, () -> parentInstance.removeChildInstance(mockChildInstance));
     }
 
     @Test
@@ -287,7 +287,7 @@ class DataInstanceTests {
 
         try (MockedStatic<RdfUtils> mockRdfUtils = Mockito.mockStatic(RdfUtils.class)) {
             mockRdfUtils.when(() -> RdfUtils.getUrlObjects(any(Resource.class), any(Property.class))).thenThrow(SaiRdfException.class);
-            assertThrows(SaiException.class, () -> parentInstance.removeChildReference(mockChildInstance));
+            assertThrows(SaiException.class, () -> parentInstance.removeChildInstance(mockChildInstance));
         }
     }
 
@@ -304,7 +304,7 @@ class DataInstanceTests {
 
         try (MockedStatic<RdfUtils> mockRdfUtils = Mockito.mockStatic(RdfUtils.class)) {
             mockRdfUtils.when(() -> RdfUtils.getUrlObjects(any(Resource.class), any(Property.class))).thenThrow(SaiRdfException.class);
-            assertThrows(SaiException.class, () -> parentInstance.findChildInstances(reference));
+            assertThrows(SaiException.class, () -> parentInstance.findChildReferences(reference));
         }
 
     }
@@ -321,7 +321,7 @@ class DataInstanceTests {
         try (MockedStatic<ShapeTreeReference> mockStaticReference = Mockito.mockStatic(ShapeTreeReference.class)) {
             ShapeTreeReference mockReference = mock(ShapeTreeReference.class);
             mockStaticReference.when(() -> ShapeTreeReference.getPropertyFromReference(any(ShapeTreeReference.class))).thenThrow(ShapeTreeException.class);
-            assertThrows(SaiException.class, () -> parentInstance.findChildInstances(mockReference));
+            assertThrows(SaiException.class, () -> parentInstance.findChildReferences(mockReference));
         }
     }
 

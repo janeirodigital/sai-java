@@ -22,10 +22,12 @@ import static com.janeirodigital.shapetrees.core.validation.ShapeTreeReference.g
 
 /**
  * General instantiation of a
- * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-instance">Data Instance</a>
+ * <a href="https://solid.github.io/data-interoperability-panel/specification/#data-instance">Data Instance</a>.
+ * This class should either be extended (through inheritance) or included through composition
+ * in a class specific to a given data domain. For a specific instantiation, see {@link BasicDataInstance}.
  */
 @Getter
-public class DataInstance extends CRUDResource {
+public abstract class DataInstance extends CRUDResource {
 
     private final ReadableDataGrant dataGrant;
     private final DataInstance parent;
@@ -51,7 +53,7 @@ public class DataInstance extends CRUDResource {
      */
     @Override
     public void update() throws SaiException {
-        if (this.parent != null && this.draft) { this.parent.addChildReference(this); }
+        if (this.parent != null && this.draft) { this.parent.addChildInstance(this); }
         super.update();
         this.draft = false;
     }
@@ -66,10 +68,20 @@ public class DataInstance extends CRUDResource {
     public void delete() throws SaiException {
         if (!this.draft) {
             super.delete();
-            if (this.parent != null) parent.removeChildReference(this);
+            if (this.parent != null) parent.removeChildInstance(this);
         }
     }
 
+    /**
+     * Gets a list of "child" data instances that are associated with
+     * the current instance via
+     * <a href="https://shapetrees.org/TR/specification/index.html#shape-tree-reference">shape tree reference</a>
+     * as part of an
+     * <a href="https://solid.github.io/data-interoperability-panel/specification/#scope-inherited">inherited data grant</a>.
+     * @param shapeTreeUrl URL of the shape tree type to get children for
+     * @return List of data instances for the provided shape tree
+     * @throws SaiException
+     */
     public DataInstanceList getChildInstances(URL shapeTreeUrl) throws SaiException {
         // Lookup the inherited child grant based on the shape tree type
         ReadableDataGrant childGrant = findChildGrant(shapeTreeUrl);
@@ -79,7 +91,15 @@ public class DataInstance extends CRUDResource {
         return new DataInstanceList(this.saiSession, childGrant, childInstanceUrls);
     }
 
-    public void addChildReference(DataInstance childInstance) throws SaiException {
+    /**
+     * Add a child data instance by adding a
+     * <a href="https://shapetrees.org/TR/specification/index.html#shape-tree-reference">shape tree reference</a>
+     * relationship to the instance graph, as authorized by an
+     * <a href="https://solid.github.io/data-interoperability-panel/specification/#scope-inherited">inherited data grant</a>.
+     * @param childInstance Child {@link DataInstance} to add
+     * @throws SaiException
+     */
+    public void addChildInstance(DataInstance childInstance) throws SaiException {
         // Lookup the shape tree reference for the child instance
         ShapeTreeReference reference = findChildShapeTreeReference(childInstance.getShapeTree().getId());
         if (reference == null) { throw new SaiException("Cannot find a child reference to shape tree " + this.getShapeTree().getId() + " to add to parent data instance: " + this.getUrl()); }
@@ -91,7 +111,14 @@ public class DataInstance extends CRUDResource {
         this.update();
     }
 
-    public void removeChildReference(DataInstance childInstance) throws SaiException {
+    /**
+     * Remove a child data instance by removing a
+     * <a href="https://shapetrees.org/TR/specification/index.html#shape-tree-reference">shape tree reference</a>
+     * relationship from the instance graph.
+     * @param childInstance Child {@link DataInstance} to remove
+     * @throws SaiException
+     */
+    public void removeChildInstance(DataInstance childInstance) throws SaiException {
         // Lookup the shape tree reference for the child instance
         ShapeTreeReference reference = findChildShapeTreeReference(childInstance.getShapeTree().getId());
         if (reference == null) { throw new SaiException("Cannot find a child reference to shape tree " + this.getShapeTree().getId() + " to remove from parent data instance: " + this.getUrl()); }
@@ -108,14 +135,31 @@ public class DataInstance extends CRUDResource {
         this.update();
     }
 
+    /**
+     * Gets a list of references to "child" data instances based on a
+     * <a href="https://shapetrees.org/TR/specification/index.html#shape-tree-reference">shape tree reference</a>
+     * in the shape tree identified by the provided <code>shapeTreeUrl</code>.
+     * @param shapeTreeUrl URL of the shape tree type to get children for
+     * @return List of child data instance URLs
+     * @throws SaiException
+     */
     public List<URL> getChildReferences(URL shapeTreeUrl) throws SaiException {
         List<URL> childUrls = new ArrayList<>();
         ShapeTreeReference reference = findChildShapeTreeReference(shapeTreeUrl);
-        List<URL> foundUrls = findChildInstances(reference);
+        List<URL> foundUrls = findChildReferences(reference);
         if (!foundUrls.isEmpty()) { childUrls.addAll(foundUrls); }
         return childUrls;
     }
 
+    /**
+     * Generate the URL for a new {@link DataInstance} as permitted by the
+     * provided <code>dataGrant</code>. UUID will be generated and used for <code>resourceName</code>
+     * if it is null.
+     * @param dataGrant {@link ReadableDataGrant} allowing the instance to be created
+     * @param resourceName Name of the instance to create
+     * @return URL for new instance
+     * @throws SaiException
+     */
     public static URL generateUrl(ReadableDataGrant dataGrant, String resourceName) throws SaiException {
         if (resourceName == null) resourceName = UUID.randomUUID().toString();
         try { return addChildToUrlPath(dataGrant.getDataRegistration(), resourceName); } catch (SaiHttpException ex) {
@@ -123,15 +167,15 @@ public class DataInstance extends CRUDResource {
         }
     }
 
+    /**
+     * Generate the URL for a new {@link DataInstance} as permitted by the
+     * provided <code>dataGrant</code>, with a generated UUID as resource name.
+     * @param dataGrant {@link ReadableDataGrant} allowing the instance to be created
+     * @return URL for new instance
+     * @throws SaiException
+     */
     public static URL generateUrl(ReadableDataGrant dataGrant) throws SaiException {
         return generateUrl(dataGrant, null);
-    }
-
-    public List<URL> findChildInstances(ShapeTreeReference reference) throws SaiException {
-        Property lookupVia = getPropertyFromShapeTreeReference(reference);
-        try { return getUrlObjects(this.resource, lookupVia); } catch (SaiRdfException ex) {
-            throw new SaiException("Unable to lookup child instances from graph", ex);
-        }
     }
 
     public ReadableDataGrant findChildGrant(URL shapeTreeUrl) throws SaiException {
@@ -147,12 +191,33 @@ public class DataInstance extends CRUDResource {
         return findChildGrant(shapeTreeUrl) != null;
     }
 
+    /**
+     * Searches the instance graph for instances of the provided
+     * <a href="https://shapetrees.org/TR/specification/index.html#shape-tree-reference">shape tree reference</a>
+     * and returns the associated targets (objects) they link to
+     * @param reference shape tree references search with
+     * @return List of referenced URLs
+     * @throws SaiException
+     */
+    protected List<URL> findChildReferences(ShapeTreeReference reference) throws SaiException {
+        Property lookupVia = getPropertyFromShapeTreeReference(reference);
+        try { return getUrlObjects(this.resource, lookupVia); } catch (SaiRdfException ex) {
+            throw new SaiException("Unable to lookup child references from graph", ex);
+        }
+    }
+
+    /**
+     * Wrapper around shape tree operation to find child reference.
+     */
     private ShapeTreeReference findChildShapeTreeReference(URL shapeTreeUrl) throws SaiException {
         try { return findChildReference(this.getShapeTree(), shapeTreeUrl); } catch (ShapeTreeException ex) {
             throw new SaiException("Failed to lookup child shape tree reference", ex);
         }
     }
 
+    /**
+     * Wrapper around shape tree operation to get property from shape tree reference
+     */
     private Property getPropertyFromShapeTreeReference(ShapeTreeReference shapeTreeReference) throws SaiException {
         try { return getPropertyFromReference(shapeTreeReference); } catch (ShapeTreeException ex) {
             throw new SaiException("Failed to get property from shape tree reference", ex);
@@ -191,6 +256,14 @@ public class DataInstance extends CRUDResource {
             setDataset(dataInstance.getDataset());
         }
 
+        /**
+         * Set the {@link ReadableDataGrant} associated with the {@link DataInstance}. This is the
+         * grant that the {@link DataInstance} is being accessed through. Also looks up the
+         * Shape Tree associated with the {@link ReadableDataGrant} and stores it.
+         * @param dataGrant {@link ReadableDataGrant} to set
+         * @return {@link Builder}
+         * @throws SaiException
+         */
         public T setDataGrant(ReadableDataGrant dataGrant) throws SaiException {
             Objects.requireNonNull(dataGrant, "Must provide a data grant for the data instance builder");
             this.dataGrant = dataGrant;
@@ -200,12 +273,25 @@ public class DataInstance extends CRUDResource {
             return getThis();
         }
 
+        /**
+         * Set the parent associated with a "child" {@link DataInstance}. Only applicable in cases
+         * where there is an inherited parent / child relationship.
+         * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#scope-inherited">Inherited Data Acecss Scope</a>
+         * @param parent Parent {@link DataInstance} to set
+         * @return {@link Builder}
+         */
         public T setParent(DataInstance parent) {
             Objects.requireNonNull(parent, "Must provide a parent data instance for the data instance builder");
             this.parent = parent;
             return getThis();
         }
 
+        /**
+         * Set whether or not the {@link DataInstance} is a draft. A draft means that
+         * it has not been updated on the resource server yet.
+         * @param status boolean draft status
+         * @return {@link Builder}
+         */
         public T setDraft(boolean status) {
             this.draft = status;
             return getThis();
