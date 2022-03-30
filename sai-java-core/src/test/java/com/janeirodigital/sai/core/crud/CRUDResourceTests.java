@@ -2,9 +2,11 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.authentication.AuthorizedSession;
+import com.janeirodigital.sai.authentication.SaiAuthenticationException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.httputils.HttpMethod;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,7 +23,9 @@ import java.util.List;
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
 import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CRUDResourceTests {
 
@@ -80,6 +84,17 @@ class CRUDResourceTests {
     }
 
     @Test
+    @DisplayName("Fail to update a CRUD resource - invalid session")
+    void failToUpdateCRUDResourceBadSession() throws SaiException, SaiHttpNotFoundException, SaiAuthenticationException {
+        URL url = toUrl(server, "/crud/crud-resource#project");
+        AuthorizedSession mockUpdateSession = mock(AuthorizedSession.class);
+        SaiSession saiUpdateSession = new SaiSession(mockUpdateSession, new HttpClientFactory(false, false, false));
+        TestableCRUDResource testable = TestableCRUDResource.get(url, saiUpdateSession, false);
+        when(mockUpdateSession.toHttpHeaders(any(HttpMethod.class), any(URL.class))).thenThrow(SaiAuthenticationException.class);
+        assertThrows(SaiException.class, () -> testable.update());
+    }
+
+    @Test
     @DisplayName("Fail to update a CRUD resource - missing")
     void failToUpdateCRUDResource() throws SaiException {
         URL url = toUrl(server, "/crud/missing");
@@ -98,6 +113,17 @@ class CRUDResourceTests {
         URL url = toUrl(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession, true);
         assertDoesNotThrow(() -> testable.delete());
+    }
+
+    @Test
+    @DisplayName("Fail to delete a CRUD resource")
+    void failTodeleteCRUDResource() throws SaiException, SaiHttpNotFoundException, SaiAuthenticationException {
+        URL url = toUrl(server, "/crud/crud-resource#project");
+        AuthorizedSession mockDeleteSession = mock(AuthorizedSession.class);
+        SaiSession saiDeleteSession = new SaiSession(mockDeleteSession, new HttpClientFactory(false, false, false));
+        TestableCRUDResource testable = TestableCRUDResource.get(url, saiDeleteSession, false);
+        when(mockDeleteSession.toHttpHeaders(any(HttpMethod.class), any(URL.class))).thenThrow(SaiAuthenticationException.class);
+        assertThrows(SaiException.class, () -> testable.delete());
     }
 
     @Test

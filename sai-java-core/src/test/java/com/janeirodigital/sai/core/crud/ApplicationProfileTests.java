@@ -7,11 +7,14 @@ import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
+import com.janeirodigital.sai.rdfutils.RdfUtils;
 import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -25,6 +28,8 @@ import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
 import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.buildRemoteJsonLdContexts;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 
 class ApplicationProfileTests {
@@ -161,6 +166,16 @@ class ApplicationProfileTests {
         ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
         assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
+    }
+
+    @Test
+    @DisplayName("Fail to read crud application profile - invalid context")
+    void failToReadCrudApplicationProfileContexts() {
+        URL url = toUrl(server, "/crud/application");
+        try (MockedStatic<RdfUtils> mockRdfUtils = Mockito.mockStatic(RdfUtils.class, CALLS_REAL_METHODS)) {
+            mockRdfUtils.when(() -> RdfUtils.buildRemoteJsonLdContexts(any(List.class))).thenThrow(SaiRdfException.class);
+            assertThrows(SaiException.class, () -> ApplicationProfile.get(url, saiSession));
+        }
     }
 
     void checkProfile(ApplicationProfile profile, boolean requiredOnly) {
