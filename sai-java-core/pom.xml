@@ -25,11 +25,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>${okhttp.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>apache-jena-libs</artifactId>
             <type>pom</type>
@@ -59,11 +54,6 @@
             <groupId>com.janeirodigital</groupId>
             <artifactId>sai-authentication-java</artifactId>
             <version>${sai-authentication.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>${nimbus.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

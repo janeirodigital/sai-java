@@ -22,10 +22,8 @@
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <lombok.version>1.18.22</lombok.version>
         <slf4j.version>1.7.33</slf4j.version>
-        <okhttp.version>4.9.3</okhttp.version>
         <jena.version>4.4.0</jena.version>
         <titanium.version>1.2.0</titanium.version>
-        <nimbus.version>9.24</nimbus.version>
         <junit.version>5.8.2</junit.version>
         <shapetrees.version>0.9.7</shapetrees.version>
         <sai-rdf-utils.version>0.9.1</sai-rdf-utils.version>
