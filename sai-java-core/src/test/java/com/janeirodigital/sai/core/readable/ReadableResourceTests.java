@@ -44,6 +44,7 @@ class ReadableResourceTests {
         mockOnGet(dispatcher, "/readable/readable-resource", "readable/readable-resource-ttl");
         mockOnGet(dispatcher, "/missing-fields/readable/readable-resource", "readable/readable-resource-missing-fields-ttl");
         mockOnGet(dispatcher, "/malformed/readable/readable-resource", "readable/readable-resource-malformed-ttl");
+        mockOnGet(dispatcher, "/binary/readable/readable-resource", "readable/binary-resource-png");
 
         // Initialize the Mock Web Server and assign the initialized dispatcher
         server = new MockWebServer();
@@ -95,6 +96,13 @@ class ReadableResourceTests {
     @DisplayName("Fail to get a protected readable resource - missing fields")
     void failToGetReadableResourceMissingFields() {
         URL url = toUrl(server, "/missing-fields/readable/readable-resource#project");
+        assertThrows(SaiException.class, () -> TestableReadableResource.get(url, saiSession, false));
+    }
+
+    @Test
+    @DisplayName("Fail to get an rdf resource - binary content type")
+    void failToGetReadableResourceInvalidRdfType() {
+        URL url = toUrl(server, "/binary/readable/readable-resource");
         assertThrows(SaiException.class, () -> TestableReadableResource.get(url, saiSession, false));
     }
 
