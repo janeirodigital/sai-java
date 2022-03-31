@@ -6,7 +6,7 @@ import com.janeirodigital.sai.rdfutils.SaiRdfException;
 import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -21,14 +21,14 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter
 public abstract class ReadableAgentRegistration extends ReadableResource {
 
-    protected final URL registeredBy;
-    protected final URL registeredWith;
+    protected final URI registeredBy;
+    protected final URI registeredWith;
     protected final OffsetDateTime registeredAt;
     protected final OffsetDateTime updatedAt;
-    protected final URL registeredAgent;
-    protected final URL accessGrantUrl;
+    protected final URI registeredAgent;
+    protected final URI accessGrantUri;
     /**
-     * Construct a {@link ReadableAgentRegistration} instance from the provided <code>url</code>.
+     * Construct a {@link ReadableAgentRegistration} instance from the provided <code>uri</code>.
      * @param builder {@link Builder} to construct with
      * @throws SaiException
      */
@@ -39,7 +39,7 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
         this.registeredAt = builder.registeredAt;
         this.updatedAt = builder.updatedAt;
         this.registeredAgent = builder.registeredAgent;
-        this.accessGrantUrl = builder.accessGrantUrl;
+        this.accessGrantUri = builder.accessGrantUri;
     }
 
     /**
@@ -48,7 +48,7 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
      * @return true when there is an access grant
      */
     public boolean hasAccessGrant() {
-        return this.accessGrantUrl != null;
+        return this.accessGrantUri != null;
     }
 
     /**
@@ -57,19 +57,19 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
      */
     protected abstract static class Builder <T extends ReadableResource.Builder<T>> extends ReadableResource.Builder<T>  {
 
-        protected URL registeredBy;
-        protected URL registeredWith;
+        protected URI registeredBy;
+        protected URI registeredWith;
         protected OffsetDateTime registeredAt;
         protected OffsetDateTime updatedAt;
-        protected URL registeredAgent;
-        protected URL accessGrantUrl;
+        protected URI registeredAgent;
+        protected URI accessGrantUri;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ReadableAgentRegistration} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableAgentRegistration} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        protected Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Populates the common fields of the {@link ReadableAgentRegistration} based on the associated Jena resource.
@@ -78,14 +78,14 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
         protected void populateFromDataset() throws SaiException {
             Objects.requireNonNull(this.resource, "Must provide a Jena model to populate from dataset");
             try {
-                this.registeredBy = getRequiredUrlObject(this.resource, REGISTERED_BY);
-                this.registeredWith = getRequiredUrlObject(this.resource, REGISTERED_WITH);
+                this.registeredBy = getRequiredUriObject(this.resource, REGISTERED_BY);
+                this.registeredWith = getRequiredUriObject(this.resource, REGISTERED_WITH);
                 this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
-                this.registeredAgent = getRequiredUrlObject(this.resource, REGISTERED_AGENT);
-                this.accessGrantUrl = getUrlObject(this.resource, HAS_ACCESS_GRANT);
+                this.registeredAgent = getRequiredUriObject(this.resource, REGISTERED_AGENT);
+                this.accessGrantUri = getUriObject(this.resource, HAS_ACCESS_GRANT);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Failed to load agent registration " + this.url, ex);
+                throw new SaiException("Failed to load agent registration " + this.uri, ex);
             }
         }
     }

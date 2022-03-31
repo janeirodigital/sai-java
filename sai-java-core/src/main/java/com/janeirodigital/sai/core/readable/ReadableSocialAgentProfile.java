@@ -10,14 +10,14 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.SolidTermsVocabulary.SOLID_OIDC_ISSUER;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObject;
-import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObjects;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUriObject;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUriObjects;
 
 /**
  * Publicly readable instantiation of a
@@ -27,10 +27,10 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObjects;
 @Getter
 public class ReadableSocialAgentProfile extends ReadableResource {
 
-    private final URL registrySetUrl;
-    private final URL authorizationAgentUrl;
-    private final URL accessInboxUrl;
-    private final List<URL> oidcIssuerUrls;
+    private final URI registrySetUri;
+    private final URI authorizationAgentUri;
+    private final URI accessInboxUri;
+    private final List<URI> oidcIssuerUris;
 
     /**
      * Construct a {@link ReadableSocialAgentProfile} instance from the provided {@link Builder}.
@@ -39,38 +39,38 @@ public class ReadableSocialAgentProfile extends ReadableResource {
      */
     private ReadableSocialAgentProfile(Builder builder) throws SaiException {
         super(builder);
-        this.registrySetUrl = builder.registrySetUrl;
-        this.authorizationAgentUrl = builder.authorizationAgentUrl;
-        this.accessInboxUrl = builder.accessInboxUrl;
-        this.oidcIssuerUrls = builder.oidcIssuerUrls;
+        this.registrySetUri = builder.registrySetUri;
+        this.authorizationAgentUri = builder.authorizationAgentUri;
+        this.accessInboxUri = builder.accessInboxUri;
+        this.oidcIssuerUris = builder.oidcIssuerUris;
     }
 
     /**
-     * Get a {@link ReadableSocialAgentProfile} from the provided <code>url</code>.
-     * @param url URL to get the {@link ReadableSocialAgentProfile} from
+     * Get a {@link ReadableSocialAgentProfile} from the provided <code>uri</code>.
+     * @param uri URI to get the {@link ReadableSocialAgentProfile} from
      * @param saiSession {@link SaiSession} to use
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link ReadableSocialAgentProfile}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ReadableSocialAgentProfile.Builder builder = new ReadableSocialAgentProfile.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, true)) {
+    public static ReadableSocialAgentProfile get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ReadableSocialAgentProfile.Builder builder = new ReadableSocialAgentProfile.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, true)) {
             return builder.setDataset(response).setContentType(contentType).setUnprotected().build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ReadableSocialAgentProfile} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ReadableSocialAgentProfile} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableSocialAgentProfile}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentProfile get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableSocialAgentProfile get(URI uri, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -80,7 +80,7 @@ public class ReadableSocialAgentProfile extends ReadableResource {
      * @throws SaiException
      */
     public ReadableSocialAgentProfile reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -88,17 +88,17 @@ public class ReadableSocialAgentProfile extends ReadableResource {
      */
     public static class Builder extends ReadableResource.Builder<Builder> {
 
-        private URL registrySetUrl;
-        private URL authorizationAgentUrl;
-        private URL accessInboxUrl;
-        private List<URL> oidcIssuerUrls;
+        private URI registrySetUri;
+        private URI authorizationAgentUri;
+        private URI accessInboxUri;
+        private List<URI> oidcIssuerUris;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ReadableApplicationProfile} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableApplicationProfile} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that don't get an unchecked cast warning when returning from setters
@@ -128,12 +128,12 @@ public class ReadableSocialAgentProfile extends ReadableResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.oidcIssuerUrls = getRequiredUrlObjects(this.resource, SOLID_OIDC_ISSUER);
-                this.authorizationAgentUrl = getRequiredUrlObject(this.resource, HAS_AUTHORIZATION_AGENT);
-                this.registrySetUrl = getRequiredUrlObject(this.resource, HAS_REGISTRY_SET);
-                this.accessInboxUrl = getRequiredUrlObject(this.resource, HAS_ACCESS_INBOX);
+                this.oidcIssuerUris = getRequiredUriObjects(this.resource, SOLID_OIDC_ISSUER);
+                this.authorizationAgentUri = getRequiredUriObject(this.resource, HAS_AUTHORIZATION_AGENT);
+                this.registrySetUri = getRequiredUriObject(this.resource, HAS_REGISTRY_SET);
+                this.accessInboxUri = getRequiredUriObject(this.resource, HAS_ACCESS_INBOX);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Failed to load social agent profile " + this.url, ex);
+                throw new SaiException("Failed to load social agent profile " + this.uri, ex);
             }
         }
 

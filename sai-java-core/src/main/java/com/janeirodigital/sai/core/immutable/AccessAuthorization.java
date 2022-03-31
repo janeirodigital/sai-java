@@ -13,7 +13,7 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +30,12 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter
 public class AccessAuthorization extends ImmutableResource {
 
-    private final URL grantedBy;
-    private final URL grantedWith;
+    private final URI grantedBy;
+    private final URI grantedWith;
     private final OffsetDateTime grantedAt;
-    private final URL grantee;
-    private final URL accessNeedGroup;
-    private final URL replaces;
+    private final URI grantee;
+    private final URI accessNeedGroup;
+    private final URI replaces;
     private final List<DataAuthorization> dataAuthorizations;
 
     /**
@@ -55,31 +55,31 @@ public class AccessAuthorization extends ImmutableResource {
     }
 
     /**
-     * Get an {@link AccessAuthorization} at the provided <code>url</code>
-     * @param url URL of the {@link AccessAuthorization} to get
+     * Get an {@link AccessAuthorization} at the provided <code>uri</code>
+     * @param uri URI of the {@link AccessAuthorization} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link AccessAuthorization}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static AccessAuthorization get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        AccessAuthorization.Builder builder = new AccessAuthorization.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static AccessAuthorization get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        AccessAuthorization.Builder builder = new AccessAuthorization.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link AccessAuthorization} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link AccessAuthorization} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link AccessAuthorization}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static AccessAuthorization get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static AccessAuthorization get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -89,7 +89,7 @@ public class AccessAuthorization extends ImmutableResource {
      * @throws SaiException
      */
     public AccessAuthorization reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -111,8 +111,8 @@ public class AccessAuthorization extends ImmutableResource {
         List<DataGrant> dataGrants = new ArrayList<>();
         for (DataAuthorization dataAuthorization : primaryDataAuthorizations) { dataGrants.addAll(dataAuthorization.generateGrants(this, granteeRegistration, agentRegistry, dataRegistries)); }
         // TODO - If there was a prior access grant, look at reusing some data grants
-        URL accessGrantUrl = granteeRegistration.generateContainedUrl();
-        AccessGrant.Builder grantBuilder = new AccessGrant.Builder(accessGrantUrl, this.saiSession);
+        URI accessGrantUri = granteeRegistration.generateContainedUri();
+        AccessGrant.Builder grantBuilder = new AccessGrant.Builder(accessGrantUri, this.saiSession);
         return grantBuilder.setGrantedBy(this.grantedBy).setGrantedAt(this.grantedAt).setGrantee(this.grantee)
                            .setAccessNeedGroup(this.accessNeedGroup).setDataGrants(dataGrants).build();
     }
@@ -122,21 +122,21 @@ public class AccessAuthorization extends ImmutableResource {
      */
     public static class Builder extends ImmutableResource.Builder<Builder> {
 
-        private URL grantedBy;
-        private URL grantedWith;
+        private URI grantedBy;
+        private URI grantedWith;
         private OffsetDateTime grantedAt;
-        private URL grantee;
-        private URL accessNeedGroup;
-        private URL replaces;
+        private URI grantee;
+        private URI accessNeedGroup;
+        private URI replaces;
         private List<DataAuthorization> dataAuthorizations;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link AccessAuthorization} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link AccessAuthorization} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) {
-            super(url, saiSession);
+        public Builder(URI uri, SaiSession saiSession) {
+            super(uri, saiSession);
             this.dataAuthorizations = new ArrayList<>();
         }
 
@@ -163,18 +163,18 @@ public class AccessAuthorization extends ImmutableResource {
         }
 
         /**
-         * Set the URL of the social agent that granted the access authorization
-         * @param grantedBy URL of the social agent grantor
+         * Set the URI of the social agent that granted the access authorization
+         * @param grantedBy URI of the social agent grantor
          * @return {@link Builder}
          */
-        public Builder setGrantedBy(URL grantedBy) {
-            Objects.requireNonNull(grantedBy, "Must provide a URL for the social agent that granted the access authorization");
+        public Builder setGrantedBy(URI grantedBy) {
+            Objects.requireNonNull(grantedBy, "Must provide a URI for the social agent that granted the access authorization");
             this.grantedBy = grantedBy;
             return this;
         }
 
-        public Builder setGrantedWith(URL grantedWith) {
-            Objects.requireNonNull(grantedWith, "Must provide a URL for the application that was used to grant the access authorization");
+        public Builder setGrantedWith(URI grantedWith) {
+            Objects.requireNonNull(grantedWith, "Must provide a URI for the application that was used to grant the access authorization");
             this.grantedWith = grantedWith;
             return this;
         }
@@ -185,20 +185,20 @@ public class AccessAuthorization extends ImmutableResource {
             return this;
         }
 
-        public Builder setGrantee(URL grantee) {
-            Objects.requireNonNull(grantee, "Must provide a URL for the grantee of the access authorization");
+        public Builder setGrantee(URI grantee) {
+            Objects.requireNonNull(grantee, "Must provide a URI for the grantee of the access authorization");
             this.grantee = grantee;
             return this;
         }
 
-        public Builder setAccessNeedGroup(URL accessNeedGroup) {
-            Objects.requireNonNull(accessNeedGroup, "Must provide a URL for the access need group of the access authorization");
+        public Builder setAccessNeedGroup(URI accessNeedGroup) {
+            Objects.requireNonNull(accessNeedGroup, "Must provide a URI for the access need group of the access authorization");
             this.accessNeedGroup = accessNeedGroup;
             return this;
         }
 
-        public Builder setReplaces(URL replaces) {
-            Objects.requireNonNull(replaces, "Must provide a URL for the access authorization that is being replaced");
+        public Builder setReplaces(URI replaces) {
+            Objects.requireNonNull(replaces, "Must provide a URI for the access authorization that is being replaced");
             this.replaces = replaces;
             return this;
         }
@@ -216,7 +216,7 @@ public class AccessAuthorization extends ImmutableResource {
             for (DataAuthorization dataAuthorization : this.dataAuthorizations) {
                 if (!dataAuthorization.getScopeOfAuthorization().equals(SCOPE_INHERITED)) {
                     for (DataAuthorization childAuthorization : this.dataAuthorizations) {
-                        if (childAuthorization.getScopeOfAuthorization().equals(SCOPE_INHERITED) && childAuthorization.getInheritsFrom().equals(dataAuthorization.getUrl())) {
+                        if (childAuthorization.getScopeOfAuthorization().equals(SCOPE_INHERITED) && childAuthorization.getInheritsFrom().equals(dataAuthorization.getUri())) {
                             dataAuthorization.getInheritingAuthorizations().add(childAuthorization);
                         }
                     }
@@ -230,14 +230,14 @@ public class AccessAuthorization extends ImmutableResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.grantedBy = getRequiredUrlObject(this.resource, GRANTED_BY);
-                this.grantedWith = getRequiredUrlObject(this.resource, GRANTED_WITH);
+                this.grantedBy = getRequiredUriObject(this.resource, GRANTED_BY);
+                this.grantedWith = getRequiredUriObject(this.resource, GRANTED_WITH);
                 this.grantedAt = getRequiredDateTimeObject(this.resource, GRANTED_AT);
-                this.grantee = getRequiredUrlObject(this.resource, GRANTEE);
-                this.accessNeedGroup = getRequiredUrlObject(this.resource, HAS_ACCESS_NEED_GROUP);
-                this.replaces = getUrlObject(this.resource, REPLACES);
-                List<URL> dataAuthorizationUrls = getRequiredUrlObjects(this.resource, HAS_DATA_AUTHORIZATION);
-                for (URL dataAuthorizationUrl : dataAuthorizationUrls) { this.dataAuthorizations.add(DataAuthorization.get(dataAuthorizationUrl, this.saiSession)); }
+                this.grantee = getRequiredUriObject(this.resource, GRANTEE);
+                this.accessNeedGroup = getRequiredUriObject(this.resource, HAS_ACCESS_NEED_GROUP);
+                this.replaces = getUriObject(this.resource, REPLACES);
+                List<URI> dataAuthorizationUris = getRequiredUriObjects(this.resource, HAS_DATA_AUTHORIZATION);
+                for (URI dataAuthorizationUri : dataAuthorizationUris) { this.dataAuthorizations.add(DataAuthorization.get(dataAuthorizationUri, this.saiSession)); }
                 organizeInheritance();
             } catch (SaiRdfException | SaiRdfNotFoundException | SaiHttpNotFoundException ex) {
                 throw new SaiException("Unable to populate immutable access authorization resource", ex);
@@ -248,7 +248,7 @@ public class AccessAuthorization extends ImmutableResource {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         private void populateDataset() {
-            this.resource = getNewResourceForType(this.url, ACCESS_AUTHORIZATION);
+            this.resource = getNewResourceForType(this.uri, ACCESS_AUTHORIZATION);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, GRANTED_BY, this.grantedBy);
             updateObject(this.resource, GRANTED_WITH, this.grantedWith);
@@ -257,10 +257,10 @@ public class AccessAuthorization extends ImmutableResource {
             updateObject(this.resource, GRANTEE, this.grantee);
             updateObject(this.resource, HAS_ACCESS_NEED_GROUP, this.accessNeedGroup);
             if (this.replaces != null) { updateObject(this.resource, REPLACES, this.replaces); }
-            List<URL> dataAuthorizationUrls = new ArrayList<>();
-            for (DataAuthorization dataAuthorization : this.dataAuthorizations) { dataAuthorizationUrls.add(dataAuthorization.getUrl()); }
+            List<URI> dataAuthorizationUris = new ArrayList<>();
+            for (DataAuthorization dataAuthorization : this.dataAuthorizations) { dataAuthorizationUris.add(dataAuthorization.getUri()); }
             organizeInheritance();
-            updateUrlObjects(this.resource, HAS_DATA_AUTHORIZATION, dataAuthorizationUrls);
+            updateUriObjects(this.resource, HAS_DATA_AUTHORIZATION, dataAuthorizationUris);
         }
 
         /**
@@ -271,10 +271,10 @@ public class AccessAuthorization extends ImmutableResource {
          * @throws SaiException
          */
         public AccessAuthorization build() throws SaiException {
-            Objects.requireNonNull(this.grantedBy, "Must provide a URL for the social agent that granted the access authorization");
-            Objects.requireNonNull(this.grantedWith, "Must provide a URL for the application that was used to grant the access authorization");
-            Objects.requireNonNull(this.grantee, "Must provide a URL for the grantee of the access authorization");
-            Objects.requireNonNull(this.accessNeedGroup, "Must provide a URL for the access need group of the access authorization");
+            Objects.requireNonNull(this.grantedBy, "Must provide a URI for the social agent that granted the access authorization");
+            Objects.requireNonNull(this.grantedWith, "Must provide a URI for the application that was used to grant the access authorization");
+            Objects.requireNonNull(this.grantee, "Must provide a URI for the grantee of the access authorization");
+            Objects.requireNonNull(this.accessNeedGroup, "Must provide a URI for the access need group of the access authorization");
             Objects.requireNonNull(this.dataAuthorizations, "Must provide a list of data authorizations for the access authorization");
             if (this.dataset == null) { populateDataset(); }
             return new AccessAuthorization(this);

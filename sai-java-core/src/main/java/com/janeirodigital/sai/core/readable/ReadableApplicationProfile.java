@@ -10,7 +10,7 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,13 +31,13 @@ public class ReadableApplicationProfile extends ReadableResource {
 
     private final String name;
     private final String description;
-    private final URL authorUrl;
-    private final URL logoUrl;
-    private final List<URL> accessNeedGroupUrls;
+    private final URI authorUri;
+    private final URI logoUri;
+    private final List<URI> accessNeedGroupUris;
     // Solid-OIDC specific
-    private final List<URL> redirectUrls;
-    private final URL clientUrl;
-    private final URL tosUrl;
+    private final List<URI> redirectUris;
+    private final URI clientUri;
+    private final URI tosUri;
     private final List<String> scopes;
     private final List<String> grantTypes;
     private final List<String> responseTypes;
@@ -53,12 +53,12 @@ public class ReadableApplicationProfile extends ReadableResource {
         super(builder);
         this.name = builder.name;
         this.description = builder.description;
-        this.authorUrl = builder.authorUrl;
-        this.logoUrl = builder.logoUrl;
-        this.accessNeedGroupUrls = builder.accessNeedGroupUrls;
-        this.redirectUrls = builder.redirectUrls;
-        this.clientUrl = builder.clientUrl;
-        this.tosUrl = builder.tosUrl;
+        this.authorUri = builder.authorUri;
+        this.logoUri = builder.logoUri;
+        this.accessNeedGroupUris = builder.accessNeedGroupUris;
+        this.redirectUris = builder.redirectUris;
+        this.clientUri = builder.clientUri;
+        this.tosUri = builder.tosUri;
         this.scopes = builder.scopes;
         this.grantTypes = builder.grantTypes;
         this.responseTypes = builder.responseTypes;
@@ -67,31 +67,31 @@ public class ReadableApplicationProfile extends ReadableResource {
     }
 
     /**
-     * Get a {@link ReadableApplicationProfile} from the provided <code>url</code>.
-     * @param url URL to get the {@link ReadableApplicationProfile} from
+     * Get a {@link ReadableApplicationProfile} from the provided <code>uri</code>.
+     * @param uri URI to get the {@link ReadableApplicationProfile} from
      * @param saiSession {@link SaiSession} to use
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link ReadableApplicationProfile}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ReadableApplicationProfile.Builder builder = new ReadableApplicationProfile.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, true)) {
+    public static ReadableApplicationProfile get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ReadableApplicationProfile.Builder builder = new ReadableApplicationProfile.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, true)) {
             return builder.setDataset(response).setContentType(contentType).setUnprotected().build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ReadableApplicationProfile} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ReadableApplicationProfile} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableApplicationProfile}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableApplicationProfile get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableApplicationProfile get(URI uri, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -102,7 +102,7 @@ public class ReadableApplicationProfile extends ReadableResource {
      * @throws SaiException
      */
     public ReadableApplicationProfile reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -112,13 +112,13 @@ public class ReadableApplicationProfile extends ReadableResource {
 
         private String name;
         private String description;
-        private URL authorUrl;
-        private URL logoUrl;
-        private List<URL> accessNeedGroupUrls;
+        private URI authorUri;
+        private URI logoUri;
+        private List<URI> accessNeedGroupUris;
         // Solid-OIDC specific
-        private List<URL> redirectUrls;
-        private URL clientUrl;
-        private URL tosUrl;
+        private List<URI> redirectUris;
+        private URI clientUri;
+        private URI tosUri;
         private List<String> scopes;
         private List<String> grantTypes;
         private List<String> responseTypes;
@@ -126,12 +126,12 @@ public class ReadableApplicationProfile extends ReadableResource {
         private boolean requireAuthTime;
         
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ReadableApplicationProfile} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableApplicationProfile} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) {
-            super(url, saiSession);
+        public Builder(URI uri, SaiSession saiSession) {
+            super(uri, saiSession);
             this.contentType = ContentType.LD_JSON;  // Solid Application Profile documents are always JSON-LD
         }
 
@@ -165,20 +165,20 @@ public class ReadableApplicationProfile extends ReadableResource {
             try {
                 this.name = getRequiredStringObject(this.resource, SOLID_OIDC_CLIENT_NAME);
                 this.description = getRequiredStringObject(this.resource, APPLICATION_DESCRIPTION);
-                this.authorUrl = getRequiredUrlObject(this.resource, APPLICATION_AUTHOR);
-                this.logoUrl = getRequiredUrlObject(this.resource, SOLID_OIDC_LOGO_URI);
-                this.accessNeedGroupUrls = getRequiredUrlObjects(this.resource, HAS_ACCESS_NEED_GROUP);
+                this.authorUri = getRequiredUriObject(this.resource, APPLICATION_AUTHOR);
+                this.logoUri = getRequiredUriObject(this.resource, SOLID_OIDC_LOGO_URI);
+                this.accessNeedGroupUris = getRequiredUriObjects(this.resource, HAS_ACCESS_NEED_GROUP);
                 // Solid-OIDC specific
-                this.redirectUrls = getRequiredUrlObjects(this.resource, SOLID_OIDC_REDIRECT_URIS);
-                this.clientUrl = getUrlObject(this.resource, SOLID_OIDC_CLIENT_URI);
-                this.tosUrl = getUrlObject(this.resource, SOLID_OIDC_TOS_URI);
+                this.redirectUris = getRequiredUriObjects(this.resource, SOLID_OIDC_REDIRECT_URIS);
+                this.clientUri = getUriObject(this.resource, SOLID_OIDC_CLIENT_URI);
+                this.tosUri = getUriObject(this.resource, SOLID_OIDC_TOS_URI);
                 this.scopes = Arrays.asList(getRequiredStringObject(this.resource, SOLID_OIDC_SCOPE).split(" "));
                 this.grantTypes = getRequiredStringObjects(this.resource, SOLID_OIDC_GRANT_TYPES);
                 this.responseTypes = getRequiredStringObjects(this.resource, SOLID_OIDC_RESPONSE_TYPES);
                 this.defaultMaxAge = getIntegerObject(this.resource, SOLID_OIDC_DEFAULT_MAX_AGE);
                 this.requireAuthTime = getBooleanObject(this.resource, SOLID_OIDC_REQUIRE_AUTH_TIME);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Failed to load application profile " + this.url, ex);
+                throw new SaiException("Failed to load application profile " + this.uri, ex);
             }
         }
 

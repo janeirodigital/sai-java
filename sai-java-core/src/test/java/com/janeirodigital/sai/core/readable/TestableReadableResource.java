@@ -10,7 +10,7 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +25,9 @@ public class TestableReadableResource extends ReadableResource {
     private final int id;
     private final String name;
     private final OffsetDateTime createdAt;
-    private final URL milestone;
+    private final URI milestone;
     private final boolean active;
-    private final List<URL> tags;
+    private final List<URI> tags;
     private final List<String> comments;
 
     private TestableReadableResource(Builder builder) throws SaiException {
@@ -41,18 +41,18 @@ public class TestableReadableResource extends ReadableResource {
         this.comments = builder.comments;
     }
 
-    public static TestableReadableResource get(URL url, SaiSession saiSession, boolean unprotected) throws SaiException, SaiHttpNotFoundException {
-        Objects.requireNonNull(url, "Must provide a URL to get");
+    public static TestableReadableResource get(URI uri, SaiSession saiSession, boolean unprotected) throws SaiException, SaiHttpNotFoundException {
+        Objects.requireNonNull(uri, "Must provide a URI to get");
         Objects.requireNonNull(saiSession, "Must provide a sai session to assign");
-        TestableReadableResource.Builder builder = new TestableReadableResource.Builder(url, saiSession);
+        TestableReadableResource.Builder builder = new TestableReadableResource.Builder(uri, saiSession);
         if (unprotected) builder.setUnprotected();
-        try (Response response = read(url, saiSession, TEXT_TURTLE, unprotected)) {
+        try (Response response = read(uri, saiSession, TEXT_TURTLE, unprotected)) {
             return builder.setDataset(response).setContentType(TEXT_TURTLE).build();
         }
     }
 
     public TestableReadableResource reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.unprotected);
+        return get(this.uri, this.saiSession, this.unprotected);
     }
 
     public static class Builder extends ReadableResource.Builder<Builder> {
@@ -60,13 +60,13 @@ public class TestableReadableResource extends ReadableResource {
         private int id;
         private String name;
         private OffsetDateTime createdAt;
-        private URL milestone;
+        private URI milestone;
         private boolean active;
-        private List<URL> tags;
+        private List<URI> tags;
         private List<String> comments;
 
-        public Builder(URL url, SaiSession saiSession) {
-            super(url, saiSession);
+        public Builder(URI uri, SaiSession saiSession) {
+            super(uri, saiSession);
             this.tags = new ArrayList<>();
             this.comments = new ArrayList<>();
         }
@@ -87,9 +87,9 @@ public class TestableReadableResource extends ReadableResource {
                 this.id = getRequiredIntegerObject(this.resource, TestableVocabulary.TESTABLE_ID);
                 this.name = getRequiredStringObject(this.resource, TestableVocabulary.TESTABLE_NAME);
                 this.createdAt = getRequiredDateTimeObject(this.resource, TestableVocabulary.TESTABLE_CREATED_AT);
-                this.milestone = getRequiredUrlObject(this.resource, TestableVocabulary.TESTABLE_HAS_MILESTONE);
+                this.milestone = getRequiredUriObject(this.resource, TestableVocabulary.TESTABLE_HAS_MILESTONE);
                 this.active = getBooleanObject(this.resource, TestableVocabulary.TESTABLE_ACTIVE);
-                this.tags = getUrlObjects(this.resource, TestableVocabulary.TESTABLE_HAS_TAG);
+                this.tags = getUriObjects(this.resource, TestableVocabulary.TESTABLE_HAS_TAG);
                 this.comments = getStringObjects(this.resource, TestableVocabulary.TESTABLE_HAS_COMMENT);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Unable to populate readable resource", ex);

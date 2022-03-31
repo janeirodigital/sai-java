@@ -9,11 +9,11 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.RECIPROCAL_REGISTRATION;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
-import static com.janeirodigital.sai.rdfutils.RdfUtils.getUrlObject;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getUriObject;
 
 /**
  * Readable instantiation of a
@@ -22,7 +22,7 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.getUrlObject;
 @Getter
 public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
 
-    private final URL reciprocalRegistration;
+    private final URI reciprocalRegistration;
 
     /**
      * Construct a {@link ReadableSocialAgentRegistration} instance from the provided {@link Builder}.
@@ -35,31 +35,31 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
     }
 
     /**
-     * Get a {@link ReadableSocialAgentRegistration} from the provided <code>url</code>.
-     * @param url URL to generate the {@link ReadableSocialAgentRegistration} from
+     * Get a {@link ReadableSocialAgentRegistration} from the provided <code>uri</code>.
+     * @param uri URI to generate the {@link ReadableSocialAgentRegistration} from
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link ReadableSocialAgentRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ReadableSocialAgentRegistration.Builder builder = new ReadableSocialAgentRegistration.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static ReadableSocialAgentRegistration get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ReadableSocialAgentRegistration.Builder builder = new ReadableSocialAgentRegistration.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ReadableSocialAgentRegistration} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ReadableSocialAgentRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableSocialAgentRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableSocialAgentRegistration get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableSocialAgentRegistration get(URI uri, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -70,7 +70,7 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
      * @throws SaiException
      */
     public ReadableSocialAgentRegistration reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -78,14 +78,14 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
      */
     private static class Builder extends ReadableAgentRegistration.Builder<Builder> {
 
-        private URL reciprocalRegistration;
+        private URI reciprocalRegistration;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ReadableSocialAgentRegistration} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableSocialAgentRegistration} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that we don't get an unchecked cast warning when returning from setters
@@ -117,9 +117,9 @@ public class ReadableSocialAgentRegistration extends ReadableAgentRegistration {
         protected void populateFromDataset() throws SaiException {
             super.populateFromDataset();
             try {
-                this.reciprocalRegistration = getUrlObject(this.resource, RECIPROCAL_REGISTRATION);
+                this.reciprocalRegistration = getUriObject(this.resource, RECIPROCAL_REGISTRATION);
             } catch (SaiRdfException ex) {
-                throw new SaiException("Failed to load readable social agent registration " + this.url, ex);
+                throw new SaiException("Failed to load readable social agent registration " + this.uri, ex);
             }
         }
 

@@ -8,7 +8,7 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
 
@@ -29,31 +29,31 @@ public class ReadableApplicationRegistration extends ReadableAgentRegistration {
     }
 
     /**
-     * Get a {@link ReadableApplicationRegistration} from the provided <code>url</code>.
-     * @param url URL to generate the {@link ReadableApplicationRegistration} from
+     * Get a {@link ReadableApplicationRegistration} from the provided <code>uri</code>.
+     * @param uri URI to generate the {@link ReadableApplicationRegistration} from
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link ReadableApplicationRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableApplicationRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ReadableApplicationRegistration.Builder builder = new ReadableApplicationRegistration.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static ReadableApplicationRegistration get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ReadableApplicationRegistration.Builder builder = new ReadableApplicationRegistration.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ReadableApplicationRegistration} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ReadableApplicationRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableApplicationRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableApplicationRegistration get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableApplicationRegistration get(URI uri, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -63,7 +63,7 @@ public class ReadableApplicationRegistration extends ReadableAgentRegistration {
      * @throws SaiException
      */
     public ReadableApplicationRegistration reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -72,11 +72,11 @@ public class ReadableApplicationRegistration extends ReadableAgentRegistration {
     private static class Builder extends ReadableAgentRegistration.Builder<Builder> {
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ReadableApplicationRegistration} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableApplicationRegistration} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that we don't get an unchecked cast warning when returning from setters

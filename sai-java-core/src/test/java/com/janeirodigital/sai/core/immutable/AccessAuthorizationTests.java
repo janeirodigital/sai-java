@@ -8,7 +8,6 @@ import com.janeirodigital.sai.core.crud.DataRegistry;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import com.janeirodigital.sai.core.sessions.SaiSession;
-import com.janeirodigital.sai.httputils.SaiHttpException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.jena.rdf.model.RDFNode;
@@ -19,7 +18,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -27,10 +26,9 @@ import java.util.List;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnPut;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -41,19 +39,19 @@ class AccessAuthorizationTests {
     private static SaiSession saiSession;
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
-    private static URL ALICE_ID, BOB_ID, CAROL_ID, JUAN_ID, TARA_ID;
-    private static URL JARVIS_ID;
-    private static URL PROJECTRON_ID;
-    private static URL PROJECTRON_NEED_GROUP;
-    private static URL PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE, CALENDAR_TREE, APPOINTMENT_TREE;
-    private static URL PROJECTRON_PROJECT_NEED, PROJECTRON_MILESTONE_NEED, PROJECTRON_ISSUE_NEED, PROJECTRON_TASK_NEED;
-    private static URL PROJECTRON_CALENDAR_NEED, PROJECTRON_APPOINTMENT_NEED;
+    private static URI ALICE_ID, BOB_ID, CAROL_ID, JUAN_ID, TARA_ID;
+    private static URI JARVIS_ID;
+    private static URI PROJECTRON_ID;
+    private static URI PROJECTRON_NEED_GROUP;
+    private static URI PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE, CALENDAR_TREE, APPOINTMENT_TREE;
+    private static URI PROJECTRON_PROJECT_NEED, PROJECTRON_MILESTONE_NEED, PROJECTRON_ISSUE_NEED, PROJECTRON_TASK_NEED;
+    private static URI PROJECTRON_CALENDAR_NEED, PROJECTRON_APPOINTMENT_NEED;
     private static OffsetDateTime GRANT_TIME;
-    private static List<URL> ALL_DATA_AUTHORIZATION_URLS;
+    private static List<URI> ALL_DATA_AUTHORIZATION_URIS;
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES, READ_MODES;
 
     @BeforeAll
-    static void beforeAll() throws SaiException, SaiHttpException {
+    static void beforeAll() throws SaiException {
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
@@ -184,30 +182,30 @@ class AccessAuthorizationTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        ALICE_ID = stringToUrl("https://alice.example/id");
-        JARVIS_ID = stringToUrl("https://jarvis.example/id");
-        PROJECTRON_ID = stringToUrl("https://projectron.example/id");
-        BOB_ID = stringToUrl("https://bob.example/id");
-        CAROL_ID = stringToUrl("https://carol.example/id");
-        JUAN_ID = stringToUrl("https://juan.example/id");
-        TARA_ID = stringToUrl("https://tara.example/id");
+        ALICE_ID = URI.create("https://alice.example/id");
+        JARVIS_ID = URI.create("https://jarvis.example/id");
+        PROJECTRON_ID = URI.create("https://projectron.example/id");
+        BOB_ID = URI.create("https://bob.example/id");
+        CAROL_ID = URI.create("https://carol.example/id");
+        JUAN_ID = URI.create("https://juan.example/id");
+        TARA_ID = URI.create("https://tara.example/id");
         GRANT_TIME = OffsetDateTime.parse("2020-09-05T06:15:01Z", DateTimeFormatter.ISO_DATE_TIME);
 
-        PROJECTRON_NEED_GROUP = stringToUrl("https://projectron.example/#d8219b1f");
-        PROJECTRON_PROJECT_NEED = stringToUrl("https://projectron.example/#ac54ff1e");
-        PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
-        PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
-        PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
-        PROJECTRON_CALENDAR_NEED = stringToUrl("https://projectron.example/#ba66ff1e");
-        PROJECTRON_APPOINTMENT_NEED = stringToUrl("https://projectron.example/#aa11aa1b");
-        ALL_DATA_AUTHORIZATION_URLS = Arrays.asList(toUrl(server, "/authorization/all-1-project"), toUrl(server, "/authorization/all-1-milestone"),
-                                              toUrl(server, "/authorization/all-1-issue"), toUrl(server, "/authorization/all-1-task"));
-        PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
-        MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
-        ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
-        TASK_TREE = toUrl(server, "/shapetrees/pm#TaskTree");
-        CALENDAR_TREE = toUrl(server, "/shapetrees/pm#CalendarTree");
-        APPOINTMENT_TREE = toUrl(server, "/shapetrees/pm#AppointmentTree");
+        PROJECTRON_NEED_GROUP = URI.create("https://projectron.example/#d8219b1f");
+        PROJECTRON_PROJECT_NEED = URI.create("https://projectron.example/#ac54ff1e");
+        PROJECTRON_MILESTONE_NEED = URI.create("https://projectron.example/#bd66ee2b");
+        PROJECTRON_ISSUE_NEED = URI.create("https://projectron.example/#aa123a1b");
+        PROJECTRON_TASK_NEED = URI.create("https://projectron.example/#ce22cc1a");
+        PROJECTRON_CALENDAR_NEED = URI.create("https://projectron.example/#ba66ff1e");
+        PROJECTRON_APPOINTMENT_NEED = URI.create("https://projectron.example/#aa11aa1b");
+        ALL_DATA_AUTHORIZATION_URIS = Arrays.asList(toMockUri(server, "/authorization/all-1-project"), toMockUri(server, "/authorization/all-1-milestone"),
+                                              toMockUri(server, "/authorization/all-1-issue"), toMockUri(server, "/authorization/all-1-task"));
+        PROJECT_TREE = toMockUri(server, "/shapetrees/pm#ProjectTree");
+        MILESTONE_TREE = toMockUri(server, "/shapetrees/pm#MilestoneTree");
+        ISSUE_TREE = toMockUri(server, "/shapetrees/pm#IssueTree");
+        TASK_TREE = toMockUri(server, "/shapetrees/pm#TaskTree");
+        CALENDAR_TREE = toMockUri(server, "/shapetrees/pm#CalendarTree");
+        APPOINTMENT_TREE = toMockUri(server, "/shapetrees/pm#AppointmentTree");
         READ_MODES = Arrays.asList(ACL_READ);
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         CREATOR_ACCESS_MODES = Arrays.asList(ACL_UPDATE, ACL_DELETE);
@@ -217,35 +215,35 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Create new access authorization and linked data authorizations - scope: all")
     void createAccessAuthorizationScopeAll() throws SaiException {
-        URL accessUrl = toUrl(server, "/authorization/all-1");
-        URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
-        URL issueUrl = toUrl(server, "/authorization/all-1-issue");
-        URL taskUrl = toUrl(server, "/authorization/all-1-task");
+        URI accessUri = toMockUri(server, "/authorization/all-1");
+        URI projectUri = toMockUri(server, "/authorization/all-1-project");
+        URI milestoneUri = toMockUri(server, "/authorization/all-1-milestone");
+        URI issueUri = toMockUri(server, "/authorization/all-1-issue");
+        URI taskUri = toMockUri(server, "/authorization/all-1-task");
         
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                                                    .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                                                    .setScopeOfAuthorization(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneUrl, saiSession);
+        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneUri, saiSession);
         DataAuthorization milestoneAuthorization = milestoneBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(MILESTONE_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfAuthorization(SCOPE_INHERITED).setAccessNeed(PROJECTRON_MILESTONE_NEED).setInheritsFrom(projectAuthorization.getUrl()).build();
+                .setScopeOfAuthorization(SCOPE_INHERITED).setAccessNeed(PROJECTRON_MILESTONE_NEED).setInheritsFrom(projectAuthorization.getUri()).build();
 
-        DataAuthorization.Builder issueBuilder = new DataAuthorization.Builder(issueUrl, saiSession);
+        DataAuthorization.Builder issueBuilder = new DataAuthorization.Builder(issueUri, saiSession);
         DataAuthorization issueAuthorization = issueBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(ISSUE_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfAuthorization(SCOPE_INHERITED).setAccessNeed(PROJECTRON_ISSUE_NEED).setInheritsFrom(milestoneAuthorization.getUrl()).build();
+                .setScopeOfAuthorization(SCOPE_INHERITED).setAccessNeed(PROJECTRON_ISSUE_NEED).setInheritsFrom(milestoneAuthorization.getUri()).build();
 
-        DataAuthorization.Builder taskBuilder = new DataAuthorization.Builder(taskUrl, saiSession);
+        DataAuthorization.Builder taskBuilder = new DataAuthorization.Builder(taskUri, saiSession);
         DataAuthorization taskAuthorization = taskBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(TASK_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfAuthorization(SCOPE_INHERITED).setAccessNeed(PROJECTRON_TASK_NEED).setInheritsFrom(milestoneAuthorization.getUrl()).build();
+                .setScopeOfAuthorization(SCOPE_INHERITED).setAccessNeed(PROJECTRON_TASK_NEED).setInheritsFrom(milestoneAuthorization.getUri()).build();
 
         List<DataAuthorization> dataAuthorizations = Arrays.asList(projectAuthorization, milestoneAuthorization, issueAuthorization, taskAuthorization);
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                                                    .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                                                    .setDataAuthorizations(dataAuthorizations).build();
@@ -257,16 +255,16 @@ class AccessAuthorizationTests {
     void testGenerateAccessGrantAll() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
-        URL accessUrl = toUrl(server, "/authorization/all-1");
-        URL agentRegistryUrl = toUrl(server, "/all-1-agents/");
-        URL personalDataUrl = toUrl(server, "/personal/data/");
-        URL workDataUrl = toUrl(server, "/personal/data/");
-        URL registrationUrl = toUrl(server, "/all-1-agents/all-1-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry personalData = DataRegistry.get(personalDataUrl, saiSession);
-        DataRegistry workData = DataRegistry.get(workDataUrl, saiSession);
-        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/all-1");
+        URI agentRegistryUri = toMockUri(server, "/all-1-agents/");
+        URI personalDataUri = toMockUri(server, "/personal/data/");
+        URI workDataUri = toMockUri(server, "/personal/data/");
+        URI registrationUri = toMockUri(server, "/all-1-agents/all-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry personalData = DataRegistry.get(personalDataUri, saiSession);
+        DataRegistry workData = DataRegistry.get(workDataUri, saiSession);
+        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUri, saiSession);
         AccessGrant accessGrant = accessAuthorization.generateGrant(registration, agentRegistry, Arrays.asList(personalData, workData));
         checkAccessGrantAll(accessGrant);
     }
@@ -276,14 +274,14 @@ class AccessAuthorizationTests {
     void testGenerateAccessGrantAllFromRegistry() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
-        URL accessUrl = toUrl(server, "/authorization/registry-1");
-        URL agentRegistryUrl = toUrl(server, "/registry-1-agents/");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL registrationUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
-        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/registry-1");
+        URI agentRegistryUri = toMockUri(server, "/registry-1-agents/");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI registrationUri = toMockUri(server, "/registry-1-agents/registry-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
+        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUri, saiSession);
         AccessGrant accessGrant = accessAuthorization.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
         checkAccessGrantAllFromRegistry(accessGrant);
     }
@@ -293,14 +291,14 @@ class AccessAuthorizationTests {
     void testGenerateAccessGrantSelectedFromRegistry() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
-        URL accessUrl = toUrl(server, "/authorization/selected-1");
-        URL agentRegistryUrl = toUrl(server, "/selected-1-agents/");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL registrationUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
-        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/selected-1");
+        URI agentRegistryUri = toMockUri(server, "/selected-1-agents/");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI registrationUri = toMockUri(server, "/selected-1-agents/selected-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
+        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUri, saiSession);
         AccessGrant accessGrant = accessAuthorization.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
         checkAccessGrantSelectedFromRegistry(accessGrant);
     }
@@ -310,14 +308,14 @@ class AccessAuthorizationTests {
     void testGenerateAccessGrantAllFromAgent() throws SaiHttpNotFoundException, SaiException {
         // Note that in typical use we wouldn't be getting an existing acccess authorization, but would instead
         // be generating the grants right after generating the authorizations
-        URL accessUrl = toUrl(server, "/authorization/agent-1");
-        URL agentRegistryUrl = toUrl(server, "/agent-1-agents/");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL registrationUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
-        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/agent-1");
+        URI agentRegistryUri = toMockUri(server, "/agent-1-agents/");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI registrationUri = toMockUri(server, "/agent-1-agents/agent-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
+        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUri, saiSession);
         AccessGrant accessGrant = accessAuthorization.generateGrant(registration, agentRegistry, Arrays.asList(dataRegistry));
         checkAccessGrantAllFromAgent(accessGrant);
     }
@@ -325,22 +323,22 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and associated data grants - no matching data registrations")
     void generateDataGrantsNoMatchingRegistrations() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/no-matches");
-        URL dataAuthorizationUrl = toUrl(server, "/authorization/no-matches-project");
-        URL EVENT_TREE = toUrl(server, "/shapetrees/pm#EventTree");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
-        URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/no-matches");
+        URI dataAuthorizationUri = toMockUri(server, "/authorization/no-matches-project");
+        URI EVENT_TREE = toMockUri(server, "/shapetrees/pm#EventTree");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/scenario-agents/");
+        URI registrationUri = toMockUri(server, "/scenario-agents/scenario-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUri, saiSession);
         DataAuthorization eventAuthorization = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(EVENT_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfAuthorization(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                 .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(eventAuthorization)).build();
@@ -352,20 +350,20 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and associated data grants - read-only access modes")
     void generateDataGrantsReadOnly() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/read-only");
-        URL dataAuthorizationUrl = toUrl(server, "/authorization/read-only-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
-        URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/read-only");
+        URI dataAuthorizationUri = toMockUri(server, "/authorization/read-only-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/scenario-agents/");
+        URI registrationUri = toMockUri(server, "/scenario-agents/scenario-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUri, saiSession);
         DataAuthorization eventAuthorization = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                 .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(eventAuthorization)).build();
@@ -377,23 +375,23 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - multiple social agents in registry")
     void generateDelegatedGrantsMultipleSocials() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
-        URL bobProjectsRegistration = toUrl(server, "/bob/data/projects/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
+        URI bobProjectsRegistration = toMockUri(server, "/bob/data/projects/");
         
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT).setAccessNeed(PROJECTRON_PROJECT_NEED)
                 .setDataRegistration(bobProjectsRegistration).build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization)).build();
@@ -405,24 +403,24 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - no match for remote data registration")
     void generateDelegatedGrantsNoMatchRemote() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
-        URL bobProjectsRegistration = toUrl(server, "/bob/data/nomatch/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
+        URI bobProjectsRegistration = toMockUri(server, "/bob/data/nomatch/");
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT).setAccessNeed(PROJECTRON_PROJECT_NEED)
                 .setDataRegistration(bobProjectsRegistration) // SPECIFIES NON-MATCHING REGISTRATION
                 .build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization)).build();
@@ -434,19 +432,19 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - data authorization includes access modes not originally granted")
     void failToGenerateDelegatedGrantsExpandedModes() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
         List<RDFNode> EXPANDED_ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE, ACL_UPDATE);
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(EXPANDED_ACCESS_MODES)
@@ -454,7 +452,7 @@ class AccessAuthorizationTests {
                 .setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT)
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization)).build();
@@ -465,32 +463,32 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - read only")
     void testGenerateDelegatedGrantsReadOnly() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL milestoneAuthorizationUrl = toUrl(server, "/authorization/delegated-milestone");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI milestoneAuthorizationUri = toMockUri(server, "/authorization/delegated-milestone");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES)
                 .setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT)
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUrl, saiSession);
+        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUri, saiSession);
         DataAuthorization milestoneAuthorization = milestoneBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(MILESTONE_TREE)
                 .setAccessModes(READ_MODES)
-                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUrl())
+                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUri())
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization, milestoneAuthorization)).build();
@@ -502,20 +500,20 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - child data authorization includes access modes not originally granted")
     void failToGenerateDelegatedGrantsChildExpandedModes() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL milestoneAuthorizationUrl = toUrl(server, "/authorization/delegated-milestone");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI milestoneAuthorizationUri = toMockUri(server, "/authorization/delegated-milestone");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
         List<RDFNode> EXPANDED_ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE, ACL_UPDATE);
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(ACCESS_MODES)
@@ -523,14 +521,14 @@ class AccessAuthorizationTests {
                 .setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT)
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUrl, saiSession);
+        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUri, saiSession);
         DataAuthorization milestoneAuthorization = milestoneBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(MILESTONE_TREE)
                 .setAccessModes(EXPANDED_ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUrl())
+                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUri())
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization, milestoneAuthorization)).build();
@@ -541,19 +539,19 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - data authorization includes creator access modes not originally granted")
     void failToGenerateDelegatedGrantsExpandedCreatorModes() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
         List<RDFNode> EXPANDED_CREATOR_MODES = Arrays.asList(ACL_UPDATE, ACL_DELETE, ACL_CREATE);
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(ACCESS_MODES)
@@ -561,7 +559,7 @@ class AccessAuthorizationTests {
                 .setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT)
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization)).build();
@@ -572,20 +570,20 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - child data authorization includes creator access modes not originally granted")
     void failToGenerateDelegatedGrantsChildExpandedCreatorModes() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL milestoneAuthorizationUrl = toUrl(server, "/authorization/delegated-milestone");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI milestoneAuthorizationUri = toMockUri(server, "/authorization/delegated-milestone");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
         List<RDFNode> EXPANDED_CREATOR_MODES = Arrays.asList(ACL_UPDATE, ACL_DELETE, ACL_CREATE);
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(ACCESS_MODES)
@@ -593,14 +591,14 @@ class AccessAuthorizationTests {
                 .setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT)
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUrl, saiSession);
+        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUri, saiSession);
         DataAuthorization milestoneAuthorization = milestoneBuilder.setDataOwner(BOB_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(MILESTONE_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(EXPANDED_CREATOR_MODES)
-                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUrl())
+                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUri())
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization, milestoneAuthorization)).build();
@@ -611,22 +609,22 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - no reciprocal registration")
     void generateDelegatedGrantsNoReciprocal() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(CAROL_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT).setAccessNeed(PROJECTRON_PROJECT_NEED)
                 .build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization)).build();
@@ -638,17 +636,17 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate access grant and delegated data grants - invalid scope")
     void failToGenerateDelegatedGrantsInvalidScope() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(CAROL_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT).setAccessNeed(PROJECTRON_PROJECT_NEED)
                 .build();
@@ -656,7 +654,7 @@ class AccessAuthorizationTests {
         DataAuthorization spyProject = Mockito.spy(projectAuthorization);
         when(spyProject.getScopeOfAuthorization()).thenReturn(ACCESS_GRANT); // NOT A VALID SCOPE TYPE
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(spyProject)).build();
@@ -667,22 +665,22 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and delegated data grants - no access grant at reciprocal")
     void generateDelegatedGrantsNoGrantAtReciprocal() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/delegated-agents");
-        URL projectAuthorizationUrl = toUrl(server, "/authorization/delegated-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/delegated-agents/");
-        URL juanRegistrationUrl = toUrl(server, "/delegated-agents/delegated-juan/");
+        URI accessUri = toMockUri(server, "/authorization/delegated-agents");
+        URI projectAuthorizationUri = toMockUri(server, "/authorization/delegated-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/delegated-agents/");
+        URI juanRegistrationUri = toMockUri(server, "/delegated-agents/delegated-juan/");
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(juanRegistrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(TARA_ID).setGrantedBy(ALICE_ID).setGrantee(JUAN_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL_FROM_AGENT).setAccessNeed(PROJECTRON_PROJECT_NEED)
                 .build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID)
                 .setGrantee(JUAN_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization)).build();
@@ -694,43 +692,43 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Generate access grant and associated data grants - multiple parents and children")
     void generateDataGrantsMultipleParents() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/multiple-parents");
-        URL dataAuthorizationUrl = toUrl(server, "/authorization/multiple-parents-project");
-        URL milestoneAuthorizationUrl = toUrl(server, "/authorization/multiple-parents-milestone");
-        URL calendarAuthorizationUrl = toUrl(server, "/authorization/multiple-parents-calendar");
-        URL appointmentAuthorizationUrl = toUrl(server, "/authorization/multiple-parents-appointment");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
-        URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
-        URL PROJECT_REGISTRATION = toUrl(server, "/personal/data/projects/");
-        URL MILESTONE_REGISTRATION = toUrl(server, "/personal/data/milestones/");
-        URL CALENDAR_REGISTRATION = toUrl(server, "/personal/data/calendars/");
-        URL APPOINTMENT_REGISTRATION = toUrl(server, "/personal/data/appointments/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/multiple-parents");
+        URI dataAuthorizationUri = toMockUri(server, "/authorization/multiple-parents-project");
+        URI milestoneAuthorizationUri = toMockUri(server, "/authorization/multiple-parents-milestone");
+        URI calendarAuthorizationUri = toMockUri(server, "/authorization/multiple-parents-calendar");
+        URI appointmentAuthorizationUri = toMockUri(server, "/authorization/multiple-parents-appointment");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/scenario-agents/");
+        URI registrationUri = toMockUri(server, "/scenario-agents/scenario-projectron/");
+        URI PROJECT_REGISTRATION = toMockUri(server, "/personal/data/projects/");
+        URI MILESTONE_REGISTRATION = toMockUri(server, "/personal/data/milestones/");
+        URI CALENDAR_REGISTRATION = toMockUri(server, "/personal/data/calendars/");
+        URI APPOINTMENT_REGISTRATION = toMockUri(server, "/personal/data/appointments/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).setDataRegistration(PROJECT_REGISTRATION).build();
 
-        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUrl, saiSession);
+        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneAuthorizationUri, saiSession);
         DataAuthorization milestoneAuthorization = milestoneBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(MILESTONE_TREE)
-                .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUrl())
+                .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUri())
                 .setAccessNeed(PROJECTRON_PROJECT_NEED).setDataRegistration(MILESTONE_REGISTRATION).build();
 
-        DataAuthorization.Builder calendarBuilder = new DataAuthorization.Builder(calendarAuthorizationUrl, saiSession);
+        DataAuthorization.Builder calendarBuilder = new DataAuthorization.Builder(calendarAuthorizationUri, saiSession);
         DataAuthorization calendarAuthorization = calendarBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(CALENDAR_TREE)
                 .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                 .setAccessNeed(PROJECTRON_CALENDAR_NEED).setDataRegistration(CALENDAR_REGISTRATION).build();
 
-        DataAuthorization.Builder appointmentBuilder = new DataAuthorization.Builder(appointmentAuthorizationUrl, saiSession);
+        DataAuthorization.Builder appointmentBuilder = new DataAuthorization.Builder(appointmentAuthorizationUri, saiSession);
         DataAuthorization appointmentAuthorization = appointmentBuilder.setDataOwner(ALICE_ID).setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(APPOINTMENT_TREE)
-                .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(calendarAuthorization.getUrl())
+                .setAccessModes(READ_MODES).setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(calendarAuthorization.getUri())
                 .setAccessNeed(PROJECTRON_APPOINTMENT_NEED).setDataRegistration(APPOINTMENT_REGISTRATION).build();
         
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                 .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization, milestoneAuthorization, calendarAuthorization, appointmentAuthorization)).build();
@@ -742,14 +740,14 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate data grants - data authorization has inherited scope")
     void failToGenerateDataGrantsAccessScopeInherited() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/registry-1");
-        URL agentRegistryUrl = toUrl(server, "/registry-1-agents/");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL registrationUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
-        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/registry-1");
+        URI agentRegistryUri = toMockUri(server, "/registry-1-agents/");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI registrationUri = toMockUri(server, "/registry-1-agents/registry-1-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
+        AccessAuthorization accessAuthorization = AccessAuthorization.get(accessUri, saiSession);
         for (DataAuthorization dataAuthorization : accessAuthorization.getDataAuthorizations()) {
             if (dataAuthorization.getScopeOfAuthorization().equals(SCOPE_INHERITED)) {
                 assertThrows(SaiException.class, () -> dataAuthorization.generateGrants(accessAuthorization, registration, agentRegistry, Arrays.asList(dataRegistry)));
@@ -760,16 +758,16 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate data grants - data authorization has invalid scope")
     void failToGenerateDataGrantsInvalidDataAuthorizationScope() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/invalid-scope");
-        URL dataAuthorizationUrl = toUrl(server, "/authorization/invalid-scope-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
-        URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/invalid-scope");
+        URI dataAuthorizationUri = toMockUri(server, "/authorization/invalid-scope-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/scenario-agents/");
+        URI registrationUri = toMockUri(server, "/scenario-agents/scenario-projectron/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfAuthorization(SCOPE_ALL).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
@@ -777,7 +775,7 @@ class AccessAuthorizationTests {
         DataAuthorization spyProject = Mockito.spy(projectAuthorization);
         when(spyProject.getScopeOfAuthorization()).thenReturn(ACCESS_GRANT); // NOT A VALID SCOPE TYPE
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                 .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(spyProject)).build();
@@ -788,22 +786,22 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate data grants - specified data registration doesn't exist")
     void failToGenerateDataGrantsInvalidDataRegistration() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/invalid-registration");
-        URL dataAuthorizationUrl = toUrl(server, "/authorization/invalid-registration-project");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
-        URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
-        URL MISSING_REGISTRATION = toUrl(server, "/personal/data/noprojects/");
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        URI accessUri = toMockUri(server, "/authorization/invalid-registration");
+        URI dataAuthorizationUri = toMockUri(server, "/authorization/invalid-registration-project");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/scenario-agents/");
+        URI registrationUri = toMockUri(server, "/scenario-agents/scenario-projectron/");
+        URI MISSING_REGISTRATION = toMockUri(server, "/personal/data/noprojects/");
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES).setDataRegistration(MISSING_REGISTRATION)
                 .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                 .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization)).build();
@@ -814,30 +812,30 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to generate data grants - specified child data registration doesn't exist")
     void failToGenerateDataGrantsInvalidChildDataRegistration() throws SaiHttpNotFoundException, SaiException {
-        URL accessUrl = toUrl(server, "/authorization/invalid-registration");
-        URL dataAuthorizationUrl = toUrl(server, "/authorization/invalid-registration-project");
-        URL eventAuthorizationUrl = toUrl(server, "/authorization/invalid-registration-event");
-        URL dataRegistryUrl = toUrl(server, "/personal/data/");
-        URL agentRegistryUrl = toUrl(server, "/scenario-agents/");
-        URL registrationUrl = toUrl(server, "/scenario-agents/scenario-projectron/");
-        URL PROJECT_REGISTRATION = toUrl(server, "/personal/data/projects/");
-        URL EVENT_TREE = toUrl(server, "/shapetrees/pm#EventTree");
+        URI accessUri = toMockUri(server, "/authorization/invalid-registration");
+        URI dataAuthorizationUri = toMockUri(server, "/authorization/invalid-registration-project");
+        URI eventAuthorizationUri = toMockUri(server, "/authorization/invalid-registration-event");
+        URI dataRegistryUri = toMockUri(server, "/personal/data/");
+        URI agentRegistryUri = toMockUri(server, "/scenario-agents/");
+        URI registrationUri = toMockUri(server, "/scenario-agents/scenario-projectron/");
+        URI PROJECT_REGISTRATION = toMockUri(server, "/personal/data/projects/");
+        URI EVENT_TREE = toMockUri(server, "/shapetrees/pm#EventTree");
 
-        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUrl, saiSession);
-        ApplicationRegistration registration = ApplicationRegistration.get(registrationUrl, saiSession);
-        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUrl, saiSession);
+        AgentRegistry agentRegistry = AgentRegistry.get(agentRegistryUri, saiSession);
+        ApplicationRegistration registration = ApplicationRegistration.get(registrationUri, saiSession);
+        DataRegistry dataRegistry = DataRegistry.get(dataRegistryUri, saiSession);
 
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUrl, saiSession);
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(dataAuthorizationUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(PROJECT_TREE)
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES).setDataRegistration(PROJECT_REGISTRATION)
                 .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY).setAccessNeed(PROJECTRON_PROJECT_NEED).build();
 
-        DataAuthorization.Builder eventBuilder = new DataAuthorization.Builder(eventAuthorizationUrl, saiSession);
+        DataAuthorization.Builder eventBuilder = new DataAuthorization.Builder(eventAuthorizationUri, saiSession);
         DataAuthorization eventAuthorization = eventBuilder.setGrantedBy(ALICE_ID).setGrantee(PROJECTRON_ID).setRegisteredShapeTree(EVENT_TREE)  // UNKNOWN
                 .setAccessModes(ACCESS_MODES).setCreatorAccessModes(CREATOR_ACCESS_MODES)
-                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUrl()).setAccessNeed(PROJECTRON_MILESTONE_NEED).build();
+                .setScopeOfAuthorization(SCOPE_INHERITED).setInheritsFrom(projectAuthorization.getUri()).setAccessNeed(PROJECTRON_MILESTONE_NEED).build();
 
-        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUrl, saiSession);
+        AccessAuthorization.Builder accessBuilder = new AccessAuthorization.Builder(accessUri, saiSession);
         AccessAuthorization accessAuthorization = accessBuilder.setGrantedBy(ALICE_ID).setGrantedWith(JARVIS_ID).setGrantedAt(GRANT_TIME)
                 .setGrantee(PROJECTRON_ID).setAccessNeedGroup(PROJECTRON_NEED_GROUP)
                 .setDataAuthorizations(Arrays.asList(projectAuthorization, eventAuthorization)).build();
@@ -849,16 +847,16 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Get an access authorization and linked data authorizations - scope: all")
     void getAccessAuthorization() throws SaiHttpNotFoundException, SaiException {
-        URL url = toUrl(server, "/authorization/all-1");
-        AccessAuthorization accessAuthorization = AccessAuthorization.get(url, saiSession);
+        URI uri = toMockUri(server, "/authorization/all-1");
+        AccessAuthorization accessAuthorization = AccessAuthorization.get(uri, saiSession);
         checkAccessAuthorization(accessAuthorization);
     }
 
     @Test
     @DisplayName("Reload an access authorization and linked data authorizations - scope: all")
     void reloadAccessAuthorization() throws SaiHttpNotFoundException, SaiException {
-        URL url = toUrl(server, "/authorization/all-1");
-        AccessAuthorization accessAuthorization = AccessAuthorization.get(url, saiSession);
+        URI uri = toMockUri(server, "/authorization/all-1");
+        AccessAuthorization accessAuthorization = AccessAuthorization.get(uri, saiSession);
         AccessAuthorization reloaded = accessAuthorization.reload();
         checkAccessAuthorization(reloaded);
     }
@@ -866,8 +864,8 @@ class AccessAuthorizationTests {
     @Test
     @DisplayName("Fail to get access authorization - missing required fields")
     void failToGetAccessAuthorizationRequired() {
-        URL url = toUrl(server, "/missing-fields/authorization/all-1");
-        assertThrows(SaiException.class, () -> AccessAuthorization.get(url, saiSession));
+        URI uri = toMockUri(server, "/missing-fields/authorization/all-1");
+        assertThrows(SaiException.class, () -> AccessAuthorization.get(uri, saiSession));
     }
 
     private void checkAccessAuthorization(AccessAuthorization accessAuthorization) {
@@ -877,7 +875,7 @@ class AccessAuthorizationTests {
         assertEquals(PROJECTRON_ID, accessAuthorization.getGrantee());
         assertEquals(GRANT_TIME, accessAuthorization.getGrantedAt());
         assertEquals(PROJECTRON_NEED_GROUP, accessAuthorization.getAccessNeedGroup());
-        for (DataAuthorization dataAuthorization : accessAuthorization.getDataAuthorizations()) { assertTrue(ALL_DATA_AUTHORIZATION_URLS.contains(dataAuthorization.getUrl())); }
+        for (DataAuthorization dataAuthorization : accessAuthorization.getDataAuthorizations()) { assertTrue(ALL_DATA_AUTHORIZATION_URIS.contains(dataAuthorization.getUri())); }
     }
 
     // The most efficient way to ensure that the access grants and data grants generated are
@@ -885,8 +883,8 @@ class AccessAuthorizationTests {
     private void checkAccessGrantAll(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
-        URL baselineUrl = toUrl(server, "/all-1-agents/all-1-projectron/all-1-grant");
-        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+        URI baselineUri = toMockUri(server, "/all-1-agents/all-1-projectron/all-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUri, saiSession);
 
         assertNotNull(accessGrant);
         assertEquals(ALICE_ID, accessGrant.getGrantedBy());
@@ -914,8 +912,8 @@ class AccessAuthorizationTests {
     private void checkAccessGrantAllFromRegistry(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
-        URL baselineUrl = toUrl(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
-        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+        URI baselineUri = toMockUri(server, "/registry-1-agents/registry-1-projectron/registry-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUri, saiSession);
 
         assertNotNull(accessGrant);
         assertEquals(ALICE_ID, accessGrant.getGrantedBy());
@@ -932,8 +930,8 @@ class AccessAuthorizationTests {
     private void checkAccessGrantSelectedFromRegistry(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
-        URL baselineUrl = toUrl(server, "/selected-1-agents/selected-1-projectron/selected-1-grant");
-        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+        URI baselineUri = toMockUri(server, "/selected-1-agents/selected-1-projectron/selected-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUri, saiSession);
 
         assertNotNull(accessGrant);
         assertEquals(ALICE_ID, accessGrant.getGrantedBy());
@@ -950,8 +948,8 @@ class AccessAuthorizationTests {
     private void checkAccessGrantAllFromAgent(AccessGrant accessGrant) throws SaiHttpNotFoundException, SaiException {
 
         // Load a known-good "baseline" access grant and data grants from test fixtures to compare against
-        URL baselineUrl = toUrl(server, "/agent-1-agents/agent-1-projectron/agent-1-grant");
-        AccessGrant baselineGrant = AccessGrant.get(baselineUrl, saiSession);
+        URI baselineUri = toMockUri(server, "/agent-1-agents/agent-1-projectron/agent-1-grant");
+        AccessGrant baselineGrant = AccessGrant.get(baselineUri, saiSession);
 
         assertNotNull(accessGrant);
         assertEquals(ALICE_ID, accessGrant.getGrantedBy());

@@ -10,7 +10,7 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,10 +27,10 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter
 public class ReadableAccessGrant extends ReadableResource {
 
-    private final URL grantedBy;
+    private final URI grantedBy;
     private final OffsetDateTime grantedAt;
-    private final URL grantee;
-    private final URL accessNeedGroup;
+    private final URI grantee;
+    private final URI accessNeedGroup;
     private final List<ReadableDataGrant> dataGrants;
 
     /**
@@ -48,31 +48,31 @@ public class ReadableAccessGrant extends ReadableResource {
     }
 
     /**
-     * Get a {@link ReadableAccessGrant} at the provided <code>url</code>
-     * @param url URL of the {@link ReadableAccessGrant} to get
+     * Get a {@link ReadableAccessGrant} at the provided <code>uri</code>
+     * @param uri URI of the {@link ReadableAccessGrant} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link ReadableAccessGrant}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableAccessGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ReadableAccessGrant.Builder builder = new ReadableAccessGrant.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static ReadableAccessGrant get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ReadableAccessGrant.Builder builder = new ReadableAccessGrant.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ReadableAccessGrant} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ReadableAccessGrant} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableAccessGrant}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static ReadableAccessGrant get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableAccessGrant get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -82,23 +82,23 @@ public class ReadableAccessGrant extends ReadableResource {
      * @throws SaiException
      */
     public ReadableAccessGrant reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
      * Lookup {@link ReadableDataGrant}s linked to the {@link ReadableAccessGrant} by data owner and
      * shape tree
-     * @param dataOwnerUrl URL of the data owner that granted access
-     * @param shapeTreeUrl URL of the shape tree associated with the data
+     * @param dataOwnerUri URI of the data owner that granted access
+     * @param shapeTreeUri URI of the shape tree associated with the data
      * @return List of matching {@link ReadableDataGrant}
      */
-    public List<ReadableDataGrant> findDataGrants(URL dataOwnerUrl, URL shapeTreeUrl) {
-        Objects.requireNonNull(dataOwnerUrl, "Must provide the URL of the data owner to find data grant");
-        Objects.requireNonNull(shapeTreeUrl, "Must provide the URL of the shape tree to find data grant");
+    public List<ReadableDataGrant> findDataGrants(URI dataOwnerUri, URI shapeTreeUri) {
+        Objects.requireNonNull(dataOwnerUri, "Must provide the URI of the data owner to find data grant");
+        Objects.requireNonNull(shapeTreeUri, "Must provide the URI of the shape tree to find data grant");
         List<ReadableDataGrant> dataGrants = new ArrayList<>();
         for (ReadableDataGrant dataGrant : this.getDataGrants()) {
-            if (!dataGrant.getDataOwner().equals(dataOwnerUrl)) continue;
-            if (!dataGrant.getRegisteredShapeTree().equals(shapeTreeUrl)) continue;
+            if (!dataGrant.getDataOwner().equals(dataOwnerUri)) continue;
+            if (!dataGrant.getRegisteredShapeTree().equals(shapeTreeUri)) continue;
             dataGrants.add(dataGrant);
         }
         return dataGrants;
@@ -106,14 +106,14 @@ public class ReadableAccessGrant extends ReadableResource {
 
     /**
      * Lookup {@link ReadableDataGrant}s linked to the {@link ReadableAccessGrant} by shape tree
-     * @param shapeTreeUrl URL of the shape tree associated with the data
+     * @param shapeTreeUri URI of the shape tree associated with the data
      * @return List of matching {@link ReadableDataGrant}
      */
-    public List<ReadableDataGrant> findDataGrants(URL shapeTreeUrl) {
-        Objects.requireNonNull(shapeTreeUrl, "Must provide the URL of the shape tree to find data grant");
+    public List<ReadableDataGrant> findDataGrants(URI shapeTreeUri) {
+        Objects.requireNonNull(shapeTreeUri, "Must provide the URI of the shape tree to find data grant");
         List<ReadableDataGrant> dataGrants = new ArrayList<>();
         for (ReadableDataGrant dataGrant : this.getDataGrants()) {
-            if (dataGrant.getRegisteredShapeTree().equals(shapeTreeUrl)) dataGrants.add(dataGrant);
+            if (dataGrant.getRegisteredShapeTree().equals(shapeTreeUri)) dataGrants.add(dataGrant);
         }
         return dataGrants;
     }
@@ -122,8 +122,8 @@ public class ReadableAccessGrant extends ReadableResource {
      * Lookup the data owners represented by the {@link ReadableDataGrant}s linked to the {@link ReadableAccessGrant}
      * @return List of data owner identifiers
      */
-    public List<URL> getDataOwners() {
-        List<URL> dataOwners = new ArrayList<>();
+    public List<URI> getDataOwners() {
+        List<URI> dataOwners = new ArrayList<>();
         for (ReadableDataGrant dataGrant : this.getDataGrants()) {
             if (!dataOwners.contains(dataGrant.getDataOwner())) dataOwners.add(dataGrant.getDataOwner());
         }
@@ -135,19 +135,19 @@ public class ReadableAccessGrant extends ReadableResource {
      */
     public static class Builder extends ReadableResource.Builder<Builder> {
 
-        private URL grantedBy;
+        private URI grantedBy;
         private OffsetDateTime grantedAt;
-        private URL grantee;
-        private URL accessNeedGroup;
+        private URI grantee;
+        private URI accessNeedGroup;
         private final List<ReadableDataGrant> dataGrants;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ReadableAccessGrant} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableAccessGrant} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) {
-            super(url, saiSession);
+        public Builder(URI uri, SaiSession saiSession) {
+            super(uri, saiSession);
             this.dataGrants = new ArrayList<>();
         }
 
@@ -184,7 +184,7 @@ public class ReadableAccessGrant extends ReadableResource {
                     for (ReadableDataGrant childGrant : this.dataGrants) {
                         if (childGrant instanceof InheritedDataGrant) {
                             InheritedDataGrant inheritedChildGrant = (InheritedDataGrant) childGrant;
-                            if (inheritedChildGrant.getInheritsFrom().equals(dataGrant.getUrl())) {
+                            if (inheritedChildGrant.getInheritsFrom().equals(dataGrant.getUri())) {
                                 parentDataGrant.getInheritingGrants().add(inheritedChildGrant);
                             }
                         }
@@ -200,12 +200,12 @@ public class ReadableAccessGrant extends ReadableResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.grantedBy = getRequiredUrlObject(this.resource, GRANTED_BY);
+                this.grantedBy = getRequiredUriObject(this.resource, GRANTED_BY);
                 this.grantedAt = getRequiredDateTimeObject(this.resource, GRANTED_AT);
-                this.grantee = getRequiredUrlObject(this.resource, GRANTEE);
-                this.accessNeedGroup = getRequiredUrlObject(this.resource, HAS_ACCESS_NEED_GROUP);
-                List<URL> dataGrantUrls = getRequiredUrlObjects(this.resource, HAS_DATA_GRANT);
-                for (URL url : dataGrantUrls) { this.dataGrants.add(ReadableDataGrant.get(url, this.saiSession)); }
+                this.grantee = getRequiredUriObject(this.resource, GRANTEE);
+                this.accessNeedGroup = getRequiredUriObject(this.resource, HAS_ACCESS_NEED_GROUP);
+                List<URI> dataGrantUris = getRequiredUriObjects(this.resource, HAS_DATA_GRANT);
+                for (URI uri : dataGrantUris) { this.dataGrants.add(ReadableDataGrant.get(uri, this.saiSession)); }
                 organizeInheritance();
             } catch (SaiHttpNotFoundException | SaiException | SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Unable to populate immutable access grant resource", ex);

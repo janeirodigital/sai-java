@@ -11,7 +11,7 @@ import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -28,12 +28,12 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter @Setter
 public class DataRegistration extends CRUDResource {
 
-    private URL registeredBy;
-    private URL registeredWith;
+    private URI registeredBy;
+    private URI registeredWith;
     private OffsetDateTime registeredAt;
     private OffsetDateTime updatedAt;
-    private URL registeredShapeTree;
-    private List<URL> dataInstances;
+    private URI registeredShapeTree;
+    private List<URI> dataInstances;
 
     /**
      * Construct a {@link DataRegistration} instance from the provided {@link Builder}.
@@ -51,31 +51,31 @@ public class DataRegistration extends CRUDResource {
     }
 
     /**
-     * Get a {@link DataRegistration} at the provided <code>url</code>
-     * @param url URL of the {@link DataRegistration} to get
+     * Get a {@link DataRegistration} at the provided <code>uri</code>
+     * @param uri URI of the {@link DataRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link DataRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static DataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiHttpNotFoundException, SaiException {
-        DataRegistration.Builder builder = new DataRegistration.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static DataRegistration get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiHttpNotFoundException, SaiException {
+        DataRegistration.Builder builder = new DataRegistration.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link DataRegistration} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link DataRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link DataRegistration}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static DataRegistration get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static DataRegistration get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -85,7 +85,7 @@ public class DataRegistration extends CRUDResource {
      * @throws SaiException
      */
     public DataRegistration reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -93,19 +93,19 @@ public class DataRegistration extends CRUDResource {
      */
     public static class Builder extends CRUDResource.Builder<Builder> {
 
-        private URL registeredBy;
-        private URL registeredWith;
+        private URI registeredBy;
+        private URI registeredWith;
         private OffsetDateTime registeredAt;
         private OffsetDateTime updatedAt;
-        private URL registeredShapeTree;
-        private List<URL> dataInstances;
+        private URI registeredShapeTree;
+        private List<URI> dataInstances;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link DataRegistration} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link DataRegistration} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that don't get an unchecked cast warning when returning from setters
@@ -130,23 +130,23 @@ public class DataRegistration extends CRUDResource {
         }
 
         /**
-         * Set the URL of the social agent that registered the data registration
-         * @param registeredBy URL of the registering social agent
+         * Set the URI of the social agent that registered the data registration
+         * @param registeredBy URI of the registering social agent
          * @return {@link Builder}
          */
-        public Builder setRegisteredBy(URL registeredBy) {
-            Objects.requireNonNull(registeredBy, "Must provide a URL for the social agent that registered the data registration");
+        public Builder setRegisteredBy(URI registeredBy) {
+            Objects.requireNonNull(registeredBy, "Must provide a URI for the social agent that registered the data registration");
             this.registeredBy = registeredBy;
             return this;
         }
 
         /**
-         * Set the URL of the application used to register the data registration
-         * @param registeredWith URL of the registering application
+         * Set the URI of the application used to register the data registration
+         * @param registeredWith URI of the registering application
          * @return {@link Builder}
          */
-        public Builder setRegisteredWith(URL registeredWith) {
-            Objects.requireNonNull(registeredWith, "Must provide a URL for the application that registered the data registration");
+        public Builder setRegisteredWith(URI registeredWith) {
+            Objects.requireNonNull(registeredWith, "Must provide a URI for the application that registered the data registration");
             this.registeredWith = registeredWith;
             return this;
         }
@@ -175,10 +175,10 @@ public class DataRegistration extends CRUDResource {
 
         /**
          * Set the registered shape tree for the data registration
-         * @param registeredShapeTree URL of the registered shape tree
+         * @param registeredShapeTree URI of the registered shape tree
          * @return {@link Builder}
          */
-        public Builder setRegisteredShapeTree(URL registeredShapeTree) {
+        public Builder setRegisteredShapeTree(URI registeredShapeTree) {
             Objects.requireNonNull(registeredShapeTree, "Must provide the registered shape tree for the data registration");
             this.registeredShapeTree = registeredShapeTree;
             return this;
@@ -190,12 +190,12 @@ public class DataRegistration extends CRUDResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.registeredBy = getRequiredUrlObject(this.resource, REGISTERED_BY);
-                this.registeredWith = getRequiredUrlObject(this.resource, REGISTERED_WITH);
+                this.registeredBy = getRequiredUriObject(this.resource, REGISTERED_BY);
+                this.registeredWith = getRequiredUriObject(this.resource, REGISTERED_WITH);
                 this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
-                this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
-                this.dataInstances = getUrlObjects(this.resource, LDP_CONTAINS);
+                this.registeredShapeTree = getRequiredUriObject(this.resource, REGISTERED_SHAPE_TREE);
+                this.dataInstances = getUriObjects(this.resource, LDP_CONTAINS);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Unable to populate data registration", ex);
             }
@@ -205,7 +205,7 @@ public class DataRegistration extends CRUDResource {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         private void populateDataset() {
-            this.resource = getNewResourceForType(this.url, DATA_REGISTRATION);
+            this.resource = getNewResourceForType(this.uri, DATA_REGISTRATION);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, REGISTERED_BY, this.registeredBy);
             updateObject(this.resource, REGISTERED_WITH, this.registeredWith);
@@ -222,8 +222,8 @@ public class DataRegistration extends CRUDResource {
          * @throws SaiException
          */
         public DataRegistration build() throws SaiException {
-            Objects.requireNonNull(registeredBy, "Must provide a URL for the social agent that registered the data registration");
-            Objects.requireNonNull(registeredWith, "Must provide a URL for the application that registered the data registration");
+            Objects.requireNonNull(registeredBy, "Must provide a URI for the social agent that registered the data registration");
+            Objects.requireNonNull(registeredWith, "Must provide a URI for the application that registered the data registration");
             Objects.requireNonNull(registeredAt, "Must provide the time the data registration was registered");
             Objects.requireNonNull(updatedAt, "Must provide the time the data registration was updated");
             Objects.requireNonNull(registeredShapeTree, "Must provide the registered shape tree for the data registration");

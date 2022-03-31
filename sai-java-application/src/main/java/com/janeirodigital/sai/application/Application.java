@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
 import lombok.Getter;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 
 /**
@@ -20,18 +20,18 @@ import java.util.Objects;
 @Getter
 public class Application {
 
-    private final URL id ;
+    private final URI id ;
     private final HttpClientFactory clientFactory;
     private final boolean validateSsl;
     private final boolean validateShapeTrees;
 
     /**
      * Construct a SAI compatible Application
-     * @param id <a href="https://solid.github.io/data-interoperability-panel/specification/#app">URL identifier</a> of the Application
+     * @param id <a href="https://solid.github.io/data-interoperability-panel/specification/#app">URI identifier</a> of the Application
      * @param validateSsl Ignores SSL validation errors when false
      * @param validateShapeTrees Intercept requests and perform client-side shape tree validation when true
      */
-    public Application(URL id, boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens, AuthorizedSessionAccessor sessionAccessor) throws SaiException {
+    public Application(URI id, boolean validateSsl, boolean validateShapeTrees, boolean refreshTokens, AuthorizedSessionAccessor sessionAccessor) throws SaiException {
         Objects.requireNonNull(id,"Must provide an application identifier to initialize an application");
         this.id = id;
         this.validateSsl = validateSsl;

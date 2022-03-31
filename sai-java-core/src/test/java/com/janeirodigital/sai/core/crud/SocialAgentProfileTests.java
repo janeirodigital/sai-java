@@ -12,13 +12,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Arrays;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -26,10 +25,10 @@ class SocialAgentProfileTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static URL aliceAuthzAgent;
-    private static URL aliceAccessInbox;
-    private static URL aliceRegistrySet;
-    private static URL aliceOidcIssuer;
+    private static URI aliceAuthzAgent;
+    private static URI aliceAccessInbox;
+    private static URI aliceRegistrySet;
+    private static URI aliceOidcIssuer;
 
     @BeforeAll
     static void beforeAll() throws SaiException, SaiHttpException {
@@ -57,19 +56,19 @@ class SocialAgentProfileTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        aliceAuthzAgent = stringToUrl("https://trusted.example/alice/");
-        aliceAccessInbox = toUrl(server, "/access/inbox/");
-        aliceRegistrySet = toUrl(server, "/registry_set");
-        aliceOidcIssuer = stringToUrl("https://idp.alice.example");
+        aliceAuthzAgent = URI.create("https://trusted.example/alice/");
+        aliceAccessInbox = toMockUri(server, "/access/inbox/");
+        aliceRegistrySet = toMockUri(server, "/registry_set");
+        aliceOidcIssuer = URI.create("https://idp.alice.example");
     }
 
     @Test
     @DisplayName("Create new crud social agent profile")
     void createNewCrudSocialAgentProfile() throws SaiException {
-        URL url = toUrl(server, "/new/ttl/id");
+        URI url = toMockUri(server, "/new/ttl/id");
         SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession);
         SocialAgentProfile profile = builder.setAuthorizationAgent(aliceAuthzAgent).setAccessInbox(aliceAccessInbox)
-                                            .setRegistrySet(aliceRegistrySet).setOidcIssuerUrls(Arrays.asList(aliceOidcIssuer)).build();
+                                            .setRegistrySet(aliceRegistrySet).setOidcIssuerUris(Arrays.asList(aliceOidcIssuer)).build();
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
@@ -77,7 +76,7 @@ class SocialAgentProfileTests {
     @Test
     @DisplayName("Read existing crud social agent profile in turtle")
     void readSocialAgentProfile() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        URL url = toUrl(server, "/ttl/id");
+        URI url = toMockUri(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
         checkProfile(profile);
     }
@@ -85,7 +84,7 @@ class SocialAgentProfileTests {
     @Test
     @DisplayName("Reload crud social agent profile")
     void reloadSocialAgentProfile() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        URL url = toUrl(server, "/ttl/id");
+        URI url = toMockUri(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
         SocialAgentProfile reloaded = profile.reload();
         checkProfile(reloaded);
@@ -94,16 +93,16 @@ class SocialAgentProfileTests {
     @Test
     @DisplayName("Fail to read existing crud social agent profile in turtle - missing required fields")
     void failToReadSocialAgentProfile() {
-        URL url = toUrl(server, "/missing-fields/ttl/id");
+        URI url = toMockUri(server, "/missing-fields/ttl/id");
         assertThrows(SaiException.class, () -> SocialAgentProfile.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Update existing crud social agent profile in turtle")
     void updateSocialAgentProfile() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        URL url = toUrl(server, "/ttl/id");
+        URI url = toMockUri(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
-        profile.setAuthorizationAgentUrl(stringToUrl("https://other.example/alice/"));
+        profile.setAuthorizationAgentUri(URI.create("https://other.example/alice/"));
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
@@ -111,7 +110,7 @@ class SocialAgentProfileTests {
     @Test
     @DisplayName("Read existing social agent profile in JSON-LD")
     void readSocialAgentProfileJsonLd() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        URL url = toUrl(server, "/jsonld/id");
+        URI url = toMockUri(server, "/jsonld/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession, LD_JSON);
         checkProfile(profile);
     }
@@ -119,11 +118,11 @@ class SocialAgentProfileTests {
     @Test
     @DisplayName("Create new crud social agent profile in JSON-LD")
     void createNewCrudSocialAgentProfileJsonLd() throws SaiException {
-        URL url = toUrl(server, "/new/jsonld/id");
+        URI url = toMockUri(server, "/new/jsonld/id");
         SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession);
         SocialAgentProfile profile = builder.setContentType(LD_JSON).setAuthorizationAgent(aliceAuthzAgent)
                                             .setAccessInbox(aliceAccessInbox).setRegistrySet(aliceRegistrySet)
-                                            .setOidcIssuerUrls(Arrays.asList(aliceOidcIssuer)).build();
+                                            .setOidcIssuerUris(Arrays.asList(aliceOidcIssuer)).build();
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
@@ -131,7 +130,7 @@ class SocialAgentProfileTests {
     @Test
     @DisplayName("Delete crud social agent profile")
     void deleteSocialAgentProfile() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/id");
+        URI url = toMockUri(server, "/ttl/id");
         SocialAgentProfile profile = SocialAgentProfile.get(url, saiSession);
         assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
@@ -139,10 +138,10 @@ class SocialAgentProfileTests {
 
     private void checkProfile(SocialAgentProfile profile) throws SaiException, SaiHttpException {
         assertNotNull(profile);
-        assertEquals(stringToUrl("https://trusted.example/alice/"), profile.getAuthorizationAgentUrl());
-        assertEquals(aliceAccessInbox, profile.getAccessInboxUrl());
-        assertEquals(aliceRegistrySet, profile.getRegistrySetUrl());
-        assertTrue(profile.getOidcIssuerUrls().contains(stringToUrl("https://idp.alice.example")));
+        assertEquals(URI.create("https://trusted.example/alice/"), profile.getAuthorizationAgentUri());
+        assertEquals(aliceAccessInbox, profile.getAccessInboxUri());
+        assertEquals(aliceRegistrySet, profile.getRegistrySetUri());
+        assertTrue(profile.getOidcIssuerUris().contains(URI.create("https://idp.alice.example")));
     }
 
 }

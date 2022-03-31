@@ -9,14 +9,14 @@ import lombok.Getter;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.rdfutils.RdfUtils.getUrlObjects;
-import static com.janeirodigital.sai.rdfutils.RdfUtils.updateUrlObjects;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getUriObjects;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.updateUriObjects;
 
 /**
  * Used by Registries as a base class to model their associated registrations. For example,
@@ -26,7 +26,7 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.updateUrlObjects;
 @Getter
 public abstract class RegistrationList<T> implements Iterable<T> {
 
-    protected List<URL> registrationUrls;
+    protected List<URI> registrationUris;
     protected SaiSession saiSession;
     protected Resource resource;
     protected Property linkedVia;
@@ -44,82 +44,82 @@ public abstract class RegistrationList<T> implements Iterable<T> {
         this.saiSession = saiSession;
         this.resource = resource;
         this.linkedVia = linkedVia;
-        this.registrationUrls = new ArrayList<>();
+        this.registrationUris = new ArrayList<>();
     }
 
     /**
-     * Populate the internal list of registration URLs based on links to registrations in the graph of the registry
+     * Populate the internal list of registration URIs based on links to registrations in the graph of the registry
      * @throws SaiException
      */
     public void populate() throws SaiException {
         try {
-            this.registrationUrls = getUrlObjects(this.resource, this.linkedVia);
+            this.registrationUris = getUriObjects(this.resource, this.linkedVia);
         } catch (SaiRdfException ex) {
             throw new SaiException("Unable to populate graph", ex);
         }
     }
 
     /**
-     * Add a registration URL to the internal list of registration URLs, and add to the graph of the registry
-     * @param registrationUrl URL of the registration to add
+     * Add a registration URI to the internal list of registration URIs, and add to the graph of the registry
+     * @param registrationUri URI of the registration to add
      * @throws SaiAlreadyExistsException if the registration already exists
      */
-    public void add(URL registrationUrl) throws SaiAlreadyExistsException {
-        Objects.requireNonNull(registrationUrl, "Must provide the URL of the registration to add to registry");
-        if (this.isPresent(registrationUrl)) {
-            throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists");
+    public void add(URI registrationUri) throws SaiAlreadyExistsException {
+        Objects.requireNonNull(registrationUri, "Must provide the URI of the registration to add to registry");
+        if (this.isPresent(registrationUri)) {
+            throw new SaiAlreadyExistsException("Cannot add " + registrationUri + "because a record already exists");
         }
-        this.registrationUrls.add(registrationUrl);
-        updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
+        this.registrationUris.add(registrationUri);
+        updateUriObjects(this.resource, this.linkedVia, this.registrationUris);
     }
 
     /**
-     * Add a list of registration URLs to the internal list, and add to the graph of the registry
-     * @param registrationUrls List of registration URLs to add
-     * @throws SaiAlreadyExistsException if any of the registration URLs already exist
+     * Add a list of registration URIs to the internal list, and add to the graph of the registry
+     * @param registrationUris List of registration URIs to add
+     * @throws SaiAlreadyExistsException if any of the registration URIs already exist
      */
-    public void addAll(List<URL> registrationUrls) throws SaiAlreadyExistsException {
-        Objects.requireNonNull(registrationUrls, "Must provide a list of URLs of the registrations to add to registry");
-        for (URL registrationUrl: registrationUrls) {
-            if (this.isPresent(registrationUrl)) {
-                throw new SaiAlreadyExistsException("Cannot add " + registrationUrl + "because a record already exists");
+    public void addAll(List<URI> registrationUris) throws SaiAlreadyExistsException {
+        Objects.requireNonNull(registrationUris, "Must provide a list of URIs of the registrations to add to registry");
+        for (URI registrationUri: registrationUris) {
+            if (this.isPresent(registrationUri)) {
+                throw new SaiAlreadyExistsException("Cannot add " + registrationUri + "because a record already exists");
             }
         }
-        this.registrationUrls.addAll(registrationUrls);
-        updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
+        this.registrationUris.addAll(registrationUris);
+        updateUriObjects(this.resource, this.linkedVia, this.registrationUris);
     }
 
     /**
-     * Check to see if the provided URL <code>checkUrl</code> is already part of the registration list
-     * @param checkUrl true if <code>checkUrl</code> is already part of the list
+     * Check to see if the provided URI <code>checkUri</code> is already part of the registration list
+     * @param checkUri true if <code>checkUri</code> is already part of the list
      * @return
      */
-    public boolean isPresent(URL checkUrl) {
-        Objects.requireNonNull(checkUrl, "Must provide the URL of the registration to check for");
-        return this.registrationUrls.contains(checkUrl);
+    public boolean isPresent(URI checkUri) {
+        Objects.requireNonNull(checkUri, "Must provide the URI of the registration to check for");
+        return this.registrationUris.contains(checkUri);
     }
 
     /**
      * Check if the registration list is empty
      * @return true if empty
      */
-    public boolean isEmpty() { return this.registrationUrls.isEmpty(); }
+    public boolean isEmpty() { return this.registrationUris.isEmpty(); }
 
     /**
      * Abstract find method implemented by sub-classes
-     * @param targetUrl Target URL to find with
+     * @param targetUri Target URI to find with
      * @return found type
      */
-    public abstract T find(URL targetUrl);
+    public abstract T find(URI targetUri);
 
     /**
-     * Remove a registration from the internal list of registration URLs, and remove from the graph of the registry
-     * @param registrationUrl URL of the registration to remove
+     * Remove a registration from the internal list of registration URIs, and remove from the graph of the registry
+     * @param registrationUri URI of the registration to remove
      */
-    public void remove(URL registrationUrl) {
-        Objects.requireNonNull(registrationUrl, "Must provide the URL of the registration to remove from registry");
-        this.registrationUrls.remove(registrationUrl);
-        updateUrlObjects(this.resource, this.linkedVia, this.registrationUrls);
+    public void remove(URI registrationUri) {
+        Objects.requireNonNull(registrationUri, "Must provide the URI of the registration to remove from registry");
+        this.registrationUris.remove(registrationUri);
+        updateUriObjects(this.resource, this.linkedVia, this.registrationUris);
     }
 
     /**
@@ -128,7 +128,7 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      */
     @ExcludeFromGeneratedCoverage
     public Iterator<T> iterator() {
-        return new RegistrationListIterator<>(this.saiSession, this.registrationUrls);
+        return new RegistrationListIterator<>(this.saiSession, this.registrationUris);
     }
 
     /**
@@ -136,11 +136,11 @@ public abstract class RegistrationList<T> implements Iterable<T> {
      * is overriden.
      */
     public static class RegistrationListIterator<T> implements Iterator<T> {
-        protected Iterator<URL> current;
+        protected Iterator<URI> current;
         protected SaiSession saiSession;
-        public RegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) {
+        public RegistrationListIterator(SaiSession saiSession, List<URI> registrationUris) {
             this.saiSession = saiSession;
-            this.current = registrationUrls.iterator();
+            this.current = registrationUris.iterator();
         }
         public boolean hasNext() { return current.hasNext(); }
         @ExcludeFromGeneratedCoverage

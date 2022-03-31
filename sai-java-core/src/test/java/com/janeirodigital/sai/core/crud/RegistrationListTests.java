@@ -12,12 +12,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -40,25 +40,25 @@ class RegistrationListTests {
     @Test
     @DisplayName("Add registrations to a registration list")
     void addAgentRegistrations() throws SaiException, SaiHttpNotFoundException, SaiAlreadyExistsException {
-        URL url = toUrl(server, "/ttl/agents/");
-        URL saNewUrl = toUrl(server, "/ttl/agents/sa-66/");
-        List<URL> newSaUrls = Arrays.asList(toUrl(server, "/ttl/agents/sa-67/"), toUrl(server, "/ttl/agents/sa-68/"));
+        URI url = toMockUri(server, "/ttl/agents/");
+        URI saNewUri = toMockUri(server, "/ttl/agents/sa-66/");
+        List<URI> newSaUris = Arrays.asList(toMockUri(server, "/ttl/agents/sa-67/"), toMockUri(server, "/ttl/agents/sa-68/"));
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
-        agentRegistry.getSocialAgentRegistrations().add(saNewUrl);
-        assertTrue(agentRegistry.getSocialAgentRegistrations().isPresent(saNewUrl));
-        agentRegistry.getSocialAgentRegistrations().addAll(newSaUrls);
-        for (URL added : newSaUrls) { assertTrue(agentRegistry.getSocialAgentRegistrations().isPresent(added)); }
+        agentRegistry.getSocialAgentRegistrations().add(saNewUri);
+        assertTrue(agentRegistry.getSocialAgentRegistrations().isPresent(saNewUri));
+        agentRegistry.getSocialAgentRegistrations().addAll(newSaUris);
+        for (URI added : newSaUris) { assertTrue(agentRegistry.getSocialAgentRegistrations().isPresent(added)); }
     }
 
     @Test
     @DisplayName("Fail to add registrations - already exists")
     void failToAddExistingRegistrations() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/");
-        URL saExistsUrl = toUrl(server, "/ttl/agents/sa-4/");
-        List<URL> existingSaUrls = Arrays.asList(saExistsUrl, toUrl(server, "/ttl/agents/sa-2/"));
+        URI url = toMockUri(server, "/ttl/agents/");
+        URI saExistsUri = toMockUri(server, "/ttl/agents/sa-4/");
+        List<URI> existingSaUris = Arrays.asList(saExistsUri, toMockUri(server, "/ttl/agents/sa-2/"));
         AgentRegistry agentRegistry = AgentRegistry.get(url, saiSession);
-        assertThrows(SaiAlreadyExistsException.class, () -> agentRegistry.getSocialAgentRegistrations().add(saExistsUrl));
-        assertThrows(SaiAlreadyExistsException.class, () -> agentRegistry.getSocialAgentRegistrations().addAll(existingSaUrls));
+        assertThrows(SaiAlreadyExistsException.class, () -> agentRegistry.getSocialAgentRegistrations().add(saExistsUri));
+        assertThrows(SaiAlreadyExistsException.class, () -> agentRegistry.getSocialAgentRegistrations().addAll(existingSaUris));
     }
 
 }

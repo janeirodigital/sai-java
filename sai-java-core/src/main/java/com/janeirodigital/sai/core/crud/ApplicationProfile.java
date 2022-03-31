@@ -11,7 +11,7 @@ import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,13 +37,13 @@ public class ApplicationProfile extends CRUDResource {
 
     private String name;
     private String description;
-    private URL authorUrl;
-    private URL logoUrl;
-    private List<URL> accessNeedGroupUrls;
+    private URI authorUri;
+    private URI logoUri;
+    private List<URI> accessNeedGroupUris;
     // Solid-OIDC specific
-    private List<URL> redirectUrls;
-    private URL clientUrl;
-    private URL tosUrl;
+    private List<URI> redirectUris;
+    private URI clientUri;
+    private URI tosUri;
     private List<String> scopes;
     private List<String> grantTypes;
     private List<String> responseTypes;
@@ -59,12 +59,12 @@ public class ApplicationProfile extends CRUDResource {
         super(builder);
         this.name = builder.name;
         this.description = builder.description;
-        this.authorUrl = builder.authorUrl;
-        this.logoUrl = builder.logoUrl;
-        this.accessNeedGroupUrls = builder.accessNeedGroupUrls;
-        this.redirectUrls = builder.redirectUrls;
-        this.clientUrl = builder.clientUrl;
-        this.tosUrl = builder.tosUrl;
+        this.authorUri = builder.authorUri;
+        this.logoUri = builder.logoUri;
+        this.accessNeedGroupUris = builder.accessNeedGroupUris;
+        this.redirectUris = builder.redirectUris;
+        this.clientUri = builder.clientUri;
+        this.tosUri = builder.tosUri;
         this.scopes = builder.scopes;
         this.grantTypes = builder.grantTypes;
         this.responseTypes = builder.responseTypes;
@@ -76,28 +76,28 @@ public class ApplicationProfile extends CRUDResource {
     }
 
     /**
-     * Get a {@link ApplicationProfile} from the provided <code>url</code>
-     * @param url URL of the {@link RegistrySet} to get
+     * Get a {@link ApplicationProfile} from the provided <code>uri</code>
+     * @param uri URI of the {@link RegistrySet} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link ApplicationProfile}
      * @throws SaiException
      */
-    public static ApplicationProfile get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static ApplicationProfile get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(ContentType.LD_JSON).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} using the application profile default content-type of JSON-LD
-     * @param url URL of the {@link ApplicationProfile}
+     * Call {@link #get(URI, SaiSession, ContentType)} using the application profile default content-type of JSON-LD
+     * @param uri URI of the {@link ApplicationProfile}
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static ApplicationProfile get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, ContentType.LD_JSON);
+    public static ApplicationProfile get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, ContentType.LD_JSON);
     }
 
     /**
@@ -107,7 +107,7 @@ public class ApplicationProfile extends CRUDResource {
      * @throws SaiException
      */
     public ApplicationProfile reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -117,13 +117,13 @@ public class ApplicationProfile extends CRUDResource {
 
         private String name;
         private String description;
-        private URL authorUrl;
-        private URL logoUrl;
-        private List<URL> accessNeedGroupUrls;
+        private URI authorUri;
+        private URI logoUri;
+        private List<URI> accessNeedGroupUris;
         // Solid-OIDC specific
-        private List<URL> redirectUrls;
-        private URL clientUrl;
-        private URL tosUrl;
+        private List<URI> redirectUris;
+        private URI clientUri;
+        private URI tosUri;
         private List<String> scopes;
         private List<String> grantTypes;
         private List<String> responseTypes;
@@ -131,11 +131,11 @@ public class ApplicationProfile extends CRUDResource {
         private Boolean requireAuthTime;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ApplicationProfile} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ApplicationProfile} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that don't get an unchecked cast warning when returning from setters
@@ -184,22 +184,22 @@ public class ApplicationProfile extends CRUDResource {
         /**
          * Set the <a href="https://solid.github.io/data-interoperability-panel/specification/#app">author</a>
          * of the application
-         * @param authorUrl URL of application author
+         * @param authorUri URI of application author
          */
-        public Builder setAuthorUrl(URL authorUrl) {
-            Objects.requireNonNull(authorUrl, "Must provide an author of the application");
-            this.authorUrl = authorUrl;
+        public Builder setAuthorUri(URI authorUri) {
+            Objects.requireNonNull(authorUri, "Must provide an author of the application");
+            this.authorUri = authorUri;
             return this;
         }
 
         /**
          * Set the <a href="https://solid.github.io/data-interoperability-panel/specification/#app">thumbnail</a>
          * of the application
-         * @param logoUrl URL of application thumbnail
+         * @param logoUri URI of application thumbnail
          */
-        public Builder setLogoUrl(URL logoUrl) {
-            Objects.requireNonNull(logoUrl, "Must provide a logo for the application");
-            this.logoUrl = logoUrl;
+        public Builder setLogoUri(URI logoUri) {
+            Objects.requireNonNull(logoUri, "Must provide a logo for the application");
+            this.logoUri = logoUri;
             return this;
         }
 
@@ -207,44 +207,44 @@ public class ApplicationProfile extends CRUDResource {
          * Set the <a href="https://solid.github.io/data-interoperability-panel/specification/#app">access need groups</a>
          * requested by the application
          * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-need-group">Access Need Group</a>
-         * @param accessNeedGroupUrls List of access need group URLs
+         * @param accessNeedGroupUris List of access need group URIs
          */
-        public Builder setAccessNeedGroupUrls(List<URL> accessNeedGroupUrls) {
-            Objects.requireNonNull(accessNeedGroupUrls, "Must provide access need groups for the application");
-            this.accessNeedGroupUrls = accessNeedGroupUrls;
+        public Builder setAccessNeedGroupUris(List<URI> accessNeedGroupUris) {
+            Objects.requireNonNull(accessNeedGroupUris, "Must provide access need groups for the application");
+            this.accessNeedGroupUris = accessNeedGroupUris;
             return this;
         }
 
         /**
          * Set the Solid-OIDC <a href="https://solid.github.io/solid-oidc/#clientids-document">redirect_uris</a> with
          * the provided URI list;
-         * @param redirectUrls List of redirect URIs
+         * @param redirectUris List of redirect URIs
          */
-        public Builder setRedirectUrls(List<URL> redirectUrls) {
-            Objects.requireNonNull(redirectUrls, "Must provide redirect uris for solid-oidc");
-            this.redirectUrls = redirectUrls;
+        public Builder setRedirectUris(List<URI> redirectUris) {
+            Objects.requireNonNull(redirectUris, "Must provide redirect uris for solid-oidc");
+            this.redirectUris = redirectUris;
             return this;
         }
 
         /**
          * Set the <a href="https://solid.github.io/solid-oidc/#clientids-document">client_uri</a>
          * of the Solid-OIDC client identifier document
-         * @param clientUrl client URI
+         * @param clientUri client URI
          */
-        public Builder setClientUrl(URL clientUrl) {
-            Objects.requireNonNull(clientUrl, "Must provide a client uri for solid-oidc");
-            this.clientUrl = clientUrl;
+        public Builder setClientUri(URI clientUri) {
+            Objects.requireNonNull(clientUri, "Must provide a client uri for solid-oidc");
+            this.clientUri = clientUri;
             return this;
         }
 
         /**
-         * Set the <a href="https://solid.github.io/solid-oidc/#clientids-document">tos_url</a>
+         * Set the <a href="https://solid.github.io/solid-oidc/#clientids-document">tos_uri</a>
          * of the Solid-OIDC client identifier document
-         * @param tosUrl Terms of service URL
+         * @param tosUri Terms of service URI
          */
-        public Builder setTosUrl(URL tosUrl) {
-            Objects.requireNonNull(tosUrl, "Must provide a terms of service uri for solid-oidc");
-            this.tosUrl = tosUrl;
+        public Builder setTosUri(URI tosUri) {
+            Objects.requireNonNull(tosUri, "Must provide a terms of service uri for solid-oidc");
+            this.tosUri = tosUri;
             return this;
         }
 
@@ -309,13 +309,13 @@ public class ApplicationProfile extends CRUDResource {
             try {
                 this.name = getRequiredStringObject(this.resource, SOLID_OIDC_CLIENT_NAME);
                 this.description = getRequiredStringObject(this.resource, APPLICATION_DESCRIPTION);
-                this.authorUrl = getRequiredUrlObject(this.resource, APPLICATION_AUTHOR);
-                this.logoUrl = getRequiredUrlObject(this.resource, SOLID_OIDC_LOGO_URI);
-                this.accessNeedGroupUrls = getRequiredUrlObjects(this.resource, HAS_ACCESS_NEED_GROUP);
+                this.authorUri = getRequiredUriObject(this.resource, APPLICATION_AUTHOR);
+                this.logoUri = getRequiredUriObject(this.resource, SOLID_OIDC_LOGO_URI);
+                this.accessNeedGroupUris = getRequiredUriObjects(this.resource, HAS_ACCESS_NEED_GROUP);
                 // Solid-OIDC specific
-                this.redirectUrls = getRequiredUrlObjects(this.resource, SOLID_OIDC_REDIRECT_URIS);
-                this.clientUrl = getUrlObject(this.resource, SOLID_OIDC_CLIENT_URI);
-                this.tosUrl = getUrlObject(this.resource, SOLID_OIDC_TOS_URI);
+                this.redirectUris = getRequiredUriObjects(this.resource, SOLID_OIDC_REDIRECT_URIS);
+                this.clientUri = getUriObject(this.resource, SOLID_OIDC_CLIENT_URI);
+                this.tosUri = getUriObject(this.resource, SOLID_OIDC_TOS_URI);
                 this.scopes = new ArrayList<>();
                 this.scopes.addAll(Arrays.asList(getRequiredStringObject(this.resource, SOLID_OIDC_SCOPE).split(" ")));
                 this.grantTypes = getRequiredStringObjects(this.resource, SOLID_OIDC_GRANT_TYPES);
@@ -323,7 +323,7 @@ public class ApplicationProfile extends CRUDResource {
                 this.defaultMaxAge = getIntegerObject(this.resource, SOLID_OIDC_DEFAULT_MAX_AGE);
                 this.requireAuthTime = getBooleanObject(this.resource, SOLID_OIDC_REQUIRE_AUTH_TIME);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Failed to load application profile " + this.url, ex);
+                throw new SaiException("Failed to load application profile " + this.uri, ex);
             }
         }
 
@@ -331,16 +331,16 @@ public class ApplicationProfile extends CRUDResource {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         private void populateDataset() {
-            this.resource = getNewResourceForType(this.url, APPLICATION);
+            this.resource = getNewResourceForType(this.uri, APPLICATION);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, SOLID_OIDC_CLIENT_NAME, this.name);
             updateObject(this.resource, APPLICATION_DESCRIPTION, this.description);
-            updateObject(this.resource, APPLICATION_AUTHOR, this.authorUrl);
-            updateObject(this.resource, SOLID_OIDC_LOGO_URI, this.logoUrl);
-            updateUrlObjects(this.resource, HAS_ACCESS_NEED_GROUP, this.accessNeedGroupUrls);
-            updateUrlObjects(this.resource, SOLID_OIDC_REDIRECT_URIS, this.redirectUrls);
-            if (this.clientUrl != null) { updateObject(this.resource, SOLID_OIDC_CLIENT_URI, this.clientUrl); }
-            if (this.tosUrl != null) { updateObject(this.resource, SOLID_OIDC_TOS_URI, this.tosUrl); }
+            updateObject(this.resource, APPLICATION_AUTHOR, this.authorUri);
+            updateObject(this.resource, SOLID_OIDC_LOGO_URI, this.logoUri);
+            updateUriObjects(this.resource, HAS_ACCESS_NEED_GROUP, this.accessNeedGroupUris);
+            updateUriObjects(this.resource, SOLID_OIDC_REDIRECT_URIS, this.redirectUris);
+            if (this.clientUri != null) { updateObject(this.resource, SOLID_OIDC_CLIENT_URI, this.clientUri); }
+            if (this.tosUri != null) { updateObject(this.resource, SOLID_OIDC_TOS_URI, this.tosUri); }
             updateObject(this.resource, SOLID_OIDC_SCOPE, String.join(" ", this.scopes));
             updateStringObjects(this.resource, SOLID_OIDC_GRANT_TYPES, this.grantTypes);
             updateStringObjects(this.resource, SOLID_OIDC_RESPONSE_TYPES, this.responseTypes);
@@ -358,10 +358,10 @@ public class ApplicationProfile extends CRUDResource {
         public ApplicationProfile build() throws SaiException {
             Objects.requireNonNull(name, "Must provide a name of the application");
             Objects.requireNonNull(description, "Must provide a description of the application");
-            Objects.requireNonNull(authorUrl, "Must provide an author of the application");
-            Objects.requireNonNull(logoUrl, "Must provide a logo for the application");
-            Objects.requireNonNull(accessNeedGroupUrls, "Must provide access need groups for the application");
-            Objects.requireNonNull(redirectUrls, "Must provide redirect uris for solid-oidc");
+            Objects.requireNonNull(authorUri, "Must provide an author of the application");
+            Objects.requireNonNull(logoUri, "Must provide a logo for the application");
+            Objects.requireNonNull(accessNeedGroupUris, "Must provide access need groups for the application");
+            Objects.requireNonNull(redirectUris, "Must provide redirect uris for solid-oidc");
             Objects.requireNonNull(scopes, "Must provide scopes for solid-oidc");
             Objects.requireNonNull(grantTypes, "Must provide grant types for solid-oidc");
             Objects.requireNonNull(responseTypes, "Must provide response types for solid-oidc");

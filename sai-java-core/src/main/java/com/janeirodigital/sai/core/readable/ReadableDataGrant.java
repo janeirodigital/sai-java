@@ -11,7 +11,7 @@ import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,15 +28,15 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter
 public abstract class ReadableDataGrant extends ReadableResource {
 
-    private final URL dataOwner;
-    private final URL grantee;
-    private final URL registeredShapeTree;
+    private final URI dataOwner;
+    private final URI grantee;
+    private final URI registeredShapeTree;
     private final List<RDFNode> accessModes;
     private final List<RDFNode> creatorAccessModes;
     private final RDFNode scopeOfGrant;
-    private final URL dataRegistration;
-    private final URL accessNeed;
-    private final URL delegationOf;
+    private final URI dataRegistration;
+    private final URI accessNeed;
+    private final URI delegationOf;
 
     /**
      * Construct a {@link ReadableDataGrant} instance from the provided {@link Builder}.
@@ -57,30 +57,30 @@ public abstract class ReadableDataGrant extends ReadableResource {
     }
 
     /**
-     * Get a {@link ReadableDataGrant} at the provided <code>url</code>
-     * @param url URL of the {@link ReadableDataGrant} to get
+     * Get a {@link ReadableDataGrant} at the provided <code>uri</code>
+     * @param uri URI of the {@link ReadableDataGrant} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataGrant}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableDataGrant get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ReadableDataGrant.Builder builder = new ReadableDataGrant.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static ReadableDataGrant get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ReadableDataGrant.Builder builder = new ReadableDataGrant.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ReadableDataGrant} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ReadableDataGrant} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataGrant}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static ReadableDataGrant get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableDataGrant get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -90,7 +90,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
      * @throws SaiException
      */
     public ReadableDataGrant reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -112,7 +112,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
     /**
      * Abstract method implemented by specific types of data grants, that allow the {@link DataInstance}s
      * permitted by that grant to be iterated.
-     * @return Map of <DataInstance URL, Parent DataInstance URL>
+     * @return Map of <DataInstance URI, Parent DataInstance URI>
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
@@ -123,25 +123,25 @@ public abstract class ReadableDataGrant extends ReadableResource {
      */
     public static class Builder extends ReadableResource.Builder<Builder> {
 
-        protected URL dataOwner;
-        protected URL grantee;
-        protected URL registeredShapeTree;
+        protected URI dataOwner;
+        protected URI grantee;
+        protected URI registeredShapeTree;
         protected List<RDFNode> accessModes;
         protected List<RDFNode> creatorAccessModes;
         protected RDFNode scopeOfGrant;
-        protected URL dataRegistration;
-        protected List<URL> dataInstances;
-        protected URL accessNeed;
-        protected URL inheritsFrom;
-        protected URL delegationOf;
+        protected URI dataRegistration;
+        protected List<URI> dataInstances;
+        protected URI accessNeed;
+        protected URI inheritsFrom;
+        protected URI delegationOf;
 
         /**
-         * Initialize builder with <code>url</code and <code>saiSession</code>
-         * @param url URL of the {@link ReadableDataGrant} to build
+         * Initialize builder with <code>uri</code and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableDataGrant} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) {
-            super(url, saiSession);
+        public Builder(URI uri, SaiSession saiSession) {
+            super(uri, saiSession);
             this.accessModes = new ArrayList<>();
             this.creatorAccessModes = new ArrayList<>();
             this.dataInstances = new ArrayList<>();
@@ -175,17 +175,17 @@ public abstract class ReadableDataGrant extends ReadableResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.dataOwner = getRequiredUrlObject(this.resource, DATA_OWNER);
-                this.grantee = getRequiredUrlObject(this.resource, GRANTEE);
-                this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
+                this.dataOwner = getRequiredUriObject(this.resource, DATA_OWNER);
+                this.grantee = getRequiredUriObject(this.resource, GRANTEE);
+                this.registeredShapeTree = getRequiredUriObject(this.resource, REGISTERED_SHAPE_TREE);
                 this.accessModes = getRequiredObjects(this.resource, ACCESS_MODE);
                 this.creatorAccessModes = getObjects(this.resource, CREATOR_ACCESS_MODE);
                 this.scopeOfGrant = getRequiredObject(this.resource, SCOPE_OF_GRANT);
-                this.dataRegistration = getUrlObject(this.resource, HAS_DATA_REGISTRATION);
-                this.dataInstances = getUrlObjects(this.resource, HAS_DATA_INSTANCE);
-                this.accessNeed = getRequiredUrlObject(this.resource, SATISFIES_ACCESS_NEED);
-                this.inheritsFrom = getUrlObject(this.resource, INHERITS_FROM_GRANT);
-                this.delegationOf = getUrlObject(this.resource, DELEGATION_OF_GRANT);
+                this.dataRegistration = getUriObject(this.resource, HAS_DATA_REGISTRATION);
+                this.dataInstances = getUriObjects(this.resource, HAS_DATA_INSTANCE);
+                this.accessNeed = getRequiredUriObject(this.resource, SATISFIES_ACCESS_NEED);
+                this.inheritsFrom = getUriObject(this.resource, INHERITS_FROM_GRANT);
+                this.delegationOf = getUriObject(this.resource, DELEGATION_OF_GRANT);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Unable to populate immutable data grant. Missing required fields", ex);
             }

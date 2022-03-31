@@ -14,13 +14,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.httputils.HttpUtils.putRdfResource;
-import static com.janeirodigital.sai.httputils.HttpUtils.urlToUri;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.getModelFromString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,7 +28,7 @@ class HttpClientValidationTests {
 
     private static HttpClientFactory factory;
     private static MockWebServer server;
-    private static URL validatingUrl;
+    private static URI validatingUri;
     private static Resource validResource;
     private static Resource invalidResource;
 
@@ -45,39 +44,39 @@ class HttpClientValidationTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        validatingUrl = toUrl(server, "/http/validating-resource");
+        validatingUri = toMockUri(server, "/http/validating-resource");
         // Valid dataset
-        Model validModel = getModelFromString(urlToUri(validatingUrl), getValidResourceBody(), TEXT_TURTLE.getValue());
-        validResource = validModel.getResource(validatingUrl.toString() + "#testable");
+        Model validModel = getModelFromString(validatingUri, getValidResourceBody(), TEXT_TURTLE.getValue());
+        validResource = validModel.getResource(validatingUri.toString() + "#testable");
         // Invalid dataset
-        Model invalidModel = getModelFromString(urlToUri(validatingUrl), getInvalidResourceBody(), TEXT_TURTLE.getValue());
-        invalidResource = invalidModel.getResource(validatingUrl.toString() + "#testable");
+        Model invalidModel = getModelFromString(validatingUri, getInvalidResourceBody(), TEXT_TURTLE.getValue());
+        invalidResource = invalidModel.getResource(validatingUri.toString() + "#testable");
     }
 
     @Test
     @DisplayName("Client shape tree validation allows valid data")
-    void clientValidatesValidData() throws SaiException, SaiRdfException, SaiHttpException {
+    void clientValidatesValidData() throws SaiException, SaiHttpException {
         factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
-        Response response = putRdfResource(validatingClient, validatingUrl, validResource, TEXT_TURTLE);
+        Response response = putRdfResource(validatingClient, validatingUri, validResource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
     }
 
     @Test
     @DisplayName("Client shape tree validation fails invalid data")
-    void clientFailsInvalidData() throws SaiException, SaiRdfException, SaiHttpException {
+    void clientFailsInvalidData() throws SaiException, SaiHttpException {
         factory = new HttpClientFactory(false, true, false);
         OkHttpClient validatingClient = factory.get();
-        Response response = putRdfResource(validatingClient, validatingUrl, invalidResource, TEXT_TURTLE);
+        Response response = putRdfResource(validatingClient, validatingUri, invalidResource, TEXT_TURTLE);
         assertFalse(response.isSuccessful());
     }
 
     @Test
     @DisplayName("Disabled client shape tree validation allows invalid data")
-    void disabledClientAllowInvalidData() throws SaiException, SaiRdfException, SaiHttpException {
+    void disabledClientAllowInvalidData() throws SaiException, SaiHttpException {
         factory = new HttpClientFactory(false, false, false);
         OkHttpClient validatingClient = factory.get();
-        Response response = putRdfResource(validatingClient, validatingUrl, invalidResource, TEXT_TURTLE);
+        Response response = putRdfResource(validatingClient, validatingUri, invalidResource, TEXT_TURTLE);
         assertTrue(response.isSuccessful());
     }
 

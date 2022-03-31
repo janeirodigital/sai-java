@@ -14,14 +14,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -56,7 +56,7 @@ class CRUDResourceTests {
     @Test
     @DisplayName("Get a CRUD resource")
     void buildExistingCRUDResource() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/crud-resource#project");
+        URI url = toMockUri(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession,true);
         checkTestableGraph(testable);
     }
@@ -64,12 +64,12 @@ class CRUDResourceTests {
     @Test
     @DisplayName("Create a CRUD resource")
     void createCRUDResource() throws SaiException {
-        URL url = toUrl(server, "/new/crud/crud-resource");
-        List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
+        URI url = toMockUri(server, "/new/crud/crud-resource");
+        List<URI> tags = Arrays.asList(toMockUri(server, "/tags/tag-111"), toMockUri(server, "/tags/tag-222"), toMockUri(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
         TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
-               .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags).setUnprotected()
+               .setMilestone(toMockUri(server, "/crud/project/milestone-1#milestone")).setTags(tags).setUnprotected()
                .setComments(comments).build();
         assertDoesNotThrow(() -> testable.update());
     }
@@ -77,7 +77,7 @@ class CRUDResourceTests {
     @Test
     @DisplayName("Update a CRUD resource")
     void updateCRUDResource() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/crud-resource#project");
+        URI url = toMockUri(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession,true);
         testable.setActive(false);
         assertDoesNotThrow(() -> testable.update());
@@ -86,23 +86,23 @@ class CRUDResourceTests {
     @Test
     @DisplayName("Fail to update a CRUD resource - invalid session")
     void failToUpdateCRUDResourceBadSession() throws SaiException, SaiHttpNotFoundException, SaiAuthenticationException {
-        URL url = toUrl(server, "/crud/crud-resource#project");
+        URI url = toMockUri(server, "/crud/crud-resource#project");
         AuthorizedSession mockUpdateSession = mock(AuthorizedSession.class);
         SaiSession saiUpdateSession = new SaiSession(mockUpdateSession, new HttpClientFactory(false, false, false));
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiUpdateSession, false);
-        when(mockUpdateSession.toHttpHeaders(any(HttpMethod.class), any(URL.class))).thenThrow(SaiAuthenticationException.class);
+        when(mockUpdateSession.toHttpHeaders(any(HttpMethod.class), any(URI.class))).thenThrow(SaiAuthenticationException.class);
         assertThrows(SaiException.class, () -> testable.update());
     }
 
     @Test
     @DisplayName("Fail to update a CRUD resource - missing")
     void failToUpdateCRUDResource() throws SaiException {
-        URL url = toUrl(server, "/crud/missing");
-        List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-111"), toUrl(server, "/tags/tag-222"), toUrl(server, "/tags/tag-333"));
+        URI url = toMockUri(server, "/crud/missing");
+        List<URI> tags = Arrays.asList(toMockUri(server, "/tags/tag-111"), toMockUri(server, "/tags/tag-222"), toMockUri(server, "/tags/tag-333"));
         List<String> comments = Arrays.asList("First updated comment", "Second updated comment", "Third updated comment");
         TestableCRUDResource.Builder builder = new TestableCRUDResource.Builder(url, saiSession);
         TestableCRUDResource testable = builder.setId(42).setName("Interoperability").setCreatedAt(OffsetDateTime.MAX.now()).setActive(false)
-                .setMilestone(toUrl(server, "/crud/project/milestone-1#milestone")).setTags(tags)
+                .setMilestone(toMockUri(server, "/crud/project/milestone-1#milestone")).setTags(tags)
                 .setComments(comments).build();
         assertThrows(SaiException.class, () -> testable.update());
     }
@@ -110,7 +110,7 @@ class CRUDResourceTests {
     @Test
     @DisplayName("Delete a CRUD resource")
     void deleteCRUDResource() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/crud-resource#project");
+        URI url = toMockUri(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession, true);
         assertDoesNotThrow(() -> testable.delete());
     }
@@ -118,18 +118,18 @@ class CRUDResourceTests {
     @Test
     @DisplayName("Fail to delete a CRUD resource")
     void failTodeleteCRUDResource() throws SaiException, SaiHttpNotFoundException, SaiAuthenticationException {
-        URL url = toUrl(server, "/crud/crud-resource#project");
+        URI url = toMockUri(server, "/crud/crud-resource#project");
         AuthorizedSession mockDeleteSession = mock(AuthorizedSession.class);
         SaiSession saiDeleteSession = new SaiSession(mockDeleteSession, new HttpClientFactory(false, false, false));
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiDeleteSession, false);
-        when(mockDeleteSession.toHttpHeaders(any(HttpMethod.class), any(URL.class))).thenThrow(SaiAuthenticationException.class);
+        when(mockDeleteSession.toHttpHeaders(any(HttpMethod.class), any(URI.class))).thenThrow(SaiAuthenticationException.class);
         assertThrows(SaiException.class, () -> testable.delete());
     }
 
     @Test
     @DisplayName("Delete a protected CRUD resource")
     void deleteProtectedCRUDResource() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/crud-resource#project");
+        URI url = toMockUri(server, "/crud/crud-resource#project");
         TestableCRUDResource testable = TestableCRUDResource.get(url, saiSession, false);
         assertDoesNotThrow(() -> testable.delete());
     }
@@ -143,9 +143,9 @@ class CRUDResourceTests {
         assertEquals("Great Validations", testable.getName());
         assertEquals(OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME), testable.getCreatedAt());
         assertTrue(testable.isActive());
-        assertEquals(toUrl(server, "/data/projects/project-1/milestone-3/#milestone"), testable.getMilestone());
+        assertEquals(toMockUri(server, "/data/projects/project-1/milestone-3/#milestone"), testable.getMilestone());
 
-        List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-1"), toUrl(server, "/tags/tag-2"), toUrl(server, "/tags/tag-3"));
+        List<URI> tags = Arrays.asList(toMockUri(server, "/tags/tag-1"), toMockUri(server, "/tags/tag-2"), toMockUri(server, "/tags/tag-3"));
         assertTrue(CollectionUtils.isEqualCollection(tags, testable.getTags()));
 
         List<String> comments = Arrays.asList("First original comment", "Second original comment", "Third original comment");

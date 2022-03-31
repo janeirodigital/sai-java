@@ -8,7 +8,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
+import java.net.URI;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -25,8 +26,8 @@ class ApplicationTests {
     @Test
     @DisplayName("Initialize an Application")
     void initializeApplication() throws SaiException, SaiHttpException {
-        Application app = new Application(stringToUrl(PROJECTRON_ID), false, true, false, sessionAccessor);
-        assertEquals(stringToUrl(PROJECTRON_ID), app.getId());
+        Application app = new Application(URI.create(PROJECTRON_ID), false, true, false, sessionAccessor);
+        assertEquals(URI.create(PROJECTRON_ID), app.getId());
         assertNotNull(app.getClientFactory());
         assertFalse(app.isValidateSsl());
         assertTrue((app.isValidateShapeTrees()));
@@ -35,7 +36,7 @@ class ApplicationTests {
     @Test
     @DisplayName("Initialize an Application Session")
     void initializeApplicationSession() throws SaiException, SaiHttpException {
-        Application app = new Application(stringToUrl(PROJECTRON_ID), false, true, false, sessionAccessor);
+        Application app = new Application(URI.create(PROJECTRON_ID), false, true, false, sessionAccessor);
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         ApplicationSession applicationSession = ApplicationSessionFactory.get(app, mockSession);
         assertNotNull(applicationSession);

@@ -11,7 +11,7 @@ import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.RECIPROCAL_REGISTRATION;
@@ -26,7 +26,7 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter @Setter
 public class SocialAgentRegistration extends AgentRegistration {
 
-    private URL reciprocalRegistration;
+    private URI reciprocalRegistration;
 
     /**
      * Construct a {@link SocialAgentRegistration} instance from the provided {@link Builder}.
@@ -39,31 +39,31 @@ public class SocialAgentRegistration extends AgentRegistration {
     }
 
     /**
-     * Get a {@link SocialAgentRegistration} from the provided <code>url</code>.
-     * @param url URL to generate the {@link SocialAgentRegistration} from
+     * Get a {@link SocialAgentRegistration} from the provided <code>uri</code>.
+     * @param uri URI to generate the {@link SocialAgentRegistration} from
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link SocialAgentRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static SocialAgentRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static SocialAgentRegistration get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link SocialAgentRegistration} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link SocialAgentRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link SocialAgentRegistration}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static SocialAgentRegistration get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static SocialAgentRegistration get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -73,7 +73,7 @@ public class SocialAgentRegistration extends AgentRegistration {
      * @throws SaiException
      */
     public SocialAgentRegistration reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -81,14 +81,14 @@ public class SocialAgentRegistration extends AgentRegistration {
      */
     public static class Builder extends AgentRegistration.Builder<Builder> {
 
-        private URL reciprocalRegistration;
+        private URI reciprocalRegistration;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link SocialAgentRegistration} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link SocialAgentRegistration} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that we don't get an unchecked cast warning when returning from setters
@@ -116,11 +116,11 @@ public class SocialAgentRegistration extends AgentRegistration {
          * Set the <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agent-registration">Reciprocal Registration</a>
          * that <code>registeredAgent</code> maintains for the social agent that owns the agent registry.
          * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar-registry">Agent Registry</a>
-         * @param registrationUrl URL of the reciprocal social agent registration
+         * @param registrationUri URI of the reciprocal social agent registration
          */
-        public Builder setReciprocalRegistration(URL registrationUrl) {
-            Objects.requireNonNull(registrationUrl, "Must provide a reciprocal registration for the social agent registration");
-            this.reciprocalRegistration = registrationUrl;
+        public Builder setReciprocalRegistration(URI registrationUri) {
+            Objects.requireNonNull(registrationUri, "Must provide a reciprocal registration for the social agent registration");
+            this.reciprocalRegistration = registrationUri;
             return this;
         }
 
@@ -131,7 +131,7 @@ public class SocialAgentRegistration extends AgentRegistration {
         @Override
         protected void populateFromDataset() throws SaiException {
             try {
-                this.reciprocalRegistration = getUrlObject(this.resource, RECIPROCAL_REGISTRATION);
+                this.reciprocalRegistration = getUriObject(this.resource, RECIPROCAL_REGISTRATION);
             } catch (SaiRdfException ex) {
                 throw new SaiException("Unable to populate social agent registration from graph", ex);
             }
@@ -143,7 +143,7 @@ public class SocialAgentRegistration extends AgentRegistration {
          */
         @Override
         protected void populateDataset() {
-            this.resource = getNewResourceForType(this.url, SOCIAL_AGENT_REGISTRATION);
+            this.resource = getNewResourceForType(this.uri, SOCIAL_AGENT_REGISTRATION);
             this.dataset = this.resource.getModel();
             if (this.reciprocalRegistration != null) { updateObject(this.resource, RECIPROCAL_REGISTRATION, this.reciprocalRegistration); }
             super.populateDataset();

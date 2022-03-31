@@ -11,7 +11,7 @@ import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,9 +27,9 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter @Setter
 public class RegistrySet extends CRUDResource {
 
-    private URL agentRegistryUrl;
-    private URL authorizationRegistryUrl;
-    private List<URL> dataRegistryUrls;
+    private URI agentRegistryUri;
+    private URI authorizationRegistryUri;
+    private List<URI> dataRegistryUris;
 
     /**
      * Construct a {@link RegistrySet} instance from the provided {@link Builder}.
@@ -38,35 +38,35 @@ public class RegistrySet extends CRUDResource {
      */
     private RegistrySet(Builder builder) throws SaiException {
         super(builder);
-        this.agentRegistryUrl = builder.agentRegistryUrl;
-        this.authorizationRegistryUrl = builder.authorizationRegistryUrl;
-        this.dataRegistryUrls = builder.dataRegistryUrls;
+        this.agentRegistryUri = builder.agentRegistryUri;
+        this.authorizationRegistryUri = builder.authorizationRegistryUri;
+        this.dataRegistryUris = builder.dataRegistryUris;
     }
 
     /**
-     * Get a {@link RegistrySet} at the provided <code>url</code>
-     * @param url URL of the {@link RegistrySet} to get
+     * Get a {@link RegistrySet} at the provided <code>uri</code>
+     * @param uri URI of the {@link RegistrySet} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link RegistrySet}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static RegistrySet get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static RegistrySet get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        RegistrySet.Builder builder = new RegistrySet.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link RegistrySet}
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link RegistrySet}
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static RegistrySet get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static RegistrySet get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -76,7 +76,7 @@ public class RegistrySet extends CRUDResource {
      * @throws SaiException
      */
     public RegistrySet reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -84,18 +84,18 @@ public class RegistrySet extends CRUDResource {
      */
     public static class Builder extends CRUDResource.Builder<Builder> {
         
-        private URL agentRegistryUrl;
-        private URL authorizationRegistryUrl;
-        private List<URL> dataRegistryUrls;
+        private URI agentRegistryUri;
+        private URI authorizationRegistryUri;
+        private List<URI> dataRegistryUris;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link RegistrySet} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link RegistrySet} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) {
-            super(url, saiSession);
-            this.dataRegistryUrls = new ArrayList<>();
+        public Builder(URI uri, SaiSession saiSession) {
+            super(uri, saiSession);
+            this.dataRegistryUris = new ArrayList<>();
         }
 
         /**
@@ -121,35 +121,35 @@ public class RegistrySet extends CRUDResource {
         }
 
         /**
-         * Set the URL of the {@link AgentRegistry}
-         * @param agentRegistryUrl URL of the {@link AgentRegistry} to set
+         * Set the URI of the {@link AgentRegistry}
+         * @param agentRegistryUri URI of the {@link AgentRegistry} to set
          * @return {@link Builder}
          */
-        public Builder setAgentRegistry(URL agentRegistryUrl) {
-            Objects.requireNonNull(agentRegistryUrl, "Must provide the URL of an agent registry to the registry set builder");
-            this.agentRegistryUrl = agentRegistryUrl;
+        public Builder setAgentRegistry(URI agentRegistryUri) {
+            Objects.requireNonNull(agentRegistryUri, "Must provide the URI of an agent registry to the registry set builder");
+            this.agentRegistryUri = agentRegistryUri;
             return this;
         }
 
         /**
-         * Set the URL of the {@link AuthorizationRegistry}
-         * @param authorizationRegistryUrl URL of the {@link AuthorizationRegistry} to set
+         * Set the URI of the {@link AuthorizationRegistry}
+         * @param authorizationRegistryUri URI of the {@link AuthorizationRegistry} to set
          * @return {@link Builder}
          */
-        public Builder setAuthorizationRegistry(URL authorizationRegistryUrl) {
-            Objects.requireNonNull(authorizationRegistryUrl, "Must provide the URL of an authorization registry to the registry set builder");
-            this.authorizationRegistryUrl = authorizationRegistryUrl;
+        public Builder setAuthorizationRegistry(URI authorizationRegistryUri) {
+            Objects.requireNonNull(authorizationRegistryUri, "Must provide the URI of an authorization registry to the registry set builder");
+            this.authorizationRegistryUri = authorizationRegistryUri;
             return this;
         }
 
         /**
-         * Set the URLs of associated Data Registries
-         * @param dataRegistryUrls List of Data Registry URLs
+         * Set the URIs of associated Data Registries
+         * @param dataRegistryUris List of Data Registry URIs
          * @return {@link Builder}
          */
-        public Builder setDataRegistries(List<URL> dataRegistryUrls) {
-            Objects.requireNonNull(dataRegistryUrls, "Must provide the URLs of associated data registries to the registry set builder");
-            this.dataRegistryUrls = dataRegistryUrls;
+        public Builder setDataRegistries(List<URI> dataRegistryUris) {
+            Objects.requireNonNull(dataRegistryUris, "Must provide the URIs of associated data registries to the registry set builder");
+            this.dataRegistryUris = dataRegistryUris;
             return this;
         }
 
@@ -159,11 +159,11 @@ public class RegistrySet extends CRUDResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.agentRegistryUrl = getRequiredUrlObject(this.resource, HAS_AGENT_REGISTRY);
-                this.authorizationRegistryUrl = getRequiredUrlObject(this.resource, HAS_AUTHORIZATION_REGISTRY);
-                this.dataRegistryUrls = getRequiredUrlObjects(this.resource, HAS_DATA_REGISTRY);
+                this.agentRegistryUri = getRequiredUriObject(this.resource, HAS_AGENT_REGISTRY);
+                this.authorizationRegistryUri = getRequiredUriObject(this.resource, HAS_AUTHORIZATION_REGISTRY);
+                this.dataRegistryUris = getRequiredUriObjects(this.resource, HAS_DATA_REGISTRY);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Failed to load registry set " + this.url, ex);
+                throw new SaiException("Failed to load registry set " + this.uri, ex);
             }
         }
 
@@ -171,11 +171,11 @@ public class RegistrySet extends CRUDResource {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         private void populateDataset() {
-            this.resource = getNewResourceForType(this.url, REGISTRY_SET);
+            this.resource = getNewResourceForType(this.uri, REGISTRY_SET);
             this.dataset = this.resource.getModel();
-            updateObject(this.resource, HAS_AGENT_REGISTRY, agentRegistryUrl);
-            updateObject(this.resource, HAS_AUTHORIZATION_REGISTRY, authorizationRegistryUrl);
-            updateUrlObjects(this.resource, HAS_DATA_REGISTRY, this.dataRegistryUrls);
+            updateObject(this.resource, HAS_AGENT_REGISTRY, agentRegistryUri);
+            updateObject(this.resource, HAS_AUTHORIZATION_REGISTRY, authorizationRegistryUri);
+            updateUriObjects(this.resource, HAS_DATA_REGISTRY, this.dataRegistryUris);
         }
 
         /**
@@ -186,9 +186,9 @@ public class RegistrySet extends CRUDResource {
          * @throws SaiException
          */
         public RegistrySet build() throws SaiException {
-            Objects.requireNonNull(this.agentRegistryUrl, "Must provide the URL of an agent registry to the registry set builder");
-            Objects.requireNonNull(this.authorizationRegistryUrl, "Must provide the URL of an authorization registry to the registry set builder");
-            Objects.requireNonNull(this.dataRegistryUrls, "Must provide the URLs of associated data registries to the registry set builder");
+            Objects.requireNonNull(this.agentRegistryUri, "Must provide the URI of an agent registry to the registry set builder");
+            Objects.requireNonNull(this.authorizationRegistryUri, "Must provide the URI of an authorization registry to the registry set builder");
+            Objects.requireNonNull(this.dataRegistryUris, "Must provide the URIs of associated data registries to the registry set builder");
             if (this.dataset == null) { populateDataset(); }
             return new RegistrySet(this);
         }
