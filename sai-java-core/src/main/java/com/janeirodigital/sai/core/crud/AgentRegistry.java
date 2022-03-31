@@ -88,10 +88,9 @@ public class AgentRegistry extends CRUDResource {
     /**
      * Add a {@link SocialAgentRegistration} or {@link ApplicationRegistration} to the {@link AgentRegistry}
      * @param registration {@link AgentRegistration} to add
-     * @throws SaiException
      * @throws SaiAlreadyExistsException
      */
-    public void add(AgentRegistration registration) throws SaiException, SaiAlreadyExistsException {
+    public void add(AgentRegistration registration) throws SaiAlreadyExistsException {
         Objects.requireNonNull(registration, "Cannot add a null agent registration to agent registry");
         if (registration instanceof SocialAgentRegistration) { addSocialAgentRegistration((SocialAgentRegistration) registration); }
         if (registration instanceof ApplicationRegistration) { addApplicationRegistration((ApplicationRegistration) registration); }
@@ -102,7 +101,6 @@ public class AgentRegistry extends CRUDResource {
      * doesn't already exist for the registered agent.
      * @param registration {@link SocialAgentRegistration} to add
      * @throws SaiAlreadyExistsException
-     * @throws SaiException
      */
     private void addSocialAgentRegistration(SocialAgentRegistration registration) throws SaiAlreadyExistsException {
         SocialAgentRegistration found = this.getSocialAgentRegistrations().find(registration.getRegisteredAgent());
@@ -115,7 +113,6 @@ public class AgentRegistry extends CRUDResource {
      * doesn't already exist for the registered agent.
      * @param registration {@link ApplicationRegistration} to add
      * @throws SaiAlreadyExistsException
-     * @throws SaiException
      */
     private void addApplicationRegistration(ApplicationRegistration registration) throws SaiAlreadyExistsException {
         ApplicationRegistration found = this.getApplicationRegistrations().find(registration.getRegisteredAgent());
