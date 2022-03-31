@@ -15,14 +15,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.net.URL;
+import java.net.URI;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -32,13 +32,13 @@ class SocialAgentRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static URL sa1RegisteredBy;
-    private static URL sa1RegisteredWith;
+    private static URI sa1RegisteredBy;
+    private static URI sa1RegisteredWith;
     private static OffsetDateTime sa1RegisteredAt;
     private static OffsetDateTime sa1UpdatedAt;
-    private static URL sa1ReciprocalRegistration;
-    private static URL sa1RegisteredAgent;
-    private static URL sa1AccessGrant;
+    private static URI sa1ReciprocalRegistration;
+    private static URI sa1RegisteredAgent;
+    private static URI sa1AccessGrant;
 
     @BeforeAll
     static void beforeAll() throws SaiException, SaiHttpException {
@@ -67,19 +67,19 @@ class SocialAgentRegistrationTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        sa1RegisteredBy = stringToUrl("https://alice.example/id#me");
-        sa1RegisteredWith = toUrl(server, "https://trusted.example/id#app");
+        sa1RegisteredBy = URI.create("https://alice.example/id#me");
+        sa1RegisteredWith = toMockUri(server, "https://trusted.example/id#app");
         sa1RegisteredAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
         sa1UpdatedAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
-        sa1RegisteredAgent = stringToUrl("https://bob.example/id#me");
-        sa1ReciprocalRegistration = stringToUrl("https://bob.example/agents/sa-7/");
-        sa1AccessGrant = toUrl(server, "/ttl/agents/sa-1/access-grant");
+        sa1RegisteredAgent = URI.create("https://bob.example/id#me");
+        sa1ReciprocalRegistration = URI.create("https://bob.example/agents/sa-7/");
+        sa1AccessGrant = toMockUri(server, "/ttl/agents/sa-1/access-grant");
     }
 
     @Test
     @DisplayName("Create new crud social agent registration")
     void createNewCrudSocialAgentRegistration() throws SaiException {
-        URL url = toUrl(server, "/new/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/new/ttl/agents/sa-1/");
         SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
         SocialAgentRegistration registration = builder.setRegisteredBy(sa1RegisteredBy).setRegisteredWith(sa1RegisteredWith)
                 .setRegisteredAt(sa1RegisteredAt).setUpdatedAt(sa1UpdatedAt)
@@ -92,7 +92,7 @@ class SocialAgentRegistrationTests {
     @Test
     @DisplayName("Create new crud social agent registration - only required fields")
     void createNewCrudSocialAgentRegistrationRequired() throws SaiException {
-        URL url = toUrl(server, "/new/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/new/ttl/agents/sa-1/");
         SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
         SocialAgentRegistration registration = builder.setRegisteredBy(sa1RegisteredBy).setRegisteredWith(sa1RegisteredWith)
                 .setRegisteredAgent(sa1RegisteredAgent).build();
@@ -103,7 +103,7 @@ class SocialAgentRegistrationTests {
     @Test
     @DisplayName("Read crud social agent registration")
     void readSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
         checkRegistration(registration, false);
     }
@@ -111,7 +111,7 @@ class SocialAgentRegistrationTests {
     @Test
     @DisplayName("Read crud social agent registration - only required fields")
     void readSocialAgentRegistrationRequired() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/required/agents/sa-1/");
+        URI url = toMockUri(server, "/ttl/required/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
         checkRegistration(registration, true);
     }
@@ -119,7 +119,7 @@ class SocialAgentRegistrationTests {
     @Test
     @DisplayName("Reload crud social agent registration")
     void reloadSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
         SocialAgentRegistration reloaded = registration.reload();
         checkRegistration(reloaded, false);
@@ -128,31 +128,31 @@ class SocialAgentRegistrationTests {
     @Test
     @DisplayName("Fail to read existing crud social agent registration - missing required fields")
     void failToReadSocialAgentRegistration() {
-        URL url = toUrl(server, "/missing-fields/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/missing-fields/ttl/agents/sa-1/");
         assertThrows(SaiException.class, () -> SocialAgentRegistration.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Fail to read existing crud social agent registration - invalid fields")
     void failToReadSocialAgentRegistrationBadReciprocal() {
-        URL url = toUrl(server, "/invalid-fields/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/invalid-fields/ttl/agents/sa-1/");
         assertThrows(SaiException.class, () -> SocialAgentRegistration.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Update existing crud social agent registration")
     void updateSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/ttl/agents/sa-1/");
 
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
-        registration.setReciprocalRegistration(stringToUrl("https://bob.example/agents/sa-222/"));
+        registration.setReciprocalRegistration(URI.create("https://bob.example/agents/sa-222/"));
         assertDoesNotThrow(() -> registration.update());
     }
 
     @Test
     @DisplayName("Read existing social agent registration in JSON-LD")
     void readSocialAgentRegistrationJsonLd() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/jsonld/agents/sa-1/");
+        URI url = toMockUri(server, "/jsonld/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession, LD_JSON);
         checkRegistration(registration, false);
     }
@@ -160,7 +160,7 @@ class SocialAgentRegistrationTests {
     @Test
     @DisplayName("Create new crud social agent registration in JSON-LD")
     void createNewCrudSocialAgentRegistrationJsonLd() throws SaiException {
-        URL url = toUrl(server, "/new/jsonld/agents/sa-1/");
+        URI url = toMockUri(server, "/new/jsonld/agents/sa-1/");
         SocialAgentRegistration.Builder builder = new SocialAgentRegistration.Builder(url, saiSession);
         SocialAgentRegistration registration = builder.setContentType(LD_JSON).setRegisteredBy(sa1RegisteredBy)
                                                       .setRegisteredWith(sa1RegisteredWith)
@@ -174,28 +174,28 @@ class SocialAgentRegistrationTests {
     @Test
     @DisplayName("Delete crud social agent registration")
     void deleteSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
+        URI url = toMockUri(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
         assertDoesNotThrow(() -> registration.delete());
         assertFalse(registration.isExists());
     }
 
     @Test
-    @DisplayName("Generate URL for contained resource")
-    void generateUrlForContained() throws SaiHttpNotFoundException, SaiException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
+    @DisplayName("Generate URI for contained resource")
+    void generateUriForContained() throws SaiHttpNotFoundException, SaiException {
+        URI url = toMockUri(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
-        assertDoesNotThrow(() -> registration.generateContainedUrl());
+        assertDoesNotThrow(() -> registration.generateContainedUri());
     }
 
     @Test
-    @DisplayName("Fail to generate URL for contained resource - Invalid path")
-    void failToGenerateUrlForContained() throws SaiHttpNotFoundException, SaiException {
-        URL url = toUrl(server, "/ttl/agents/sa-1/");
+    @DisplayName("Fail to generate URI for contained resource - Invalid path")
+    void failToGenerateUriForContained() throws SaiHttpNotFoundException, SaiException {
+        URI url = toMockUri(server, "/ttl/agents/sa-1/");
         SocialAgentRegistration registration = SocialAgentRegistration.get(url, saiSession);
         try (MockedStatic<HttpUtils> mockedStaticUtils = Mockito.mockStatic(HttpUtils.class)) {
-            mockedStaticUtils.when(() -> HttpUtils.addChildToUrlPath(any(URL.class), anyString())).thenThrow(SaiHttpException.class);
-            assertThrows(SaiException.class, () -> registration.generateContainedUrl());
+            mockedStaticUtils.when(() -> HttpUtils.addChildToUriPath(any(URI.class), anyString())).thenThrow(SaiHttpException.class);
+            assertThrows(SaiException.class, () -> registration.generateContainedUri());
         }
     }
 
@@ -209,7 +209,7 @@ class SocialAgentRegistrationTests {
         if (!required) {
             assertEquals(sa1ReciprocalRegistration, registration.getReciprocalRegistration());
             assertTrue(registration.hasAccessGrant());
-            assertEquals(sa1AccessGrant, registration.getAccessGrantUrl());
+            assertEquals(sa1AccessGrant, registration.getAccessGrantUri());
         }
     }
 

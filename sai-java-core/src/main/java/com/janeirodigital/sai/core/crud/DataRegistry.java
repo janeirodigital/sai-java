@@ -11,7 +11,7 @@ import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -41,29 +41,29 @@ public class DataRegistry extends CRUDResource {
     }
 
     /**
-     * Get a {@link DataRegistry} at the provided <code>url</code>
-     * @param url URL of the {@link DataRegistry} to get
+     * Get a {@link DataRegistry} at the provided <code>uri</code>
+     * @param uri URI of the {@link DataRegistry} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link DataRegistry}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static DataRegistry get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        DataRegistry.Builder builder = new DataRegistry.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static DataRegistry get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        DataRegistry.Builder builder = new DataRegistry.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link DataRegistry}
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link DataRegistry}
      * @param saiSession {@link SaiSession} to assign
      * @return
      */
-    public static DataRegistry get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static DataRegistry get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -73,7 +73,7 @@ public class DataRegistry extends CRUDResource {
      * @throws SaiException
      */
     public DataRegistry reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -93,8 +93,8 @@ public class DataRegistry extends CRUDResource {
     public void add(DataRegistration registration) throws SaiException, SaiAlreadyExistsException {
         Objects.requireNonNull(registration, "Cannot add a null data registration to agent registry");
         DataRegistration found = this.getDataRegistrations().find(registration.getRegisteredShapeTree());
-        if (found != null) { throw new SaiAlreadyExistsException("Data registration already exists for shape tree " + registration.getRegisteredShapeTree() + " at " + found.getUrl()); }
-        this.getDataRegistrations().add(registration.getUrl());
+        if (found != null) { throw new SaiAlreadyExistsException("Data registration already exists for shape tree " + registration.getRegisteredShapeTree() + " at " + found.getUri()); }
+        this.getDataRegistrations().add(registration.getUri());
     }
 
     /**
@@ -103,7 +103,7 @@ public class DataRegistry extends CRUDResource {
      */
     public void remove(DataRegistration registration) {
         Objects.requireNonNull(registration, "Cannot remove a null data registration to agent registry");
-        this.dataRegistrations.remove(registration.getUrl());
+        this.dataRegistrations.remove(registration.getUri());
     }
     
     /**
@@ -114,12 +114,12 @@ public class DataRegistry extends CRUDResource {
         private DataRegistrationList<DataRegistration> dataRegistrations;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link DataRegistry} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link DataRegistry} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) {
-            super(url, saiSession);
+        public Builder(URI uri, SaiSession saiSession) {
+            super(uri, saiSession);
         }
 
         /**
@@ -153,7 +153,7 @@ public class DataRegistry extends CRUDResource {
                 this.dataRegistrations = new DataRegistrationList<>(this.saiSession, this.resource);
                 this.dataRegistrations.populate();
             } catch (SaiException ex) {
-                throw new SaiException("Failed to load data registry " + this.url, ex);
+                throw new SaiException("Failed to load data registry " + this.uri, ex);
             }
         }
 
@@ -161,9 +161,9 @@ public class DataRegistry extends CRUDResource {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         private void populateDataset() {
-            this.resource = getNewResourceForType(this.url, DATA_REGISTRY);
+            this.resource = getNewResourceForType(this.uri, DATA_REGISTRY);
             this.dataset = this.resource.getModel();
-            // Note that data registration URLs added via setDataRegistrationUrls are automatically added to the
+            // Note that data registration URIs added via setDataRegistrationUris are automatically added to the
             // dataset graph, so they don't have to be added here again
         }
 
@@ -191,14 +191,14 @@ public class DataRegistry extends CRUDResource {
         /**
          * Override the default find in {@link RegistrationList} to lookup based on the registered shape tree of
          * a {@link DataRegistration}
-         * @param shapeTreeUrl URL of the registeredShapeTree to find
+         * @param shapeTreeUri URI of the registeredShapeTree to find
          * @return {@link DataRegistration}
          */
         @Override
-        public T find(URL shapeTreeUrl) {
+        public T find(URI shapeTreeUri) {
             for (T registration : this) {
                 DataRegistration dataRegistration = (DataRegistration) registration;
-                if (shapeTreeUrl.equals(dataRegistration.getRegisteredShapeTree())) { return registration; }
+                if (shapeTreeUri.equals(dataRegistration.getRegisteredShapeTree())) { return registration; }
             }
             return null;
         }
@@ -208,22 +208,22 @@ public class DataRegistry extends CRUDResource {
          * @return {@link DataRegistration} Iterator
          */
         @Override
-        public Iterator<T> iterator() { return new DataRegistrationListIterator<>(this.getSaiSession(), this.getRegistrationUrls()); }
+        public Iterator<T> iterator() { return new DataRegistrationListIterator<>(this.getSaiSession(), this.getRegistrationUris()); }
 
         /**
-         * Custom iterator that iterates over {@link DataRegistration} URLs and gets actual instances of them
+         * Custom iterator that iterates over {@link DataRegistration} URIs and gets actual instances of them
          */
         private static class DataRegistrationListIterator<T> extends RegistrationListIterator<T> {
-            public DataRegistrationListIterator(SaiSession saiSession, List<URL> registrationUrls) { super(saiSession, registrationUrls); }
+            public DataRegistrationListIterator(SaiSession saiSession, List<URI> registrationUris) { super(saiSession, registrationUris); }
             /**
-             * Get the {@link DataRegistration} for the next URL in the iterator
+             * Get the {@link DataRegistration} for the next URI in the iterator
              * @return {@link DataRegistration}
              */
             @Override
             public T next() {
                 try {
-                    URL registrationUrl = current.next();
-                    return (T) DataRegistration.get(registrationUrl, saiSession);
+                    URI registrationUri = current.next();
+                    return (T) DataRegistration.get(registrationUri, saiSession);
                 } catch (SaiException | SaiHttpNotFoundException ex) {
                     throw new SaiRuntimeException("Failed to get data registration while iterating list", ex);
                 }

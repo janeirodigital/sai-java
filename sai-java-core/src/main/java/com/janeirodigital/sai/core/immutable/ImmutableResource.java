@@ -10,7 +10,7 @@ import lombok.Getter;
 import okhttp3.Headers;
 import okhttp3.Response;
 
-import java.net.URL;
+import java.net.URI;
 
 import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.deleteProtectedResource;
 import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
@@ -35,17 +35,17 @@ public class ImmutableResource extends ReadableResource {
     /**
      * Create the corresponding resource over HTTP with the current contents
      * of <code>dataset</code>. If-None-Match header is used to ensure another
-     * resource at <code>url</code> doesn't already exist.
+     * resource at <code>uri</code> doesn't already exist.
      * @throws SaiException
      */
     public void create() throws SaiException {
         Headers headers = setHttpHeader(HttpHeader.IF_NONE_MATCH, "*");
         try {
             if (this.isUnprotected()) { this.createUnprotected(headers); } else {
-                checkResponse(putProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
+                checkResponse(putProtectedRdfResource(this.saiSession.getAuthorizedSession(), this.httpClient, this.uri, this.resource, this.contentType, this.jsonLdContext, headers));
             }
         } catch (SaiAuthenticationException | SaiHttpException ex) {
-            throw new SaiException("Failed to create immutable resource " + this.url, ex);
+            throw new SaiException("Failed to create immutable resource " + this.uri, ex);
         }
         this.exists = true;
     }
@@ -54,7 +54,7 @@ public class ImmutableResource extends ReadableResource {
      * Create the corresponding resource without sending any authorization headers
      */
     private void createUnprotected(Headers headers) throws SaiHttpException {
-        checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext, headers));
+        checkResponse(putRdfResource(this.httpClient, this.uri, this.resource, this.contentType, this.jsonLdContext, headers));
     }
 
     /**
@@ -64,10 +64,10 @@ public class ImmutableResource extends ReadableResource {
     public void delete() throws SaiException {
         try {
             if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-                checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
+                checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.uri));
             }
         } catch (SaiHttpException | SaiAuthenticationException ex) {
-            throw new SaiException("Failed to delete immutable resource " + this.url, ex);
+            throw new SaiException("Failed to delete immutable resource " + this.uri, ex);
         }
         this.exists = false;
     }
@@ -78,7 +78,7 @@ public class ImmutableResource extends ReadableResource {
      * @throws SaiHttpException
      */
     private void deleteUnprotected() throws SaiHttpException {
-        checkResponse(deleteResource(this.httpClient, this.url));
+        checkResponse(deleteResource(this.httpClient, this.uri));
     }
 
     /**
@@ -88,7 +88,7 @@ public class ImmutableResource extends ReadableResource {
      * @throws SaiHttpException
      */
     private Response checkResponse(Response response) throws SaiHttpException {
-        if (!response.isSuccessful()) { throw new SaiHttpException("Failed to " + response.request().method() + " " + this.url + ": " + getResponseFailureMessage(response)); }
+        if (!response.isSuccessful()) { throw new SaiHttpException("Failed to " + response.request().method() + " " + this.uri + ": " + getResponseFailureMessage(response)); }
         return response;
     }
 
@@ -101,10 +101,10 @@ public class ImmutableResource extends ReadableResource {
 
         /**
          * Base builder for Immutable resource types. Use setters for all further configuration
-         * @param url URL of the resource to build
+         * @param uri URI of the resource to build
          * @param saiSession {@link SaiSession} to use
          */
-        protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        protected Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
     }
 }

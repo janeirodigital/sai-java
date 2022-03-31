@@ -10,13 +10,13 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredDateTimeObject;
-import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObject;
+import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUriObject;
 
 /**
  * Readable instantiation of a
@@ -25,11 +25,11 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.getRequiredUrlObject;
 @Getter
 public class ReadableDataRegistration extends ReadableResource {
 
-    private final URL registeredBy;
-    private final URL registeredWith;
+    private final URI registeredBy;
+    private final URI registeredWith;
     private final OffsetDateTime registeredAt;
     private final OffsetDateTime updatedAt;
-    private final URL registeredShapeTree;
+    private final URI registeredShapeTree;
 
     /**
      * Construct a {@link ReadableDataRegistration} instance from the provided {@link Builder}.
@@ -46,31 +46,31 @@ public class ReadableDataRegistration extends ReadableResource {
     }
 
     /**
-     * Get a {@link ReadableDataRegistration} at the provided <code>url</code>
-     * @param url URL of the {@link ReadableDataRegistration} to get
+     * Get a {@link ReadableDataRegistration} at the provided <code>uri</code>
+     * @param uri URI of the {@link ReadableDataRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use
      * @return Retrieved {@link ReadableDataRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableDataRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ReadableDataRegistration.Builder builder = new ReadableDataRegistration.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static ReadableDataRegistration get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ReadableDataRegistration.Builder builder = new ReadableDataRegistration.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ReadableDataRegistration} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ReadableDataRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ReadableDataRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ReadableDataRegistration get(URL url, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ReadableDataRegistration get(URI uri, SaiSession saiSession) throws SaiException, SaiHttpNotFoundException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -80,7 +80,7 @@ public class ReadableDataRegistration extends ReadableResource {
      * @throws SaiException
      */
     public ReadableDataRegistration reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -88,18 +88,18 @@ public class ReadableDataRegistration extends ReadableResource {
      */
     private static class Builder extends ReadableResource.Builder<Builder> {
 
-        private URL registeredBy;
-        private URL registeredWith;
+        private URI registeredBy;
+        private URI registeredWith;
         private OffsetDateTime registeredAt;
         private OffsetDateTime updatedAt;
-        private URL registeredShapeTree;
+        private URI registeredShapeTree;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ReadableApplicationProfile} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ReadableApplicationProfile} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that don't get an unchecked cast warning when returning from setters
@@ -129,11 +129,11 @@ public class ReadableDataRegistration extends ReadableResource {
          */
         private void populateFromDataset() throws SaiException {
             try {
-                this.registeredBy = getRequiredUrlObject(this.resource, REGISTERED_BY);
-                this.registeredWith = getRequiredUrlObject(this.resource, REGISTERED_WITH);
+                this.registeredBy = getRequiredUriObject(this.resource, REGISTERED_BY);
+                this.registeredWith = getRequiredUriObject(this.resource, REGISTERED_WITH);
                 this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
-                this.registeredShapeTree = getRequiredUrlObject(this.resource, REGISTERED_SHAPE_TREE);
+                this.registeredShapeTree = getRequiredUriObject(this.resource, REGISTERED_SHAPE_TREE);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Unable to populate readable data registration resource", ex);
             }

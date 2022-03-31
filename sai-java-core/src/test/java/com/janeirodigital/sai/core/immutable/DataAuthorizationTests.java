@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -21,10 +21,9 @@ import java.util.List;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnPut;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.core.vocabularies.AclVocabulary.*;
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -32,15 +31,15 @@ class DataAuthorizationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static URL ALICE_ID;
-    private static URL BOB_ID;
-    private static URL JARVIS_ID;
-    private static URL PROJECTRON_ID;
-    private static URL PROJECTRON_NEED_GROUP;
-    private static URL PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE;
-    private static URL PROJECTRON_PROJECT_NEED, PROJECTRON_MILESTONE_NEED, PROJECTRON_ISSUE_NEED, PROJECTRON_TASK_NEED;
+    private static URI ALICE_ID;
+    private static URI BOB_ID;
+    private static URI JARVIS_ID;
+    private static URI PROJECTRON_ID;
+    private static URI PROJECTRON_NEED_GROUP;
+    private static URI PROJECT_TREE, MILESTONE_TREE, ISSUE_TREE, TASK_TREE;
+    private static URI PROJECTRON_PROJECT_NEED, PROJECTRON_MILESTONE_NEED, PROJECTRON_ISSUE_NEED, PROJECTRON_TASK_NEED;
     private static OffsetDateTime GRANT_TIME;
-    private static List<URL> ALL_DATA_AUTHORIZATION_URLS;
+    private static List<URI> ALL_DATA_AUTHORIZATION_URIS;
     private static List<RDFNode> ACCESS_MODES, CREATOR_ACCESS_MODES, READ_MODES, WRITE_MODES;
 
     @BeforeAll
@@ -68,22 +67,22 @@ class DataAuthorizationTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        ALICE_ID = stringToUrl("https://alice.example/id");
-        BOB_ID = stringToUrl("https://bob.example/id");
-        JARVIS_ID = stringToUrl("https://jarvis.example/id");
-        PROJECTRON_ID = stringToUrl("https://projectron.example/id");
+        ALICE_ID = URI.create("https://alice.example/id");
+        BOB_ID = URI.create("https://bob.example/id");
+        JARVIS_ID = URI.create("https://jarvis.example/id");
+        PROJECTRON_ID = URI.create("https://projectron.example/id");
         GRANT_TIME = OffsetDateTime.parse("2020-09-05T06:15:01Z", DateTimeFormatter.ISO_DATE_TIME);
-        PROJECTRON_NEED_GROUP = stringToUrl("https://projectron.example/#d8219b1f");
-        PROJECTRON_PROJECT_NEED = stringToUrl("https://projectron.example/#ac54ff1e");
-        PROJECTRON_MILESTONE_NEED = stringToUrl("https://projectron.example/#bd66ee2b");
-        PROJECTRON_ISSUE_NEED = stringToUrl("https://projectron.example/#aa123a1b");
-        PROJECTRON_TASK_NEED = stringToUrl("https://projectron.example/#ce22cc1a");
-        ALL_DATA_AUTHORIZATION_URLS = Arrays.asList(toUrl(server, "/authorization/all-1-project"), toUrl(server, "/authorization/all-1-milestone"),
-                                              toUrl(server, "/authorization/all-1-issue"), toUrl(server, "/authorization/all-1-task"));
-        PROJECT_TREE = toUrl(server, "/shapetrees/pm#ProjectTree");
-        MILESTONE_TREE = toUrl(server, "/shapetrees/pm#MilestoneTree");
-        ISSUE_TREE = toUrl(server, "/shapetrees/pm#IssueTree");
-        TASK_TREE = toUrl(server, "/shapetrees/pm#TaskTree");
+        PROJECTRON_NEED_GROUP = URI.create("https://projectron.example/#d8219b1f");
+        PROJECTRON_PROJECT_NEED = URI.create("https://projectron.example/#ac54ff1e");
+        PROJECTRON_MILESTONE_NEED = URI.create("https://projectron.example/#bd66ee2b");
+        PROJECTRON_ISSUE_NEED = URI.create("https://projectron.example/#aa123a1b");
+        PROJECTRON_TASK_NEED = URI.create("https://projectron.example/#ce22cc1a");
+        ALL_DATA_AUTHORIZATION_URIS = Arrays.asList(toMockUri(server, "/authorization/all-1-project"), toMockUri(server, "/authorization/all-1-milestone"),
+                                              toMockUri(server, "/authorization/all-1-issue"), toMockUri(server, "/authorization/all-1-task"));
+        PROJECT_TREE = toMockUri(server, "/shapetrees/pm#ProjectTree");
+        MILESTONE_TREE = toMockUri(server, "/shapetrees/pm#MilestoneTree");
+        ISSUE_TREE = toMockUri(server, "/shapetrees/pm#IssueTree");
+        TASK_TREE = toMockUri(server, "/shapetrees/pm#TaskTree");
         ACCESS_MODES = Arrays.asList(ACL_READ, ACL_CREATE);
         READ_MODES = Arrays.asList(ACL_READ);
         WRITE_MODES = Arrays.asList(ACL_WRITE);
@@ -94,8 +93,8 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Create new data authorization - scope: all")
     void createAll() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/all-1-project");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID)
                                                    .setGrantee(PROJECTRON_ID)
                                                    .setRegisteredShapeTree(PROJECT_TREE)
@@ -111,14 +110,14 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Create new data authorization - scope: all from registry")
     void createAllFromRegistry() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/registry-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/registry-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                                                    .setGrantedBy(ALICE_ID)
                                                    .setGrantee(PROJECTRON_ID)
                                                    .setRegisteredShapeTree(PROJECT_TREE)
-                                                   .setDataRegistration(drUrl)
+                                                   .setDataRegistration(drUri)
                                                    .setAccessModes(WRITE_MODES)
                                                    .setCreatorAccessModes(CREATOR_ACCESS_MODES)
                                                    .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
@@ -131,17 +130,17 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Create new data authorization - scope: selected from registry")
     void createSelectedFromRegistry() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
-                                                toUrl(server, "/personal/data/projects/project-2"),
-                                                toUrl(server, "/personal/data/projects/project-3"));
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/selected-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        List<URI> dataInstances = Arrays.asList(toMockUri(server, "/personal/data/projects/project-1"),
+                                                toMockUri(server, "/personal/data/projects/project-2"),
+                                                toMockUri(server, "/personal/data/projects/project-3"));
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                                                     .setGrantedBy(ALICE_ID)
                                                     .setGrantee(PROJECTRON_ID)
                                                     .setRegisteredShapeTree(PROJECT_TREE)
-                                                    .setDataRegistration(drUrl)
+                                                    .setDataRegistration(drUri)
                                                     .setAccessModes(READ_MODES)
                                                     .setScopeOfAuthorization(SCOPE_SELECTED_FROM_REGISTRY)
                                                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
@@ -154,8 +153,8 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Create new data authorization - scope: all from agent")
     void createAllFromAgent() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/agent-1-project");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/agent-1-project");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID)
                                                    .setGrantedBy(ALICE_ID)
                                                    .setGrantee(PROJECTRON_ID)
@@ -171,20 +170,20 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Create new data authorization - scope: inherited")
     void createInherited() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/project-1-milestone");
-        URL milestoneUrl = toUrl(server, "/authorization/registry-1-milestone");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/project-1-milestone");
+        URI milestoneUri = toMockUri(server, "/authorization/registry-1-milestone");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder milestoneBuilder = new DataAuthorization.Builder(milestoneUri, saiSession);
         DataAuthorization milestoneAuthorization = milestoneBuilder.setDataOwner(ALICE_ID)
                 .setGrantedBy(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
                 .setRegisteredShapeTree(MILESTONE_TREE)
-                .setDataRegistration(drUrl)
+                .setDataRegistration(drUri)
                 .setAccessModes(ACCESS_MODES)
                 .setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfAuthorization(SCOPE_INHERITED)
                 .setAccessNeed(PROJECTRON_MILESTONE_NEED)
-                .setInheritsFrom(projectUrl)
+                .setInheritsFrom(projectUri)
                 .build();
         assertDoesNotThrow(() -> milestoneAuthorization.create());
     }
@@ -192,14 +191,14 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Create new data authorization - scope: no access")
     void createNoAccess() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/selected-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantedBy(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
-                .setDataRegistration(drUrl)
+                .setDataRegistration(drUri)
                 .setAccessModes(ACCESS_MODES)
                 .setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfAuthorization(SCOPE_NO_ACCESS)
@@ -213,15 +212,15 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - scope: invalid")
     void failToCreateInvalidScope() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/selected-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
         DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                 .setGrantedBy(ALICE_ID)
                 .setGrantee(PROJECTRON_ID)
                 .setRegisteredShapeTree(PROJECT_TREE)
-                .setDataRegistration(drUrl)
+                .setDataRegistration(drUri)
                 .setAccessModes(ACCESS_MODES)
                 .setCreatorAccessModes(CREATOR_ACCESS_MODES)
                 .setScopeOfAuthorization(ACCESS_GRANT)  // INVALID
@@ -233,15 +232,15 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - create privileges and no creator modes")
     void failToCreateInvalidCreator() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/selected-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
-                    .setDataRegistration(drUrl)
+                    .setDataRegistration(drUri)
                     .setAccessModes(ACCESS_MODES)  // can create but no creator modes are set
                     .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
@@ -252,21 +251,21 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - not inherited and inherits from data authorization")
     void failToCreateInvalidInheritsFrom() {
-        URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/all-1-project");
+        URI milestoneUri = toMockUri(server, "/authorization/all-1-milestone");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
-                    .setDataRegistration(drUrl)
+                    .setDataRegistration(drUri)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
                     .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
-                    .setInheritsFrom(milestoneUrl)
+                    .setInheritsFrom(milestoneUri)
                     .build();
         });
     }
@@ -274,15 +273,15 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - selected with no instances")
     void failToCreateSelectedNoInstances() throws SaiException {
-        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/selected-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
-                    .setDataRegistration(drUrl)
+                    .setDataRegistration(drUri)
                     .setAccessModes(READ_MODES)
                     .setScopeOfAuthorization(SCOPE_SELECTED_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
@@ -295,12 +294,12 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - selected with no instances")
     void failToCreateSelectedNoRegistration() {
-        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
-                toUrl(server, "/personal/data/projects/project-2"),
-                toUrl(server, "/personal/data/projects/project-3"));
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/selected-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        List<URI> dataInstances = Arrays.asList(toMockUri(server, "/personal/data/projects/project-1"),
+                toMockUri(server, "/personal/data/projects/project-2"),
+                toMockUri(server, "/personal/data/projects/project-3"));
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
@@ -319,18 +318,18 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - has instances and no selected scope")
     void failToCreateInstancesNoSelected() {
-        URL projectUrl = toUrl(server, "/authorization/selected-1-project");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        List<URL> dataInstances = Arrays.asList(toUrl(server, "/personal/data/projects/project-1"),
-                toUrl(server, "/personal/data/projects/project-2"),
-                toUrl(server, "/personal/data/projects/project-3"));
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/selected-1-project");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        List<URI> dataInstances = Arrays.asList(toMockUri(server, "/personal/data/projects/project-1"),
+                toMockUri(server, "/personal/data/projects/project-2"),
+                toMockUri(server, "/personal/data/projects/project-3"));
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
-                    .setDataRegistration(drUrl)
+                    .setDataRegistration(drUri)
                     .setAccessModes(READ_MODES)
                     .setScopeOfAuthorization(SCOPE_ALL_FROM_REGISTRY)
                     .setAccessNeed(PROJECTRON_PROJECT_NEED)
@@ -344,15 +343,15 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - scope of all but data registration provided")
     void failToCreateAllAndDataReg() {
-        URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/all-1-project");
+        URI milestoneUri = toMockUri(server, "/authorization/all-1-milestone");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
-                    .setDataRegistration(drUrl)
+                    .setDataRegistration(drUri)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
                     .setScopeOfAuthorization(SCOPE_ALL)
@@ -364,10 +363,10 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - scope of all but data owner is set")
     void failToCreateAllAndDataOwner() {
-        URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/all-1-project");
+        URI milestoneUri = toMockUri(server, "/authorization/all-1-milestone");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
@@ -384,10 +383,10 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - all from registry scope but no data registration")
     void failToCreateAllFromRegNoDataReg() {
-        URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/all-1-project");
+        URI milestoneUri = toMockUri(server, "/authorization/all-1-milestone");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(ALICE_ID)
                     .setGrantedBy(ALICE_ID)
@@ -404,16 +403,16 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to create new data authorization - inherited but no inherits from")
     void failToCreateInheritedNoInheritsFrom() {
-        URL projectUrl = toUrl(server, "/authorization/all-1-project");
-        URL milestoneUrl = toUrl(server, "/authorization/all-1-milestone");
-        URL drUrl = toUrl(server, "/personal/data/projects/");
-        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUrl, saiSession);
+        URI projectUri = toMockUri(server, "/authorization/all-1-project");
+        URI milestoneUri = toMockUri(server, "/authorization/all-1-milestone");
+        URI drUri = toMockUri(server, "/personal/data/projects/");
+        DataAuthorization.Builder projectBuilder = new DataAuthorization.Builder(projectUri, saiSession);
         assertThrows(SaiException.class, () -> {
             DataAuthorization projectAuthorization = projectBuilder.setDataOwner(BOB_ID)
                     .setGrantedBy(ALICE_ID)
                     .setGrantee(PROJECTRON_ID)
                     .setRegisteredShapeTree(PROJECT_TREE)
-                    .setDataRegistration(drUrl)
+                    .setDataRegistration(drUri)
                     .setAccessModes(ACCESS_MODES)
                     .setCreatorAccessModes(CREATOR_ACCESS_MODES)
                     .setScopeOfAuthorization(SCOPE_INHERITED)
@@ -425,8 +424,8 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Get data authorization - scope: all")
     void getDataAuthorization() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/authorization/all-1-project");
-        DataAuthorization dataAuthorization = DataAuthorization.get(url, saiSession);
+        URI uri = toMockUri(server, "/authorization/all-1-project");
+        DataAuthorization dataAuthorization = DataAuthorization.get(uri, saiSession);
         assertEquals(ALICE_ID, dataAuthorization.getGrantedBy());
         assertEquals(PROJECTRON_ID, dataAuthorization.getGrantee());
         assertEquals(PROJECT_TREE, dataAuthorization.getRegisteredShapeTree());
@@ -439,8 +438,8 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Reload data authorization - scope: all")
     void reloadDataAuthorization() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/authorization/all-1-project");
-        DataAuthorization dataAuthorization = DataAuthorization.get(url, saiSession);
+        URI uri = toMockUri(server, "/authorization/all-1-project");
+        DataAuthorization dataAuthorization = DataAuthorization.get(uri, saiSession);
         DataAuthorization reloaded = dataAuthorization.reload();
         assertEquals(ALICE_ID, reloaded.getGrantedBy());
         assertEquals(PROJECTRON_ID, reloaded.getGrantee());
@@ -454,8 +453,8 @@ class DataAuthorizationTests {
     @Test
     @DisplayName("Fail to get data authorization - missing required fields")
     void failToReadDataRegistration() {
-        URL url = toUrl(server, "/missing-fields/authorization/all-1-project");
-        assertThrows(SaiException.class, () -> DataAuthorization.get(url, saiSession));
+        URI uri = toMockUri(server, "/missing-fields/authorization/all-1-project");
+        assertThrows(SaiException.class, () -> DataAuthorization.get(uri, saiSession));
     }
 
 }

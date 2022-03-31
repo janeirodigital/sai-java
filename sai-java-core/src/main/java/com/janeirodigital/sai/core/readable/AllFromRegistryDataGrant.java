@@ -5,7 +5,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import lombok.Getter;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,9 +36,9 @@ public class AllFromRegistryDataGrant extends InheritableDataGrant {
     public DataInstanceList getDataInstances() throws SaiException {
         try {
             DataRegistration registration = DataRegistration.get(this.getDataRegistration(), this.saiSession);
-            Map<URL, DataInstance> dataInstanceUrls = new HashMap<>();
-            for (URL dataInstanceUrl : registration.getDataInstances()) { dataInstanceUrls.put(dataInstanceUrl, null); }
-            return new DataInstanceList(saiSession, this, dataInstanceUrls);
+            Map<URI, DataInstance> dataInstanceUris = new HashMap<>();
+            for (URI dataInstanceUri : registration.getDataInstances()) { dataInstanceUris.put(dataInstanceUri, null); }
+            return new DataInstanceList(saiSession, this, dataInstanceUris);
         } catch (SaiHttpNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration(), ex);
         }

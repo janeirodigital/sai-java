@@ -4,7 +4,7 @@ import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import lombok.Getter;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 @Getter
 public class InheritedDataGrant extends ReadableDataGrant {
 
-    private final URL inheritsFrom;
+    private final URI inheritsFrom;
 
     /**
      * Construct an {@link InheritedDataGrant} from the provided {@link ReadableDataGrant.Builder}.
@@ -38,13 +38,13 @@ public class InheritedDataGrant extends ReadableDataGrant {
     public DataInstanceList getDataInstances() throws SaiException {
         try {
             ReadableDataGrant parentGrant = ReadableDataGrant.get(this.getInheritsFrom(), this.getSaiSession());
-            Map<URL, DataInstance> childInstanceUrls = new HashMap<>();
+            Map<URI, DataInstance> childInstanceUris = new HashMap<>();
             for (DataInstance parentInstance : parentGrant.getDataInstances()) {
-                for (URL childReference : parentInstance.getChildReferences(this.getRegisteredShapeTree())) {
-                    childInstanceUrls.put(childReference, parentInstance);
+                for (URI childReference : parentInstance.getChildReferences(this.getRegisteredShapeTree())) {
+                    childInstanceUris.put(childReference, parentInstance);
                 }
             }
-            return new DataInstanceList(this.getSaiSession(), this, childInstanceUrls);
+            return new DataInstanceList(this.getSaiSession(), this, childInstanceUris);
         } catch (SaiHttpNotFoundException ex) {
             throw new SaiException("Failed to load data instances from " + this.getDataRegistration(), ex);
         }

@@ -12,14 +12,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -27,12 +26,12 @@ class ReadableApplicationRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static URL app1RegisteredBy;
-    private static URL app1RegisteredWith;
+    private static URI app1RegisteredBy;
+    private static URI app1RegisteredWith;
     private static OffsetDateTime app1RegisteredAt;
     private static OffsetDateTime app1UpdatedAt;
-    private static URL app1RegisteredAgent;
-    private static URL app1AccessGrant;
+    private static URI app1RegisteredAgent;
+    private static URI app1AccessGrant;
 
     @BeforeAll
     static void beforeAll() throws SaiException, SaiHttpException {
@@ -58,18 +57,18 @@ class ReadableApplicationRegistrationTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        app1RegisteredBy = stringToUrl("https://alice.example/id#me");
-        app1RegisteredWith = toUrl(server, "https://trusted.example/id#app");
+        app1RegisteredBy = URI.create("https://alice.example/id#me");
+        app1RegisteredWith = toMockUri(server, "https://trusted.example/id#app");
         app1RegisteredAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
         app1UpdatedAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
-        app1RegisteredAgent = stringToUrl("https://projectron.example/id#app");
-        app1AccessGrant = toUrl(server, "/ttl/agents/app-1/access-grant");
+        app1RegisteredAgent = URI.create("https://projectron.example/id#app");
+        app1AccessGrant = toMockUri(server, "/ttl/agents/app-1/access-grant");
     }
 
     @Test
     @DisplayName("Get readable social agent registration")
     void readSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/app-1/");
+        URI url = toMockUri(server, "/ttl/agents/app-1/");
         ReadableApplicationRegistration registration = ReadableApplicationRegistration.get(url, saiSession);
         checkRegistration(registration);
     }
@@ -77,7 +76,7 @@ class ReadableApplicationRegistrationTests {
     @Test
     @DisplayName("Reload readable social agent registration")
     void reloadSocialAgentRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/agents/app-1/");
+        URI url = toMockUri(server, "/ttl/agents/app-1/");
         ReadableApplicationRegistration registration = ReadableApplicationRegistration.get(url, saiSession);
         ReadableApplicationRegistration reloaded = registration.reload();
         assertNotEquals(registration, reloaded);
@@ -88,14 +87,14 @@ class ReadableApplicationRegistrationTests {
     @Test
     @DisplayName("Fail to get readable social agent registration - missing required fields")
     void failToReadSocialAgentRegistration() {
-        URL url = toUrl(server, "/missing-fields/ttl/agents/app-1/");
+        URI url = toMockUri(server, "/missing-fields/ttl/agents/app-1/");
         assertThrows(SaiException.class, () -> ReadableApplicationRegistration.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Read existing social agent registration in JSON-LD")
     void readSocialAgentRegistrationJsonLd() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/jsonld/agents/app-1/");
+        URI url = toMockUri(server, "/jsonld/agents/app-1/");
         ReadableApplicationRegistration registration = ReadableApplicationRegistration.get(url, saiSession, LD_JSON);
         checkRegistration(registration);
     }
@@ -107,7 +106,7 @@ class ReadableApplicationRegistrationTests {
         assertEquals(app1RegisteredAt, registration.getRegisteredAt());
         assertEquals(app1UpdatedAt, registration.getUpdatedAt());
         assertEquals(app1RegisteredAgent, registration.getRegisteredAgent());
-        assertEquals(app1AccessGrant, registration.getAccessGrantUrl());
+        assertEquals(app1AccessGrant, registration.getAccessGrantUri());
     }
 
 }

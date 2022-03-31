@@ -13,14 +13,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -28,11 +27,11 @@ class DataRegistrationTests {
 
     private static SaiSession saiSession;
     private static MockWebServer server;
-    private static URL dr1RegisteredBy;
-    private static URL dr1RegisteredWith;
+    private static URI dr1RegisteredBy;
+    private static URI dr1RegisteredWith;
     private static OffsetDateTime dr1RegisteredAt;
     private static OffsetDateTime dr1UpdatedAt;
-    private static URL dr1RegisteredShapeTree;
+    private static URI dr1RegisteredShapeTree;
 
     @BeforeAll
     static void beforeAll() throws SaiException, SaiHttpException {
@@ -58,17 +57,17 @@ class DataRegistrationTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        dr1RegisteredBy = stringToUrl("https://alice.example/id#me");
-        dr1RegisteredWith = toUrl(server, "https://trusted.example/id#app");
+        dr1RegisteredBy = URI.create("https://alice.example/id#me");
+        dr1RegisteredWith = toMockUri(server, "https://trusted.example/id#app");
         dr1RegisteredAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
         dr1UpdatedAt = OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME);
-        dr1RegisteredShapeTree = toUrl(server, "/shapetrees/pm#ProjectTree");
+        dr1RegisteredShapeTree = toMockUri(server, "/shapetrees/pm#ProjectTree");
     }
 
     @Test
     @DisplayName("Create new crud data registration")
     void createNewCrudDataRegistration() throws SaiException {
-        URL url = toUrl(server, "/new/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/new/ttl/data/dr-1/");
         DataRegistration.Builder builder = new DataRegistration.Builder(url, saiSession);
         DataRegistration registration = builder.setRegisteredBy(dr1RegisteredBy).setRegisteredWith(dr1RegisteredWith)
                                                       .setRegisteredAt(dr1RegisteredAt).setUpdatedAt(dr1UpdatedAt)
@@ -79,7 +78,7 @@ class DataRegistrationTests {
     @Test
     @DisplayName("Get crud data registration")
     void readDataRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/ttl/data/dr-1/");
         DataRegistration registration = DataRegistration.get(url, saiSession);
         checkRegistration(registration);
     }
@@ -87,7 +86,7 @@ class DataRegistrationTests {
     @Test
     @DisplayName("Reload crud data registration")
     void reloadDataRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/ttl/data/dr-1/");
         DataRegistration registration = DataRegistration.get(url, saiSession);
         DataRegistration reloaded = registration.reload();
         checkRegistration(reloaded);
@@ -96,7 +95,7 @@ class DataRegistrationTests {
     @Test
     @DisplayName("Get readable data registration")
     void getReadableDataRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/ttl/data/dr-1/");
         ReadableDataRegistration readable = ReadableDataRegistration.get(url, saiSession);
         checkReadableRegistration(readable);
     }
@@ -104,7 +103,7 @@ class DataRegistrationTests {
     @Test
     @DisplayName("Reload readable data registration")
     void reloadReadableDataRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/ttl/data/dr-1/");
         ReadableDataRegistration readable = ReadableDataRegistration.get(url, saiSession);
         ReadableDataRegistration reloaded = readable.reload();
         checkReadableRegistration(reloaded);
@@ -113,30 +112,30 @@ class DataRegistrationTests {
     @Test
     @DisplayName("Fail to get existing crud data registration in turtle - missing required fields")
     void failToReadDataRegistration() {
-        URL url = toUrl(server, "/missing-fields/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/missing-fields/ttl/data/dr-1/");
         assertThrows(SaiException.class, () -> DataRegistration.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Fail to get readable data registration in turtle - missing required fields")
     void failToGetReadableDataRegistrationRequired() {
-        URL url = toUrl(server, "/missing-fields/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/missing-fields/ttl/data/dr-1/");
         assertThrows(SaiException.class, () -> ReadableDataRegistration.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Update crud data registration")
     void updateDataRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/ttl/data/dr-1/");
         DataRegistration registration = DataRegistration.get(url, saiSession);
-        registration.setRegisteredShapeTree(toUrl(server, "/shapetrees/pm#OtherTree"));
+        registration.setRegisteredShapeTree(toMockUri(server, "/shapetrees/pm#OtherTree"));
         assertDoesNotThrow(() -> registration.update());
     }
 
     @Test
     @DisplayName("Read existing data registration in JSON-LD")
     void readDataRegistrationJsonLd() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/jsonld/data/dr-1/");
+        URI url = toMockUri(server, "/jsonld/data/dr-1/");
         DataRegistration registration = DataRegistration.get(url, saiSession, LD_JSON);
         checkRegistration(registration);
     }
@@ -144,7 +143,7 @@ class DataRegistrationTests {
     @Test
     @DisplayName("Create new crud data registration in JSON-LD")
     void createNewCrudDataRegistrationJsonLd() throws SaiException {
-        URL url = toUrl(server, "/new/jsonld/data/dr-1/");
+        URI url = toMockUri(server, "/new/jsonld/data/dr-1/");
         DataRegistration.Builder builder = new DataRegistration.Builder(url, saiSession);
         DataRegistration registration = builder.setContentType(LD_JSON).setRegisteredBy(dr1RegisteredBy)
                                                       .setRegisteredWith(dr1RegisteredWith)
@@ -156,7 +155,7 @@ class DataRegistrationTests {
     @Test
     @DisplayName("Delete crud data registration")
     void deleteDataRegistration() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/data/dr-1/");
+        URI url = toMockUri(server, "/ttl/data/dr-1/");
         DataRegistration registration = DataRegistration.get(url, saiSession);
         assertDoesNotThrow(() -> registration.delete());
         assertFalse(registration.isExists());

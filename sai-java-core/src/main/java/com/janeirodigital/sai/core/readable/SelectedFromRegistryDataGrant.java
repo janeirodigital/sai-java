@@ -3,7 +3,7 @@ package com.janeirodigital.sai.core.readable;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import lombok.Getter;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +16,7 @@ import java.util.Map;
 @Getter
 public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
 
-    List<URL> dataInstances;
+    List<URI> dataInstances;
 
     /**
      * Construct a {@link SelectedFromRegistryDataGrant} from the provided {@link ReadableDataGrant.Builder}.
@@ -35,9 +35,9 @@ public class SelectedFromRegistryDataGrant extends InheritableDataGrant {
      */
     @Override
     public DataInstanceList getDataInstances() {
-        Map<URL, DataInstance> dataInstanceUrls = new HashMap<>();
-        for (URL dataInstanceUrl : this.dataInstances) { dataInstanceUrls.put(dataInstanceUrl, null); }
-        return new DataInstanceList(saiSession, this, dataInstanceUrls);
+        Map<URI, DataInstance> dataInstanceUris = new HashMap<>();
+        for (URI dataInstanceUri : this.dataInstances) { dataInstanceUris.put(dataInstanceUri, null); }
+        return new DataInstanceList(saiSession, this, dataInstanceUris);
     }
 
 }

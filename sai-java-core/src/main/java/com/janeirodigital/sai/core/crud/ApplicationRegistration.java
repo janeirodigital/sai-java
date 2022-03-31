@@ -8,7 +8,7 @@ import lombok.Getter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.APPLICATION_REGISTRATION;
@@ -32,31 +32,31 @@ public class ApplicationRegistration extends AgentRegistration {
     }
 
     /**
-     * Get a {@link ApplicationRegistration} at the provided <code>url</code>
-     * @param url URL of the {@link ApplicationRegistration} to get
+     * Get a {@link ApplicationRegistration} at the provided <code>uri</code>
+     * @param uri URI of the {@link ApplicationRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use for retrieval
      * @return Retrieved {@link ApplicationRegistration}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static ApplicationRegistration get(URL url, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
-        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(url, saiSession);
-        try (Response response = read(url, saiSession, contentType, false)) {
+    public static ApplicationRegistration get(URI uri, SaiSession saiSession, ContentType contentType) throws SaiException, SaiHttpNotFoundException {
+        ApplicationRegistration.Builder builder = new ApplicationRegistration.Builder(uri, saiSession);
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link ApplicationRegistration} to get
+     * Call {@link #get(URI, SaiSession, ContentType)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link ApplicationRegistration} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link ApplicationRegistration}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static ApplicationRegistration get(URL url, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE);
+    public static ApplicationRegistration get(URI uri, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE);
     }
 
     /**
@@ -66,7 +66,7 @@ public class ApplicationRegistration extends AgentRegistration {
      * @throws SaiException
      */
     public ApplicationRegistration reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType);
+        return get(this.uri, this.saiSession, this.contentType);
     }
 
     /**
@@ -75,11 +75,11 @@ public class ApplicationRegistration extends AgentRegistration {
      public static class Builder extends AgentRegistration.Builder<Builder> {
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link ApplicationRegistration} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link ApplicationRegistration} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Ensures that we don't get an unchecked cast warning when returning from setters
@@ -108,7 +108,7 @@ public class ApplicationRegistration extends AgentRegistration {
          */
         @Override
         protected void populateDataset() {
-            this.resource = getNewResourceForType(this.url, APPLICATION_REGISTRATION);
+            this.resource = getNewResourceForType(this.uri, APPLICATION_REGISTRATION);
             this.dataset = this.resource.getModel();
             super.populateDataset();
         }

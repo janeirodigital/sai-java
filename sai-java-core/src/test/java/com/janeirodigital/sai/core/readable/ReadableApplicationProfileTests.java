@@ -12,9 +12,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
+
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -37,21 +38,21 @@ class ReadableApplicationProfileTests {
         server.setDispatcher(dispatcher);
         // Initialize the Data Factory
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
-        when(mockSession.getSocialAgentId()).thenReturn(toUrl(server, "/ttl/id"));
+        when(mockSession.getSocialAgentId()).thenReturn(toMockUri(server, "/ttl/id"));
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
     }
 
     @Test
     @DisplayName("Get readable application profile document as json-ld")
     void getReadableApplicationProfileAsJsonLd() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        ReadableApplicationProfile profile = ReadableApplicationProfile.get(toUrl(server, "/jsonld/projectron/id"), saiSession);
+        ReadableApplicationProfile profile = ReadableApplicationProfile.get(toMockUri(server, "/jsonld/projectron/id"), saiSession);
         checkProfile(profile);
     }
 
     @Test
     @DisplayName("Reload readable application profile document as json-ld")
     void reloadReadableApplicationProfileAsJsonLd() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        ReadableApplicationProfile profile = ReadableApplicationProfile.get(toUrl(server, "/jsonld/projectron/id"), saiSession);
+        ReadableApplicationProfile profile = ReadableApplicationProfile.get(toMockUri(server, "/jsonld/projectron/id"), saiSession);
         ReadableApplicationProfile reloaded = profile.reload();
         assertNotEquals(profile, reloaded);
         checkProfile(profile);
@@ -61,19 +62,19 @@ class ReadableApplicationProfileTests {
     @Test
     @DisplayName("Fail to get readable application profile document - missing fields")
     void failToGetReadableApplicationProfileMissingFields() {
-        assertThrows(SaiException.class, () -> ReadableApplicationProfile.get(toUrl(server, "/missing-fields/jsonld/projectron/id"), saiSession));
+        assertThrows(SaiException.class, () -> ReadableApplicationProfile.get(toMockUri(server, "/missing-fields/jsonld/projectron/id"), saiSession));
     }
 
     private void checkProfile(ReadableApplicationProfile profile) throws SaiHttpException {
         assertEquals("Projectron", profile.getName());
-        assertEquals(stringToUrl("http://projectron.example/logo.png"), profile.getLogoUrl());
+        assertEquals(URI.create("http://projectron.example/logo.png"), profile.getLogoUri());
         assertEquals("Best project management ever", profile.getDescription());
-        assertEquals(stringToUrl("http://acme.example/id"), profile.getAuthorUrl());
-        assertTrue(profile.getAccessNeedGroupUrls().contains(stringToUrl("http://localhost/projectron/access#group1")));
-        assertTrue(profile.getAccessNeedGroupUrls().contains(stringToUrl("http://localhost/projectron/access#group2")));
-        assertEquals(stringToUrl("http://projectron.example/"), profile.getClientUrl());
-        assertTrue((profile.getRedirectUrls().contains(toUrl(server, "/redirect"))));
-        assertEquals(stringToUrl("http://projectron.example/tos.html"), profile.getTosUrl());
+        assertEquals(URI.create("http://acme.example/id"), profile.getAuthorUri());
+        assertTrue(profile.getAccessNeedGroupUris().contains(URI.create("http://localhost/projectron/access#group1")));
+        assertTrue(profile.getAccessNeedGroupUris().contains(URI.create("http://localhost/projectron/access#group2")));
+        assertEquals(URI.create("http://projectron.example/"), profile.getClientUri());
+        assertTrue((profile.getRedirectUris().contains(toMockUri(server, "/redirect"))));
+        assertEquals(URI.create("http://projectron.example/tos.html"), profile.getTosUri());
         assertTrue(profile.getScopes().contains("openid"));
         assertTrue(profile.getScopes().contains("offline_access"));
         assertTrue(profile.getScopes().contains("profile"));

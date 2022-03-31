@@ -26,10 +26,10 @@
         <titanium.version>1.2.0</titanium.version>
         <junit.version>5.8.2</junit.version>
         <shapetrees.version>0.9.7</shapetrees.version>
-        <sai-rdf-utils.version>0.9.1</sai-rdf-utils.version>
-        <sai-http-utils.version>0.9.2</sai-http-utils.version>
-        <sai-authentication.version>0.9.1</sai-authentication.version>
-        <mockwebserverplus-ext.version>0.9.3</mockwebserverplus-ext.version>
+        <sai-rdf-utils.version>0.9.2-SNAPSHOT</sai-rdf-utils.version>
+        <sai-http-utils.version>0.9.3-SNAPSHOT</sai-http-utils.version>
+        <sai-authentication.version>0.9.2-SNAPSHOT</sai-authentication.version>
+        <mockwebserverplus-ext.version>0.9.3-SNAPSHOT</mockwebserverplus-ext.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc.version>3.3.1</maven-javadoc.version>

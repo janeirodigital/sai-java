@@ -5,9 +5,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 import static com.janeirodigital.sai.core.http.UrlUtils.stringToUrl;
+import static com.janeirodigital.sai.core.http.UrlUtils.uriToUrl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -23,5 +25,12 @@ class UrlUtilsTests {
     @DisplayName("Fail to convert string to URL - malformed URL")
     void failToConvertStringToUrl() {
         assertThrows(SaiException.class, () -> stringToUrl("ddd:\\--solidproject_orgZq=something&something=<something+else>"));
+    }
+
+    @Test
+    @DisplayName("Fail to convert URI to URL - malformed URL")
+    void failToConvertUriToUrl() {
+        URI uri = URI.create("cool:web:times");
+        assertThrows(SaiException.class, () -> uriToUrl(uri));
     }
 }

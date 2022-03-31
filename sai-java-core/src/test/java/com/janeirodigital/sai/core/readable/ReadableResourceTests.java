@@ -13,14 +13,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.TEXT_TURTLE;
 import static com.janeirodigital.sai.httputils.HttpHeader.CONTENT_TYPE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,7 +65,7 @@ class ReadableResourceTests {
     @Test
     @DisplayName("Get a readable resource")
     void getReadableResource() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/readable/readable-resource#project");
+        URI url = toMockUri(server, "/readable/readable-resource#project");
         TestableReadableResource testable = TestableReadableResource.get(url, saiSession, true);
 
         assertNotNull(testable);
@@ -73,9 +73,9 @@ class ReadableResourceTests {
         assertEquals("Great Validations", testable.getName());
         assertEquals(OffsetDateTime.parse("2021-04-04T20:15:47.000Z", DateTimeFormatter.ISO_DATE_TIME), testable.getCreatedAt());
         assertTrue(testable.isActive());
-        assertEquals(toUrl(server, "/data/projects/project-1/milestone-3/#milestone"), testable.getMilestone());
+        assertEquals(toMockUri(server, "/data/projects/project-1/milestone-3/#milestone"), testable.getMilestone());
 
-        List<URL> tags = Arrays.asList(toUrl(server, "/tags/tag-1"), toUrl(server, "/tags/tag-2"), toUrl(server, "/tags/tag-3"));
+        List<URI> tags = Arrays.asList(toMockUri(server, "/tags/tag-1"), toMockUri(server, "/tags/tag-2"), toMockUri(server, "/tags/tag-3"));
         assertTrue(CollectionUtils.isEqualCollection(tags, testable.getTags()));
 
         List<String> comments = Arrays.asList("First original comment", "Second original comment", "Third original comment");
@@ -85,7 +85,7 @@ class ReadableResourceTests {
     @Test
     @DisplayName("Get a protected readable resource")
     void bootstrapProtectedReadableResource() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/readable/readable-resource#project");
+        URI url = toMockUri(server, "/readable/readable-resource#project");
         TestableReadableResource testable = TestableReadableResource.get(url, saiSession, false);
         // No need to test all of the accessors again
         assertNotNull(testable);
@@ -95,21 +95,21 @@ class ReadableResourceTests {
     @Test
     @DisplayName("Fail to get a protected readable resource - missing fields")
     void failToGetReadableResourceMissingFields() {
-        URL url = toUrl(server, "/missing-fields/readable/readable-resource#project");
+        URI url = toMockUri(server, "/missing-fields/readable/readable-resource#project");
         assertThrows(SaiException.class, () -> TestableReadableResource.get(url, saiSession, false));
     }
 
     @Test
     @DisplayName("Fail to get an rdf resource - binary content type")
     void failToGetReadableResourceInvalidRdfType() {
-        URL url = toUrl(server, "/binary/readable/readable-resource");
+        URI url = toMockUri(server, "/binary/readable/readable-resource");
         assertThrows(SaiException.class, () -> TestableReadableResource.get(url, saiSession, false));
     }
 
     @Test
     @DisplayName("Fail to get a protected readable resource - io failure")
     void failToGetReadableResourceMalformedDocuments() {
-        URL url = toUrl(queuingServer, "/io/readable/protected-readable");
+        URI url = toMockUri(queuingServer, "/io/readable/protected-readable");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
@@ -121,7 +121,7 @@ class ReadableResourceTests {
     @Test
     @DisplayName("Fail to get unprotected readable resource - io failure")
     void failToGetReadableResourceIO() {
-        URL url = toUrl(queuingServer, "/io/readable/unprotected-readable");
+        URI url = toMockUri(queuingServer, "/io/readable/unprotected-readable");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
@@ -133,19 +133,19 @@ class ReadableResourceTests {
     @Test
     @DisplayName("Test readable response check - unsuccessful - resource not found")
     void testReadableResponseCheckNotFound() {
-        URL missingUrl = toUrl(server, "/missing/readable/resource");
-        assertThrows(SaiHttpNotFoundException.class, () -> TestableReadableResource.get(missingUrl, saiSession, false));
+        URI missingUri = toMockUri(server, "/missing/readable/resource");
+        assertThrows(SaiHttpNotFoundException.class, () -> TestableReadableResource.get(missingUri, saiSession, false));
     }
 
     @Test
     @DisplayName("Test readable response check - unsuccessful - server error")
     void testReadableResponseCheckError() {
-        URL errorUrl = toUrl(queuingServer, "/io/readable/server-error-resource");
+        URI errorUri = toMockUri(queuingServer, "/io/readable/server-error-resource");
         queuingServer.enqueue(new MockResponse()
                 .setResponseCode(500)
                 .addHeader(CONTENT_TYPE.getValue(), TEXT_TURTLE.getValue())
                 .setBody("BAD"));
-        assertThrows(SaiException.class, () -> TestableReadableResource.get(errorUrl, saiSession, true));
+        assertThrows(SaiException.class, () -> TestableReadableResource.get(errorUri, saiSession, true));
     }
 }
 

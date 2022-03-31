@@ -14,7 +14,7 @@ import lombok.Setter;
 import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -36,34 +36,34 @@ public class TestableTask extends DataInstance {
     }
 
     /**
-     * Get a {@link TestableTask} from the provided <code>url</code>.
-     * @param url URL to generate the {@link TestableTask} from
+     * Get a {@link TestableTask} from the provided <code>uri</code>.
+     * @param uri URI to generate the {@link TestableTask} from
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use for retrieval
      * @return {@link TestableTask}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static TestableTask get(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiHttpNotFoundException {
+    public static TestableTask get(URI uri, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiHttpNotFoundException {
         Objects.requireNonNull(dataGrant, "Must provide a readable data grant permitting the data instance to get");
-        TestableTask.Builder builder = new TestableTask.Builder(url, saiSession);
+        TestableTask.Builder builder = new TestableTask.Builder(uri, saiSession);
         if (parent != null) builder.setParent(parent);
         builder.setDataGrant(dataGrant).setDraft(false);
-        try (Response response = read(url, saiSession, contentType, false)) {
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).build();
         }
     }
 
     /**
-     * Call {@link #get(URL, SaiSession, ContentType, ReadableDataGrant, DataInstance)} without specifying a desired content type for retrieval
-     * @param url URL of the {@link TestableTask} to get
+     * Call {@link #get(URI, SaiSession, ContentType, ReadableDataGrant, DataInstance)} without specifying a desired content type for retrieval
+     * @param uri URI of the {@link TestableTask} to get
      * @param saiSession {@link SaiSession} to assign
      * @return Retrieved {@link TestableTask}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static TestableTask get(URL url, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE, dataGrant, parent);
+    public static TestableTask get(URI uri, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE, dataGrant, parent);
     }
 
     public static List<TestableTask> getAccessible(ReadableDataGrant dataGrant, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
@@ -81,7 +81,7 @@ public class TestableTask extends DataInstance {
      * @throws SaiException
      */
     public TestableTask reload() throws SaiHttpNotFoundException, SaiException {
-        return get(this.url, this.saiSession, this.contentType, this.getDataGrant(), this.getParent());
+        return get(this.uri, this.saiSession, this.contentType, this.getDataGrant(), this.getParent());
     }
 
     public static class Builder extends DataInstance.Builder<Builder> {
@@ -90,11 +90,11 @@ public class TestableTask extends DataInstance {
         private String description;
         
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link TestableTask} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link TestableTask} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         public Builder(DataInstance dataInstance) throws SaiException { super(dataInstance); }
 
@@ -149,7 +149,7 @@ public class TestableTask extends DataInstance {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         protected void populateDataset() {
-            this.resource = getNewResourceForType(this.url, TESTABLE_TASK);
+            this.resource = getNewResourceForType(this.uri, TESTABLE_TASK);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, TESTABLE_NAME, this.name);
             updateObject(this.resource, TESTABLE_DESCRIPTION, this.description);

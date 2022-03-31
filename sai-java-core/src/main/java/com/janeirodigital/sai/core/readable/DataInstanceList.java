@@ -5,14 +5,14 @@ import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
 public class DataInstanceList implements Iterable<DataInstance> {
     
-    protected Map<URL,DataInstance> dataInstanceUrls;
+    protected Map<URI,DataInstance> dataInstanceUris;
     protected SaiSession saiSession;
     protected ReadableDataGrant dataGrant;
 
@@ -20,48 +20,48 @@ public class DataInstanceList implements Iterable<DataInstance> {
      * Construct a {@link DataInstanceList}
      * @param saiSession {@link SaiSession} to assign
      * @param dataGrant {@link ReadableDataGrant} associated with instance access
-     * @param dataInstanceUrls Map of {@link DataInstance} URLs to iterate and (optionally) their parent {@link DataInstance}s
+     * @param dataInstanceUris Map of {@link DataInstance} URIs to iterate and (optionally) their parent {@link DataInstance}s
      */
-    public DataInstanceList(SaiSession saiSession, ReadableDataGrant dataGrant, Map<URL,DataInstance> dataInstanceUrls) {
+    public DataInstanceList(SaiSession saiSession, ReadableDataGrant dataGrant, Map<URI,DataInstance> dataInstanceUris) {
         Objects.requireNonNull(saiSession, "Must provide a sai session for the data instance list");
         Objects.requireNonNull(dataGrant, "Must provide a data grant for the data instance list");
-        Objects.requireNonNull(dataInstanceUrls, "Must provide a map of data instance urls and their associated parents when available");
+        Objects.requireNonNull(dataInstanceUris, "Must provide a map of data instance uris and their associated parents when available");
         this.saiSession = saiSession;
         this.dataGrant = dataGrant;
-        this.dataInstanceUrls = dataInstanceUrls;
+        this.dataInstanceUris = dataInstanceUris;
     }
 
     /**
      * Indicates whether the {@link DataInstanceList} is empty
      * @return true when there are no data instances
      */
-    public boolean isEmpty() { return this.dataInstanceUrls.isEmpty(); }
+    public boolean isEmpty() { return this.dataInstanceUris.isEmpty(); }
 
     /**
      * Indicates the number of {@link DataInstance}s in the list
      * @return Amount of {@link DataInstance}s in the list
      */
-    public int size() { return this.dataInstanceUrls.size(); }
+    public int size() { return this.dataInstanceUris.size(); }
 
     /**
      * Return an iterator for the {@link DataInstanceList}
      * @return
      */
     public Iterator<DataInstance> iterator() {
-        return new DataInstanceListIterator(this.saiSession, this.dataGrant, this.dataInstanceUrls);
+        return new DataInstanceListIterator(this.saiSession, this.dataGrant, this.dataInstanceUris);
     }
 
     /**
-     * Iterator that can be used to iterate over a list of {@link DataInstance} URLs,
+     * Iterator that can be used to iterate over a list of {@link DataInstance} URIs,
      * returning a {@link BasicDataInstance} for each.
      */
     private static class DataInstanceListIterator implements Iterator<DataInstance> {
-        private final Iterator<Map.Entry<URL, DataInstance>> current;
+        private final Iterator<Map.Entry<URI, DataInstance>> current;
         private final SaiSession saiSession;
         private final ReadableDataGrant dataGrant;
-        public DataInstanceListIterator(SaiSession saiSession, ReadableDataGrant dataGrant, Map<URL,DataInstance> dataInstanceUrls) {
+        public DataInstanceListIterator(SaiSession saiSession, ReadableDataGrant dataGrant, Map<URI,DataInstance> dataInstanceUris) {
             this.saiSession = saiSession;
-            this.current = dataInstanceUrls.entrySet().iterator();
+            this.current = dataInstanceUris.entrySet().iterator();
             this.dataGrant = dataGrant;
         }
 
@@ -78,10 +78,10 @@ public class DataInstanceList implements Iterable<DataInstance> {
          */
         public DataInstance next() {
             try {
-                Map.Entry<URL, DataInstance> pair = current.next();
-                URL instanceUrl = pair.getKey();
+                Map.Entry<URI, DataInstance> pair = current.next();
+                URI instanceUri = pair.getKey();
                 DataInstance parent = pair.getValue();
-                return BasicDataInstance.get(instanceUrl, saiSession, dataGrant, parent);
+                return BasicDataInstance.get(instanceUri, saiSession, dataGrant, parent);
             } catch (SaiException| SaiHttpNotFoundException ex) {
                 throw new SaiRuntimeException("Failed to get data instance", ex);
             }

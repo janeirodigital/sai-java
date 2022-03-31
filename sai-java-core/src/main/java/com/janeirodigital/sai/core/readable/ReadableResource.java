@@ -14,7 +14,7 @@ import okhttp3.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.getProtectedRdfResource;
@@ -30,7 +30,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 @Getter
 public class ReadableResource {
 
-    protected final URL url;
+    protected final URI uri;
     protected final SaiSession saiSession;
     protected final OkHttpClient httpClient;
     protected Model dataset;
@@ -46,7 +46,7 @@ public class ReadableResource {
      */
     protected ReadableResource(Builder<?> builder) throws SaiException {
         Objects.requireNonNull(builder, "Must provide a builder for the readable resource");
-        this.url = builder.url;
+        this.uri = builder.uri;
         this.saiSession = builder.saiSession;
         this.httpClient = this.saiSession.getHttpClient();
         this.dataset = builder.dataset;
@@ -58,9 +58,9 @@ public class ReadableResource {
     }
 
     /**
-     * Reads the remote RDF resource at <code>url</code>, providing credentials from the {@link SaiSession} when
+     * Reads the remote RDF resource at <code>uri</code>, providing credentials from the {@link SaiSession} when
      * <code>unprotected</code> is not true.
-     * @param url URL to GET
+     * @param uri URI to GET
      * @param saiSession {@link SaiSession} to use
      * @param contentType {@link ContentType} to accept
      * @param unprotected When true, does not send authorization headers
@@ -68,18 +68,18 @@ public class ReadableResource {
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    protected static Response read(URL url, SaiSession saiSession, ContentType contentType, boolean unprotected) throws SaiException, SaiHttpNotFoundException {
-        Objects.requireNonNull(url, "Must provide the URL of the readable social agent profile to get");
+    protected static Response read(URI uri, SaiSession saiSession, ContentType contentType, boolean unprotected) throws SaiException, SaiHttpNotFoundException {
+        Objects.requireNonNull(uri, "Must provide the URI of the readable social agent profile to get");
         Objects.requireNonNull(saiSession, "Must provide a sai session to assign to the readable social agent profile");
         Objects.requireNonNull(contentType, "Must provide a content type to assign to the readable social agent profile");
         Headers headers = addHttpHeader(HttpHeader.ACCEPT, contentType.getValue());
         Response response;
         try {
-            if (unprotected) { response = getRdfResource(saiSession.getHttpClient(), url, headers); } else {
-                response = getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), url, headers);
+            if (unprotected) { response = getRdfResource(saiSession.getHttpClient(), uri, headers); } else {
+                response = getProtectedRdfResource(saiSession.getAuthorizedSession(), saiSession.getHttpClient(), uri, headers);
             }
         } catch (SaiHttpException | SaiAuthenticationException ex) {
-            throw new SaiException("Unable to read resource " + url, ex);
+            throw new SaiException("Unable to read resource " + uri, ex);
         }
         return checkReadableResponse(response);
     }
@@ -107,7 +107,7 @@ public class ReadableResource {
      */
     public abstract static class Builder<T extends Builder<T>> {
 
-        protected final URL url;
+        protected final URI uri;
         protected final SaiSession saiSession;
         protected boolean unprotected;
         protected ContentType contentType;
@@ -118,13 +118,13 @@ public class ReadableResource {
 
         /**
          * Base builder for all resource types. Use setters for all further configuration
-         * @param url URL of the resource to build
+         * @param uri URI of the resource to build
          * @param saiSession {@link SaiSession} to use
          */
-        protected Builder(URL url, SaiSession saiSession) {
-            Objects.requireNonNull(url, "Must provide a URL to the resource builder");
+        protected Builder(URI uri, SaiSession saiSession) {
+            Objects.requireNonNull(uri, "Must provide a URI to the resource builder");
             Objects.requireNonNull(saiSession, "Must provide a sai session to the resource builder");
-            this.url = url;
+            this.uri = uri;
             this.saiSession = saiSession;
             // resource defaults (can override with setters)
             this.unprotected = false;                                       // default to protected resources
@@ -171,7 +171,7 @@ public class ReadableResource {
         public T setDataset(Model dataset) throws SaiException {
             Objects.requireNonNull(dataset, "Must provide a Jena model to the resource builder");
             this.dataset = dataset;
-            this.resource = getResourceFromModel(this.dataset, this.url);
+            this.resource = getResourceFromModel(this.dataset, this.uri);
             return getThis();
         }
 

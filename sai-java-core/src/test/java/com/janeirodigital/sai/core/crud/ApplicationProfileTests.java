@@ -16,16 +16,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.core.contexts.InteropContext.INTEROP_CONTEXT;
 import static com.janeirodigital.sai.core.contexts.SolidOidcContext.SOLID_OIDC_CONTEXT;
 import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.buildRemoteJsonLdContexts;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,13 +40,13 @@ class ApplicationProfileTests {
     private static final List<String> PROJECTRON_SCOPES = Arrays.asList("openid", "offline_access", "profile");
     private static final List<String> PROJECTRON_GRANT_TYPES = Arrays.asList("refresh_token", "authorization_code");
     private static final List<String> PROJECTRON_RESPONSE_TYPES = Arrays.asList("code");
-    private static URL PROJECTRON_LOGO;
-    private static URL PROJECTRON_AUTHOR;
-    private static URL PROJECTRON_CLIENT_URL;
-    private static URL PROJECTRON_TOS;
+    private static URI PROJECTRON_LOGO;
+    private static URI PROJECTRON_AUTHOR;
+    private static URI PROJECTRON_CLIENT_URI;
+    private static URI PROJECTRON_TOS;
     private static String APPLICATION_CONTEXT;
-    private static List<URL> PROJECTRON_NEED_GROUPS;
-    private static List<URL> PROJECTRON_REDIRECTS;
+    private static List<URI> PROJECTRON_NEED_GROUPS;
+    private static List<URI> PROJECTRON_REDIRECTS;
     private static final int PROJECTRON_MAX_AGE = 3600;
     private static final boolean PROJECTRON_REQUIRE_AUTH_TIME = true;
 
@@ -75,27 +74,27 @@ class ApplicationProfileTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        PROJECTRON_LOGO = stringToUrl("http://projectron.example/logo.png");
-        PROJECTRON_AUTHOR = stringToUrl("http://acme.example/id");
-        PROJECTRON_NEED_GROUPS = Arrays.asList(stringToUrl("http://localhost/projectron/access#group1"), stringToUrl("http://localhost/projectron/access#group2"));
-        PROJECTRON_CLIENT_URL = stringToUrl("http://projectron.example/");
-        PROJECTRON_REDIRECTS = Arrays.asList(toUrl(server, "/redirect"));
-        PROJECTRON_TOS = stringToUrl("http://projectron.example/tos.html");
+        PROJECTRON_LOGO = URI.create("http://projectron.example/logo.png");
+        PROJECTRON_AUTHOR = URI.create("http://acme.example/id");
+        PROJECTRON_NEED_GROUPS = Arrays.asList(URI.create("http://localhost/projectron/access#group1"), URI.create("http://localhost/projectron/access#group2"));
+        PROJECTRON_CLIENT_URI = URI.create("http://projectron.example/");
+        PROJECTRON_REDIRECTS = Arrays.asList(toMockUri(server, "/redirect"));
+        PROJECTRON_TOS = URI.create("http://projectron.example/tos.html");
         APPLICATION_CONTEXT = buildRemoteJsonLdContexts(Arrays.asList(INTEROP_CONTEXT, SOLID_OIDC_CONTEXT));
     }
 
     @Test
     @DisplayName("Create new crud application profile")
     void createNewCrudApplicationProfile() throws SaiException {
-        URL url = toUrl(server, "/new/crud/application");
+        URI uri = toMockUri(server, "/new/crud/application");
 
-        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(uri, saiSession);
         // Note - the application profile constructor automatically sets the right contexts but setting it here
         // explicitly to to test the underlying support of json ld context assignment.
         ApplicationProfile profile = builder.setContentType(LD_JSON).setJsonLdContext(APPLICATION_CONTEXT).setName(PROJECTRON_NAME).setDescription(PROJECTRON_DESCRIPTION)
-                                            .setAuthorUrl(PROJECTRON_AUTHOR).setAccessNeedGroupUrls(PROJECTRON_NEED_GROUPS)
-                                            .setClientUrl(PROJECTRON_CLIENT_URL).setRedirectUrls(PROJECTRON_REDIRECTS)
-                                            .setTosUrl(PROJECTRON_TOS).setLogoUrl(PROJECTRON_LOGO).setScopes(PROJECTRON_SCOPES)
+                                            .setAuthorUri(PROJECTRON_AUTHOR).setAccessNeedGroupUris(PROJECTRON_NEED_GROUPS)
+                                            .setClientUri(PROJECTRON_CLIENT_URI).setRedirectUris(PROJECTRON_REDIRECTS)
+                                            .setTosUri(PROJECTRON_TOS).setLogoUri(PROJECTRON_LOGO).setScopes(PROJECTRON_SCOPES)
                                             .setGrantType(PROJECTRON_GRANT_TYPES).setResponseTypes(PROJECTRON_RESPONSE_TYPES)
                                             .setDefaultMaxAge(PROJECTRON_MAX_AGE).setRequireAuthTime(PROJECTRON_REQUIRE_AUTH_TIME)
                                             .build();
@@ -106,11 +105,11 @@ class ApplicationProfileTests {
     @Test
     @DisplayName("Create new crud application profile - only required fields")
     void createNewCrudApplicationProfileRequired() throws SaiException {
-        URL url = toUrl(server, "/new/crud/application");
-        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
+        URI uri = toMockUri(server, "/new/crud/application");
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(uri, saiSession);
         ApplicationProfile profile = builder.setName(PROJECTRON_NAME).setDescription(PROJECTRON_DESCRIPTION)
-                .setAuthorUrl(PROJECTRON_AUTHOR).setAccessNeedGroupUrls(PROJECTRON_NEED_GROUPS)
-                .setRedirectUrls(PROJECTRON_REDIRECTS).setLogoUrl(PROJECTRON_LOGO).setScopes(PROJECTRON_SCOPES)
+                .setAuthorUri(PROJECTRON_AUTHOR).setAccessNeedGroupUris(PROJECTRON_NEED_GROUPS)
+                .setRedirectUris(PROJECTRON_REDIRECTS).setLogoUri(PROJECTRON_LOGO).setScopes(PROJECTRON_SCOPES)
                 .setGrantType(PROJECTRON_GRANT_TYPES).setResponseTypes(PROJECTRON_RESPONSE_TYPES).build();
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
@@ -119,24 +118,24 @@ class ApplicationProfileTests {
     @Test
     @DisplayName("Read crud application profile")
     void readCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        URI uri = toMockUri(server, "/crud/application");
+        ApplicationProfile profile = ApplicationProfile.get(uri, saiSession);
         checkProfile(profile, false);
     }
 
     @Test
     @DisplayName("Read crud application profile - only required fields")
     void readCrudApplicationProfileRequired() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/required/application");
-        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        URI uri = toMockUri(server, "/crud/required/application");
+        ApplicationProfile profile = ApplicationProfile.get(uri, saiSession);
         checkProfile(profile, true);
     }
 
     @Test
     @DisplayName("Reload crud application profile")
     void reloadCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        URI uri = toMockUri(server, "/crud/application");
+        ApplicationProfile profile = ApplicationProfile.get(uri, saiSession);
         ApplicationProfile reloaded = profile.reload();
         checkProfile(reloaded, false);
     }
@@ -144,16 +143,16 @@ class ApplicationProfileTests {
     @Test
     @DisplayName("Fail to read crud application profile - missing required fields")
     void failToReadCrudApplicationProfileMissingFields() {
-        URL url = toUrl(server, "/missing-fields/crud/application");
-        assertThrows(SaiException.class, () -> ApplicationProfile.get(url, saiSession));
+        URI uri = toMockUri(server, "/missing-fields/crud/application");
+        assertThrows(SaiException.class, () -> ApplicationProfile.get(uri, saiSession));
     }
 
     @Test
     @DisplayName("Update crud application profile")
     void updateCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
-        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(url, saiSession);
+        URI uri = toMockUri(server, "/crud/application");
+        ApplicationProfile profile = ApplicationProfile.get(uri, saiSession);
+        ApplicationProfile.Builder builder = new ApplicationProfile.Builder(uri, saiSession);
         ApplicationProfile updatedProfile = builder.setDataset(profile.getDataset()).setName("Projectimus Prime").build();
         assertDoesNotThrow(() -> updatedProfile.update());
         assertEquals("Projectimus Prime", updatedProfile.getName());
@@ -162,8 +161,8 @@ class ApplicationProfileTests {
     @Test
     @DisplayName("Delete crud application profile")
     void deleteCrudApplicationProfile() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/crud/application");
-        ApplicationProfile profile = ApplicationProfile.get(url, saiSession);
+        URI uri = toMockUri(server, "/crud/application");
+        ApplicationProfile profile = ApplicationProfile.get(uri, saiSession);
         assertDoesNotThrow(() -> profile.delete());
         assertFalse(profile.isExists());
     }
@@ -171,28 +170,28 @@ class ApplicationProfileTests {
     @Test
     @DisplayName("Fail to read crud application profile - invalid context")
     void failToReadCrudApplicationProfileContexts() {
-        URL url = toUrl(server, "/crud/application");
+        URI uri = toMockUri(server, "/crud/application");
         try (MockedStatic<RdfUtils> mockRdfUtils = Mockito.mockStatic(RdfUtils.class, CALLS_REAL_METHODS)) {
             mockRdfUtils.when(() -> RdfUtils.buildRemoteJsonLdContexts(any(List.class))).thenThrow(SaiRdfException.class);
-            assertThrows(SaiException.class, () -> ApplicationProfile.get(url, saiSession));
+            assertThrows(SaiException.class, () -> ApplicationProfile.get(uri, saiSession));
         }
     }
 
     void checkProfile(ApplicationProfile profile, boolean requiredOnly) {
         assertEquals(PROJECTRON_NAME, profile.getName());
-        assertEquals(PROJECTRON_LOGO, profile.getLogoUrl());
+        assertEquals(PROJECTRON_LOGO, profile.getLogoUri());
         assertEquals(PROJECTRON_DESCRIPTION, profile.getDescription());
-        assertEquals(PROJECTRON_AUTHOR, profile.getAuthorUrl());
-        for (URL groupUrl : profile.getAccessNeedGroupUrls()) { assertTrue(PROJECTRON_NEED_GROUPS.contains(groupUrl)); }
-        for (URL redirectUrl : profile.getRedirectUrls()) { assertTrue(PROJECTRON_REDIRECTS.contains(redirectUrl)); }
+        assertEquals(PROJECTRON_AUTHOR, profile.getAuthorUri());
+        for (URI groupUri : profile.getAccessNeedGroupUris()) { assertTrue(PROJECTRON_NEED_GROUPS.contains(groupUri)); }
+        for (URI redirectUri : profile.getRedirectUris()) { assertTrue(PROJECTRON_REDIRECTS.contains(redirectUri)); }
         for (String scope : profile.getScopes()) { assertTrue(PROJECTRON_SCOPES.contains(scope)); }
         for (String grantType : profile.getGrantTypes()) { assertTrue(PROJECTRON_GRANT_TYPES.contains(grantType)); }
         for (String responseType : profile.getResponseTypes()) { assertTrue(PROJECTRON_RESPONSE_TYPES.contains(responseType)); }
         if (!requiredOnly) {
             assertEquals(PROJECTRON_MAX_AGE, profile.getDefaultMaxAge());
             assertEquals(PROJECTRON_REQUIRE_AUTH_TIME, profile.getRequireAuthTime());
-            assertEquals(PROJECTRON_CLIENT_URL, profile.getClientUrl());
-            assertEquals(PROJECTRON_TOS, profile.getTosUrl());
+            assertEquals(PROJECTRON_CLIENT_URI, profile.getClientUri());
+            assertEquals(PROJECTRON_TOS, profile.getTosUri());
         }
     }
 }

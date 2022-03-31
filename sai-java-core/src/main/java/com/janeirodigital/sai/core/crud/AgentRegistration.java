@@ -8,13 +8,13 @@ import com.janeirodigital.sai.rdfutils.SaiRdfNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 import static com.janeirodigital.sai.core.vocabularies.InteropVocabulary.*;
-import static com.janeirodigital.sai.httputils.HttpUtils.addChildToUrlPath;
+import static com.janeirodigital.sai.httputils.HttpUtils.addChildToUriPath;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 /**
@@ -25,12 +25,12 @@ import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 @Getter @Setter
 public abstract class AgentRegistration extends CRUDResource {
 
-    private URL registeredBy;
-    private URL registeredWith;
+    private URI registeredBy;
+    private URI registeredWith;
     private OffsetDateTime registeredAt;
     private OffsetDateTime updatedAt;
-    private URL registeredAgent;
-    private URL accessGrantUrl;
+    private URI registeredAgent;
+    private URI accessGrantUri;
 
     /**
      * Construct an {@link AgentRegistration} instance from the provided {@link Builder}.
@@ -44,17 +44,17 @@ public abstract class AgentRegistration extends CRUDResource {
         this.registeredAt = builder.registeredAt;
         this.updatedAt = builder.updatedAt;
         this.registeredAgent = builder.registeredAgent;
-        this.accessGrantUrl = builder.accessGrantUrl;
+        this.accessGrantUri = builder.accessGrantUri;
     }
     
     /**
-     * Generates the URL for a new contained "child" resource in the {@link AgentRegistration}
-     * @return Generated URL
+     * Generates the URI for a new contained "child" resource in the {@link AgentRegistration}
+     * @return Generated URI
      * @throws SaiException
      */
-    public URL generateContainedUrl() throws SaiException {
-        try { return addChildToUrlPath(this.getUrl(), UUID.randomUUID().toString()); } catch (SaiHttpException ex) {
-            throw new SaiException("Unable to add child to url path", ex);
+    public URI generateContainedUri() throws SaiException {
+        try { return addChildToUriPath(this.getUri(), UUID.randomUUID().toString()); } catch (SaiHttpException ex) {
+            throw new SaiException("Unable to add child to uri path", ex);
         }
     }
 
@@ -64,7 +64,7 @@ public abstract class AgentRegistration extends CRUDResource {
      * @return true when there is an access grant
      */
     public boolean hasAccessGrant() {
-        return this.accessGrantUrl != null;
+        return this.accessGrantUri != null;
     }
 
     /**
@@ -73,39 +73,39 @@ public abstract class AgentRegistration extends CRUDResource {
      */
     protected abstract static class Builder <T extends CRUDResource.Builder<T>> extends CRUDResource.Builder<T> {
 
-        protected URL registeredBy;
-        protected URL registeredWith;
+        protected URI registeredBy;
+        protected URI registeredWith;
         protected OffsetDateTime registeredAt;
         protected OffsetDateTime updatedAt;
-        protected URL registeredAgent;
-        protected URL accessGrantUrl;
+        protected URI registeredAgent;
+        protected URI accessGrantUri;
 
         /**
-         * Initialize builder with <code>url</code> and <code>saiSession</code>
-         * @param url URL of the {@link AgentRegistration} to build
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
+         * @param uri URI of the {@link AgentRegistration} to build
          * @param saiSession {@link SaiSession} to assign
          */
-        protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        protected Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         /**
          * Set the social agent that registered the agent registration.
          * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar">Agent Registrations</a>
-         * @param socialAgentUrl URL of the social agent that added the registration
+         * @param socialAgentUri URI of the social agent that added the registration
          */
-        public T setRegisteredBy(URL socialAgentUrl) {
-            Objects.requireNonNull(socialAgentUrl, "Must provide the social agent who registered the agent registration");
-            this.registeredBy = socialAgentUrl;
+        public T setRegisteredBy(URI socialAgentUri) {
+            Objects.requireNonNull(socialAgentUri, "Must provide the social agent who registered the agent registration");
+            this.registeredBy = socialAgentUri;
             return getThis();
         }
 
         /**
          * Set the application that registered the agent registration.
          * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar">Agent Registrations</a>
-         * @param applicationUrl URL of the application that was use to add the registration
+         * @param applicationUri URI of the application that was use to add the registration
          */
-        public T setRegisteredWith(URL applicationUrl) {
-            Objects.requireNonNull(applicationUrl, "Must provide the application used to register the agent registration");
-            this.registeredWith = applicationUrl;
+        public T setRegisteredWith(URI applicationUri) {
+            Objects.requireNonNull(applicationUri, "Must provide the application used to register the agent registration");
+            this.registeredWith = applicationUri;
             return getThis();
         }
 
@@ -134,11 +134,11 @@ public abstract class AgentRegistration extends CRUDResource {
         /**
          * Set the registered agent that is the subject of the agent registration
          * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar">Agent Registrations</a>
-         * @param agentUrl URL of the agent that was registered
+         * @param agentUri URI of the agent that was registered
          */
-        public T setRegisteredAgent(URL agentUrl) {
-            Objects.requireNonNull(agentUrl, "Must provide the agent to register");
-            this.registeredAgent = agentUrl;
+        public T setRegisteredAgent(URI agentUri) {
+            Objects.requireNonNull(agentUri, "Must provide the agent to register");
+            this.registeredAgent = agentUri;
             return getThis();
         }
 
@@ -146,11 +146,11 @@ public abstract class AgentRegistration extends CRUDResource {
          * Set the access grant for the agent registration
          * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#ar">Agent Registrations</a>
          * @see <a href="https://solid.github.io/data-interoperability-panel/specification/#access-grant">Access Grants</a>
-         * @param accessGrantUrl URL of the access grant
+         * @param accessGrantUri URI of the access grant
          */
-        public T setAccessGrant(URL accessGrantUrl) {
-            Objects.requireNonNull(accessGrantUrl, "Must provide the access grant for the agent registration");
-            this.accessGrantUrl = accessGrantUrl;
+        public T setAccessGrant(URI accessGrantUri) {
+            Objects.requireNonNull(accessGrantUri, "Must provide the access grant for the agent registration");
+            this.accessGrantUri = accessGrantUri;
             return getThis();
         }
 
@@ -161,14 +161,14 @@ public abstract class AgentRegistration extends CRUDResource {
         protected void populateFromDataset() throws SaiException {
             Objects.requireNonNull(this.resource, "Must provide a Jena model to populate from dataset");
             try {
-                this.registeredBy = getRequiredUrlObject(this.resource, REGISTERED_BY);
-                this.registeredWith = getRequiredUrlObject(this.resource, REGISTERED_WITH);
+                this.registeredBy = getRequiredUriObject(this.resource, REGISTERED_BY);
+                this.registeredWith = getRequiredUriObject(this.resource, REGISTERED_WITH);
                 this.registeredAt = getRequiredDateTimeObject(this.resource, REGISTERED_AT);
                 this.updatedAt = getRequiredDateTimeObject(this.resource, UPDATED_AT);
-                this.registeredAgent = getRequiredUrlObject(this.resource, REGISTERED_AGENT);
-                this.accessGrantUrl = getUrlObject(this.resource, HAS_ACCESS_GRANT);
+                this.registeredAgent = getRequiredUriObject(this.resource, REGISTERED_AGENT);
+                this.accessGrantUri = getUriObject(this.resource, HAS_ACCESS_GRANT);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Failed to load agent registration " + this.url, ex);
+                throw new SaiException("Failed to load agent registration " + this.uri, ex);
             }
         }
 
@@ -183,7 +183,7 @@ public abstract class AgentRegistration extends CRUDResource {
             if (this.updatedAt == null) { this.updatedAt = OffsetDateTime.now(); }
             updateObject(this.resource, UPDATED_AT, this.updatedAt);
             updateObject(this.resource, REGISTERED_AGENT, this.registeredAgent);
-            if (this.accessGrantUrl != null) { updateObject(this.resource, HAS_ACCESS_GRANT, this.accessGrantUrl); }
+            if (this.accessGrantUri != null) { updateObject(this.resource, HAS_ACCESS_GRANT, this.accessGrantUri); }
         }
     }
 

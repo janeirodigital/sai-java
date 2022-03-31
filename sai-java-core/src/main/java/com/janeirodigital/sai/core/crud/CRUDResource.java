@@ -8,7 +8,7 @@ import com.janeirodigital.sai.httputils.SaiHttpException;
 import lombok.Getter;
 import okhttp3.Response;
 
-import java.net.URL;
+import java.net.URI;
 
 import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.deleteProtectedResource;
 import static com.janeirodigital.sai.authentication.AuthorizedSessionHelper.putProtectedRdfResource;
@@ -37,10 +37,10 @@ public class CRUDResource extends ReadableResource {
     public void update() throws SaiException {
         try {
             if (this.isUnprotected()) { this.updateUnprotected(); } else {
-                checkResponse(putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
+                checkResponse(putProtectedRdfResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.uri, this.resource, this.contentType, this.jsonLdContext));
             }
         } catch (SaiHttpException | SaiAuthenticationException ex) {
-            throw new SaiException("Failed to update resource " + this.url, ex);
+            throw new SaiException("Failed to update resource " + this.uri, ex);
         }
         this.exists = true;
     }
@@ -52,10 +52,10 @@ public class CRUDResource extends ReadableResource {
     public void delete() throws SaiException {
         try {
             if (this.isUnprotected()) { this.deleteUnprotected(); } else {
-                checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.url));
+                checkResponse(deleteProtectedResource(this.getSaiSession().getAuthorizedSession(), this.httpClient, this.uri));
             }
         } catch (SaiHttpException | SaiAuthenticationException ex ) {
-            throw new SaiException("Failed to delete resource " + this.url, ex);
+            throw new SaiException("Failed to delete resource " + this.uri, ex);
         }
         this.exists = false;
     }
@@ -66,7 +66,7 @@ public class CRUDResource extends ReadableResource {
      * @throws SaiException
      */
     private void updateUnprotected() throws SaiHttpException, SaiException {
-        checkResponse(putRdfResource(this.httpClient, this.url, this.resource, this.contentType, this.jsonLdContext));
+        checkResponse(putRdfResource(this.httpClient, this.uri, this.resource, this.contentType, this.jsonLdContext));
     }
 
     /**
@@ -75,7 +75,7 @@ public class CRUDResource extends ReadableResource {
      * @throws SaiException
      */
     private void deleteUnprotected() throws SaiException, SaiHttpException {
-        checkResponse(deleteResource(this.httpClient, this.url));
+        checkResponse(deleteResource(this.httpClient, this.uri));
     }
 
     /**
@@ -85,7 +85,7 @@ public class CRUDResource extends ReadableResource {
      * @throws SaiException
      */
     private Response checkResponse(Response response) throws SaiException {
-        if (!response.isSuccessful()) { throw new SaiException("Failed to " + response.request().method() + " " + this.url + ": " + getResponseFailureMessage(response)); }
+        if (!response.isSuccessful()) { throw new SaiException("Failed to " + response.request().method() + " " + this.uri + ": " + getResponseFailureMessage(response)); }
         return response;
     }
 
@@ -98,10 +98,10 @@ public class CRUDResource extends ReadableResource {
 
         /**
          * Base builder for CRUD resource types. Use setters for all further configuration
-         * @param url URL of the resource to build
+         * @param uri URI of the resource to build
          * @param saiSession {@link SaiSession} to use
          */
-        protected Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        protected Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
     }
 }

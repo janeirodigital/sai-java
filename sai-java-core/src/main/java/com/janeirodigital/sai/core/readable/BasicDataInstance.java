@@ -7,7 +7,7 @@ import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import lombok.Getter;
 import okhttp3.Response;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
@@ -27,8 +27,8 @@ public class BasicDataInstance extends DataInstance {
     }
 
     /**
-     * Get a {@link BasicDataInstance} at the provided <code>url</code>
-     * @param url URL of the {@link BasicDataInstance} to get
+     * Get a {@link BasicDataInstance} at the provided <code>uri</code>
+     * @param uri URI of the {@link BasicDataInstance} to get
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use for retrieval
      * @param parent Optional parent {@link DataInstance} to provide if known
@@ -36,22 +36,22 @@ public class BasicDataInstance extends DataInstance {
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static BasicDataInstance get(URL url, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiHttpNotFoundException {
-        BasicDataInstance.Builder builder = new BasicDataInstance.Builder(url, saiSession);
+    public static BasicDataInstance get(URI uri, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiHttpNotFoundException {
+        BasicDataInstance.Builder builder = new BasicDataInstance.Builder(uri, saiSession);
         builder.setDataGrant(dataGrant);
         if (parent != null) builder.setParent(parent);
-        try (Response response = read(url, saiSession, contentType, false)) {
+        try (Response response = read(uri, saiSession, contentType, false)) {
             return builder.setDataset(response).setContentType(contentType).build();
         }
     }
 
-    public static BasicDataInstance get(URL url, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiHttpNotFoundException, SaiException {
-        return get(url, saiSession, DEFAULT_RDF_CONTENT_TYPE, dataGrant, parent);
+    public static BasicDataInstance get(URI uri, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiHttpNotFoundException, SaiException {
+        return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE, dataGrant, parent);
     }
     
     protected static class Builder extends DataInstance.Builder<Builder> {
 
-        public Builder(URL url, SaiSession saiSession) { super(url, saiSession); }
+        public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
 
         @Override
         public Builder getThis() { return this; }
@@ -64,7 +64,7 @@ public class BasicDataInstance extends DataInstance {
             }
             if (this.dataset == null) {
                 // Data instance is being created, initialize an empty graph resource the application code can populate.
-                this.resource = getNewResource(this.url);
+                this.resource = getNewResource(this.uri);
                 this.dataset = this.resource.getModel();
             } else {
                 this.exists = true;

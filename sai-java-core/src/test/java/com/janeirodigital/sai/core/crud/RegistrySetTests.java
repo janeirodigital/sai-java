@@ -12,14 +12,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.janeirodigital.mockwebserver.DispatcherHelper.*;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -29,11 +28,11 @@ class RegistrySetTests {
     private static MockWebServer server;
     private static RequestMatchingFixtureDispatcher dispatcher;
 
-    private static URL aliceAgentRegistry;
-    private static URL aliceAuthorizationRegistry;
-    private static URL aliceAgentRegistryJsonLd;
-    private static URL aliceAuthorizationRegistryJsonLd;
-    private static List<URL> aliceDataRegistries;
+    private static URI aliceAgentRegistry;
+    private static URI aliceAuthorizationRegistry;
+    private static URI aliceAgentRegistryJsonLd;
+    private static URI aliceAuthorizationRegistryJsonLd;
+    private static List<URI> aliceDataRegistries;
 
     @BeforeAll
     static void beforeAll() throws SaiException, SaiHttpException {
@@ -59,17 +58,17 @@ class RegistrySetTests {
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
 
-        aliceAgentRegistry = toUrl(server,"/ttl/agents/");
-        aliceAuthorizationRegistry = toUrl(server, "/ttl/authorization/");
-        aliceAgentRegistryJsonLd = toUrl(server,"/jsonld/agents/");
-        aliceAuthorizationRegistryJsonLd = toUrl(server, "/jsonld/authorization/");
-        aliceDataRegistries = Arrays.asList(stringToUrl("https://work.alice.example/data/"), stringToUrl("https://personal.alice.example/data/"));
+        aliceAgentRegistry = toMockUri(server,"/ttl/agents/");
+        aliceAuthorizationRegistry = toMockUri(server, "/ttl/authorization/");
+        aliceAgentRegistryJsonLd = toMockUri(server,"/jsonld/agents/");
+        aliceAuthorizationRegistryJsonLd = toMockUri(server, "/jsonld/authorization/");
+        aliceDataRegistries = Arrays.asList(URI.create("https://work.alice.example/data/"), URI.create("https://personal.alice.example/data/"));
     }
 
     @Test
     @DisplayName("Create new crud registry set")
     void createNewCrudRegistrySet() throws SaiException {
-        URL url = toUrl(server, "/new/ttl/registries");
+        URI url = toMockUri(server, "/new/ttl/registries");
         RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession);
         RegistrySet registrySet = builder.setAgentRegistry(aliceAgentRegistry).setAuthorizationRegistry(aliceAuthorizationRegistry)
                                          .setDataRegistries(aliceDataRegistries).build();
@@ -80,7 +79,7 @@ class RegistrySetTests {
     @Test
     @DisplayName("Read crud registry set")
     void readRegistrySet() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/registries");
+        URI url = toMockUri(server, "/ttl/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession);
         checkRegistrySet(registrySet);
     }
@@ -88,7 +87,7 @@ class RegistrySetTests {
     @Test
     @DisplayName("Reload crud registry set")
     void reloadRegistrySet() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/registries");
+        URI url = toMockUri(server, "/ttl/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession);
         RegistrySet reloaded = registrySet.reload();
         checkRegistrySet(reloaded);
@@ -97,16 +96,16 @@ class RegistrySetTests {
     @Test
     @DisplayName("Fail to read existing crud registry set in turtle - missing required fields")
     void failToReadRegistrySet() {
-        URL url = toUrl(server, "/missing-fields/ttl/registries");
+        URI url = toMockUri(server, "/missing-fields/ttl/registries");
         assertThrows(SaiException.class, () -> RegistrySet.get(url, saiSession));
     }
 
     @Test
     @DisplayName("Update existing crud registry set")
     void updateRegistrySet() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        URL url = toUrl(server, "/ttl/registries");
+        URI url = toMockUri(server, "/ttl/registries");
         RegistrySet existing = RegistrySet.get(url, saiSession);
-        existing.setAgentRegistryUrl(stringToUrl("https://alice.example/otheragents/"));
+        existing.setAgentRegistryUri(URI.create("https://alice.example/otheragents/"));
         assertDoesNotThrow(() -> existing.update());
         assertNotNull(existing);
     }
@@ -114,7 +113,7 @@ class RegistrySetTests {
     @Test
     @DisplayName("Read existing registry set in JSON-LD")
     void readRegistrySetJsonLd() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/jsonld/registries");
+        URI url = toMockUri(server, "/jsonld/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession, LD_JSON);
         checkRegistrySetJsonLd(registrySet);
     }
@@ -122,7 +121,7 @@ class RegistrySetTests {
     @Test
     @DisplayName("Create new crud registry set in JSON-LD")
     void createNewCrudRegistrySetJsonLd() throws SaiException {
-        URL url = toUrl(server, "/new/jsonld/registries");
+        URI url = toMockUri(server, "/new/jsonld/registries");
         RegistrySet.Builder builder = new RegistrySet.Builder(url, saiSession);
         RegistrySet registrySet = builder.setContentType(LD_JSON).setAgentRegistry(aliceAgentRegistry)
                                           .setAuthorizationRegistry(aliceAuthorizationRegistry)
@@ -134,7 +133,7 @@ class RegistrySetTests {
     @Test
     @DisplayName("Delete crud registry set")
     void deleteRegistrySet() throws SaiException, SaiHttpNotFoundException {
-        URL url = toUrl(server, "/ttl/registries");
+        URI url = toMockUri(server, "/ttl/registries");
         RegistrySet registrySet = RegistrySet.get(url, saiSession);
         assertDoesNotThrow(() -> registrySet.delete());
         assertFalse(registrySet.isExists());
@@ -142,16 +141,16 @@ class RegistrySetTests {
 
     private void checkRegistrySet(RegistrySet registrySet) {
         assertNotNull(registrySet);
-        assertEquals(aliceAgentRegistry, registrySet.getAgentRegistryUrl());
-        assertEquals(aliceAuthorizationRegistry, registrySet.getAuthorizationRegistryUrl());
-        assertTrue(aliceDataRegistries.containsAll(registrySet.getDataRegistryUrls()));
+        assertEquals(aliceAgentRegistry, registrySet.getAgentRegistryUri());
+        assertEquals(aliceAuthorizationRegistry, registrySet.getAuthorizationRegistryUri());
+        assertTrue(aliceDataRegistries.containsAll(registrySet.getDataRegistryUris()));
     }
 
     private void checkRegistrySetJsonLd(RegistrySet registrySet) {
         assertNotNull(registrySet);
-        assertEquals(aliceAgentRegistryJsonLd, registrySet.getAgentRegistryUrl());
-        assertEquals(aliceAuthorizationRegistryJsonLd, registrySet.getAuthorizationRegistryUrl());
-        assertTrue(aliceDataRegistries.containsAll(registrySet.getDataRegistryUrls()));
+        assertEquals(aliceAgentRegistryJsonLd, registrySet.getAgentRegistryUri());
+        assertEquals(aliceAuthorizationRegistryJsonLd, registrySet.getAuthorizationRegistryUri());
+        assertTrue(aliceDataRegistries.containsAll(registrySet.getDataRegistryUris()));
     }
 
 }

@@ -12,10 +12,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
+
 import static com.janeirodigital.mockwebserver.DispatcherHelper.mockOnGet;
-import static com.janeirodigital.mockwebserver.MockWebServerHelper.toUrl;
+import static com.janeirodigital.mockwebserver.MockWebServerHelper.toMockUri;
 import static com.janeirodigital.sai.httputils.ContentType.LD_JSON;
-import static com.janeirodigital.sai.httputils.HttpUtils.stringToUrl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
@@ -44,20 +45,20 @@ class ReadableSocialAgentProfileTests {
     @Test
     @DisplayName("Get readable social agent profile document")
     void getReadableSocialAgentProfileTurtle() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        ReadableSocialAgentProfile profile = ReadableSocialAgentProfile.get(toUrl(server, "/ttl/id"), saiSession);
+        ReadableSocialAgentProfile profile = ReadableSocialAgentProfile.get(toMockUri(server, "/ttl/id"), saiSession);
         checkProfile(profile);
     }
 
     @Test
     @DisplayName("Fail to get readable social agent profile document - missing required fields")
     void failToGetReadableSocialAgentProfileRequired() {
-        assertThrows(SaiException.class, () -> ReadableSocialAgentProfile.get(toUrl(server, "/missing/ttl/id"), saiSession));
+        assertThrows(SaiException.class, () -> ReadableSocialAgentProfile.get(toMockUri(server, "/missing/ttl/id"), saiSession));
     }
 
     @Test
     @DisplayName("Reload social agent profile document")
     void reloadReadableSocialAgentProfileTurtle() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        ReadableSocialAgentProfile profile = ReadableSocialAgentProfile.get(toUrl(server, "/ttl/id"), saiSession);
+        ReadableSocialAgentProfile profile = ReadableSocialAgentProfile.get(toMockUri(server, "/ttl/id"), saiSession);
         ReadableSocialAgentProfile reloaded = profile.reload();
         assertNotEquals(profile, reloaded);
         checkProfile(profile);
@@ -67,16 +68,16 @@ class ReadableSocialAgentProfileTests {
     @Test
     @DisplayName("Get readable social agent profile document as json-ld")
     void getReadableSocialAgentProfileJsonLd() throws SaiException, SaiHttpNotFoundException, SaiHttpException {
-        ReadableSocialAgentProfile profile = ReadableSocialAgentProfile.get(toUrl(server, "/jsonld/id"), saiSession, LD_JSON);
+        ReadableSocialAgentProfile profile = ReadableSocialAgentProfile.get(toMockUri(server, "/jsonld/id"), saiSession, LD_JSON);
         checkProfile(profile);
     }
 
     private void checkProfile(ReadableSocialAgentProfile profile) throws SaiHttpException {
         assertNotNull(profile);
-        assertEquals(stringToUrl("https://trusted.example/alice/"), profile.getAuthorizationAgentUrl());
-        assertEquals(stringToUrl("https://alice.example/access/inbox/"), profile.getAccessInboxUrl());
-        assertEquals(stringToUrl("https://alice.example/registry_set"), profile.getRegistrySetUrl());
-        assertTrue(profile.getOidcIssuerUrls().contains(stringToUrl("https://idp.alice.example")));
+        assertEquals(URI.create("https://trusted.example/alice/"), profile.getAuthorizationAgentUri());
+        assertEquals(URI.create("https://alice.example/access/inbox/"), profile.getAccessInboxUri());
+        assertEquals(URI.create("https://alice.example/registry_set"), profile.getRegistrySetUri());
+        assertTrue(profile.getOidcIssuerUris().contains(URI.create("https://idp.alice.example")));
     }
 
 }
