@@ -18,26 +18,26 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <jena.version>4.1.0</jena.version>
-        <maven-compiler-plugin.version>3.9.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <lombok.version>1.18.22</lombok.version>
-        <slf4j.version>1.7.33</slf4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <jena.version>4.4.0</jena.version>
         <titanium.version>1.2.0</titanium.version>
         <junit.version>5.8.2</junit.version>
         <shapetrees.version>0.9.7</shapetrees.version>
-        <sai-rdf-utils.version>0.9.2-SNAPSHOT</sai-rdf-utils.version>
-        <sai-http-utils.version>0.9.3-SNAPSHOT</sai-http-utils.version>
-        <sai-authentication.version>0.9.2-SNAPSHOT</sai-authentication.version>
-        <mockwebserverplus-ext.version>0.9.3-SNAPSHOT</mockwebserverplus-ext.version>
+        <sai-rdf-utils.version>0.9.2</sai-rdf-utils.version>
+        <sai-http-utils.version>0.9.3</sai-http-utils.version>
+        <sai-authentication.version>0.9.2</sai-authentication.version>
+        <mockwebserverplus-ext.version>0.9.4</mockwebserverplus-ext.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <maven-javadoc.version>3.3.1</maven-javadoc.version>
+        <maven-javadoc.version>3.3.2</maven-javadoc.version>
         <snakeyaml.version>1.30</snakeyaml.version>
-        <mockito.version>4.3.1</mockito.version>
+        <mockito.version>4.4.0</mockito.version>
         <maven-site-plugin.version>3.10.0</maven-site-plugin.version>
         <maven-release-plugin.version>3.0.0-M5</maven-release-plugin.version>
-        <maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
+        <maven-project-info-reports-plugin.version>3.2.2</maven-project-info-reports-plugin.version>
         <project.scm.id>github</project.scm.id>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
