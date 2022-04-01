@@ -1,12 +1,12 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.authorizations;
 
 import com.janeirodigital.sai.core.agents.SocialAgentRegistration;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
-import com.janeirodigital.sai.core.immutable.AccessAuthorization;
 import com.janeirodigital.sai.core.resources.CRUDResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
+import com.janeirodigital.sai.core.utils.RegistrationList;
 import com.janeirodigital.sai.httputils.ContentType;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
 import lombok.Getter;

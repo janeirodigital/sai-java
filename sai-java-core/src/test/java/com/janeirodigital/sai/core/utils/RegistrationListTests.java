@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.utils;
 
 import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.authentication.AuthorizedSession;

@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.agents;
 
-import com.janeirodigital.sai.core.crud.RegistrationList;
+import com.janeirodigital.sai.core.utils.RegistrationList;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;

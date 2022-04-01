@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.agents;
 
+import com.janeirodigital.sai.core.authorizations.AccessGrant;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.resources.ReadableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
@@ -44,7 +45,7 @@ public abstract class ReadableAgentRegistration extends ReadableResource {
     }
 
     /**
-     * Indicates whether or not there is an {@link com.janeirodigital.sai.core.immutable.AccessGrant} linked
+     * Indicates whether or not there is an {@link AccessGrant} linked
      * to the registration
      * @return true when there is an access grant
      */

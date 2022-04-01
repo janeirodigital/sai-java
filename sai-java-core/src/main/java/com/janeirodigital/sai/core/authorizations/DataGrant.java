@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.immutable;
+package com.janeirodigital.sai.core.authorizations;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.resources.ImmutableResource;

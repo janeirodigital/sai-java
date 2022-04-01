@@ -1,7 +1,7 @@
 package com.janeirodigital.sai.core.agents;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.immutable.DataGrant;
+import com.janeirodigital.sai.core.authorizations.DataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;

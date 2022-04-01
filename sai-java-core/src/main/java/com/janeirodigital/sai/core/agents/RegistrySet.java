@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.agents;
 
-import com.janeirodigital.sai.core.crud.AuthorizationRegistry;
+import com.janeirodigital.sai.core.authorizations.AuthorizationRegistry;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.resources.CRUDResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;

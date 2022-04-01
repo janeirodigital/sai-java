@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.immutable;
+package com.janeirodigital.sai.core.authorizations;
 
 import com.janeirodigital.sai.core.agents.AgentRegistration;
 import com.janeirodigital.sai.core.agents.AgentRegistry;
@@ -6,9 +6,6 @@ import com.janeirodigital.sai.core.agents.SocialAgentRegistration;
 import com.janeirodigital.sai.core.data.DataRegistration;
 import com.janeirodigital.sai.core.data.DataRegistry;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.readable.InheritableDataGrant;
-import com.janeirodigital.sai.core.readable.ReadableAccessGrant;
-import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.resources.ImmutableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;

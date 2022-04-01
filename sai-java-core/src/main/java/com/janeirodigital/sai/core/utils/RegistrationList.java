@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.utils;
 
 import com.janeirodigital.sai.core.agents.AgentRegistry;
 import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;

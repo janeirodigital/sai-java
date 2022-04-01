@@ -1,4 +1,4 @@
 /**
  * Access to corresponding RDF Resources providing read-only capabilities
  */
-package com.janeirodigital.sai.core.readable;
+package com.janeirodigital.sai.core.data;

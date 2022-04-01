@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.readable;
+package com.janeirodigital.sai.core.authorizations;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import lombok.Getter;

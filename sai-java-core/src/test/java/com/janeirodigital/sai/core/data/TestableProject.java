@@ -1,9 +1,9 @@
-package com.janeirodigital.sai.core.immutable;
+package com.janeirodigital.sai.core.data;
 
 import com.janeirodigital.sai.core.agents.SocialAgentRegistration;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.data.DataInstance;
-import com.janeirodigital.sai.core.readable.ReadableDataGrant;
+import com.janeirodigital.sai.core.authorizations.DataGrant;
+import com.janeirodigital.sai.core.authorizations.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;
@@ -24,29 +24,29 @@ import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYP
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
 @Getter @Setter
-public class TestableTask extends DataInstance {
-
+public class TestableProject extends DataInstance {
+    
     private String name;
     private String description;
 
-    public TestableTask(Builder builder) throws SaiException {
+    public TestableProject(Builder builder) throws SaiException {
         super(builder);
         this.name = builder.name;
         this.description = builder.description;
     }
 
     /**
-     * Get a {@link TestableTask} from the provided <code>uri</code>.
-     * @param uri URI to generate the {@link TestableTask} from
+     * Get a {@link TestableProject} from the provided <code>uri</code>.
+     * @param uri URI to generate the {@link TestableProject} from
      * @param saiSession {@link SaiSession} to assign
      * @param contentType {@link ContentType} to use for retrieval
-     * @return {@link TestableTask}
+     * @return {@link TestableProject}
      * @throws SaiException
      * @throws SaiHttpNotFoundException
      */
-    public static TestableTask get(URI uri, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiHttpNotFoundException {
+    public static TestableProject get(URI uri, SaiSession saiSession, ContentType contentType, ReadableDataGrant dataGrant, DataInstance parent) throws SaiException, SaiHttpNotFoundException {
         Objects.requireNonNull(dataGrant, "Must provide a readable data grant permitting the data instance to get");
-        TestableTask.Builder builder = new TestableTask.Builder(uri, saiSession);
+        TestableProject.Builder builder = new TestableProject.Builder(uri, saiSession);
         if (parent != null) builder.setParent(parent);
         builder.setDataGrant(dataGrant).setDraft(false);
         try (Response response = read(uri, saiSession, contentType, false)) {
@@ -56,31 +56,52 @@ public class TestableTask extends DataInstance {
 
     /**
      * Call {@link #get(URI, SaiSession, ContentType, ReadableDataGrant, DataInstance)} without specifying a desired content type for retrieval
-     * @param uri URI of the {@link TestableTask} to get
+     * @param uri URI of the {@link TestableProject} to get
      * @param saiSession {@link SaiSession} to assign
-     * @return Retrieved {@link TestableTask}
+     * @return Retrieved {@link TestableProject}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public static TestableTask get(URI uri, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiHttpNotFoundException, SaiException {
+    public static TestableProject get(URI uri, SaiSession saiSession, ReadableDataGrant dataGrant, DataInstance parent) throws SaiHttpNotFoundException, SaiException {
         return get(uri, saiSession, DEFAULT_RDF_CONTENT_TYPE, dataGrant, parent);
     }
 
-    public static List<TestableTask> getAccessible(ReadableDataGrant dataGrant, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
+    public static List<TestableProject> getAccessible(ReadableDataGrant dataGrant, SaiSession saiSession) throws SaiHttpNotFoundException, SaiException {
         Objects.requireNonNull(dataGrant, "Must provide a data grant to get accessible data instances");
         Objects.requireNonNull(saiSession, "Must provide a sai session to get accessible data instances");
+        List<TestableProject> testableProjects = new ArrayList<>();
+        for (DataInstance dataInstance : dataGrant.getDataInstances()) { testableProjects.add(new TestableProject.Builder(dataInstance).build()); }
+        return testableProjects;
+    }
+
+    // NOTE - In real world use it would not be necessary to pass milestoneTree, because it would be a constant,
+    // globally accessible URI. In our test infrastructure we host these dynamically on a local server and the actual
+    // URI is generated with each run, so it's passed here as a parameter.
+    public List<TestableMilestone> getMilestones(URI milestoneTree) throws SaiException {
+        List<TestableMilestone> testableMilestones = new ArrayList<>();
+        for (DataInstance childInstance : this.getChildInstances(milestoneTree)) { testableMilestones.add(new TestableMilestone.Builder(childInstance).build()); }
+        return testableMilestones;
+    }
+
+    public List<TestableIssue> getIssues(URI issueTree) throws SaiException {
+        List<TestableIssue> testableIssues = new ArrayList<>();
+        for (DataInstance childInstance : this.getChildInstances(issueTree)) { testableIssues.add(new TestableIssue.Builder(childInstance).build()); }
+        return testableIssues;
+    }
+
+    public List<TestableTask> getTasks(URI taskTree) throws SaiException {
         List<TestableTask> testableTasks = new ArrayList<>();
-        for (DataInstance dataInstance : dataGrant.getDataInstances()) { testableTasks.add(new TestableTask.Builder(dataInstance).build()); }
+        for (DataInstance childInstance : this.getChildInstances(taskTree)) { testableTasks.add(new TestableTask.Builder(childInstance).build()); }
         return testableTasks;
     }
 
     /**
-     * Reload a new instance of {@link TestableTask} using the attributes of the current instance
-     * @return Reloaded {@link TestableTask}
+     * Reload a new instance of {@link TestableProject} using the attributes of the current instance
+     * @return Reloaded {@link TestableProject}
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
-    public TestableTask reload() throws SaiHttpNotFoundException, SaiException {
+    public TestableProject reload() throws SaiHttpNotFoundException, SaiException {
         return get(this.uri, this.saiSession, this.contentType, this.getDataGrant(), this.getParent());
     }
 
@@ -91,7 +112,7 @@ public class TestableTask extends DataInstance {
         
         /**
          * Initialize builder with <code>uri</code> and <code>saiSession</code>
-         * @param uri URI of the {@link TestableTask} to build
+         * @param uri URI of the {@link TestableProject} to build
          * @param saiSession {@link SaiSession} to assign
          */
         public Builder(URI uri, SaiSession saiSession) { super(uri, saiSession); }
@@ -141,7 +162,7 @@ public class TestableTask extends DataInstance {
                 this.name = getRequiredStringObject(this.resource, TESTABLE_NAME);
                 this.description = getRequiredStringObject(this.resource, TESTABLE_DESCRIPTION);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
-                throw new SaiException("Unable to populate testable task", ex);
+                throw new SaiException("Unable to populate testable project: " + ex.getMessage());
             }
         }
 
@@ -149,24 +170,24 @@ public class TestableTask extends DataInstance {
          * Populates the Jena dataset graph with the attributes from the Builder
          */
         protected void populateDataset() {
-            this.resource = getNewResourceForType(this.uri, TESTABLE_TASK);
+            this.resource = getNewResourceForType(this.uri, TESTABLE_PROJECT);
             this.dataset = this.resource.getModel();
             updateObject(this.resource, TESTABLE_NAME, this.name);
             updateObject(this.resource, TESTABLE_DESCRIPTION, this.description);
         }
 
         /**
-         * Build the {@link TestableTask} using attributes from the Builder. If no Jena dataset has been
+         * Build the {@link TestableProject} using attributes from the Builder. If no Jena dataset has been
          * provided, then the dataset will be populated using the attributes from the Builder with
          * {@link #populateDataset()}.
          * @return {@link DataGrant}
          * @throws SaiException
          */
-        public TestableTask build() throws SaiException {
-            Objects.requireNonNull(this.name, "Must provide the name of the task");
-            Objects.requireNonNull(this.description, "Must provide a description of the task");
+        public TestableProject build() throws SaiException {
+            Objects.requireNonNull(this.name, "Must provide the name of the project");
+            Objects.requireNonNull(this.description, "Must provide a description of the project");
             if (this.dataset == null) { populateDataset(); }
-            return new TestableTask(this);
+            return new TestableProject(this);
         }
         
     }
