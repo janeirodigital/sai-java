@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.data;
 
-import com.janeirodigital.sai.core.crud.CRUDResource;
+import com.janeirodigital.sai.core.resources.CRUDResource;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.UrlUtils;
 import com.janeirodigital.sai.core.readable.InheritableDataGrant;

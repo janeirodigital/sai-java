@@ -1,6 +1,7 @@
 package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.resources.ImmutableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;

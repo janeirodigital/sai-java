@@ -2,6 +2,7 @@ package com.janeirodigital.sai.core.crud;
 
 import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.authentication.AuthorizedSession;
+import com.janeirodigital.sai.core.agents.AgentRegistry;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.http.HttpClientFactory;
@@ -32,7 +33,7 @@ class RegistrationListTests {
         AuthorizedSession mockSession = mock(AuthorizedSession.class);
         saiSession = new SaiSession(mockSession, new HttpClientFactory(false, false, false));
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
-        mockOnGet(dispatcher, "/ttl/agents/", "crud/agent-registry-ttl");
+        mockOnGet(dispatcher, "/ttl/agents/", "agents/agent-registry-ttl");
         server = new MockWebServer();
         server.setDispatcher(dispatcher);
     }

@@ -1,6 +1,8 @@
 package com.janeirodigital.sai.core.readable;
 
+import com.janeirodigital.sai.core.agents.ReadableApplicationProfile;
 import com.janeirodigital.sai.core.exceptions.SaiException;
+import com.janeirodigital.sai.core.resources.ReadableResource;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;
 import com.janeirodigital.sai.httputils.SaiHttpNotFoundException;

@@ -1,5 +1,6 @@
 package com.janeirodigital.sai.core.crud;
 
+import com.janeirodigital.sai.core.agents.AgentRegistry;
 import com.janeirodigital.sai.core.annotations.ExcludeFromGeneratedCoverage;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;

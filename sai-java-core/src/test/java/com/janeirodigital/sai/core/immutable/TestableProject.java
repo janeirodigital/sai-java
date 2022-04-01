@@ -1,6 +1,6 @@
 package com.janeirodigital.sai.core.immutable;
 
-import com.janeirodigital.sai.core.crud.SocialAgentRegistration;
+import com.janeirodigital.sai.core.agents.SocialAgentRegistration;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.data.DataInstance;
 import com.janeirodigital.sai.core.readable.ReadableDataGrant;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.janeirodigital.sai.core.TestableVocabulary.*;
+import static com.janeirodigital.sai.core.vocabularies.TestableVocabulary.*;
 import static com.janeirodigital.sai.httputils.HttpUtils.DEFAULT_RDF_CONTENT_TYPE;
 import static com.janeirodigital.sai.rdfutils.RdfUtils.*;
 
