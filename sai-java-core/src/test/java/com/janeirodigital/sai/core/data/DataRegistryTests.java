@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.data;
 
 import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.authentication.AuthorizedSession;
@@ -41,20 +41,20 @@ class DataRegistryTests {
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET data registry in Turtle
-        mockOnGet(dispatcher, "/ttl/data/", "crud/data-registry-ttl");
-        mockOnGet(dispatcher, "/ttl/empty/data/", "crud/data-registry-empty-ttl");
-        mockOnGet(dispatcher, "/ttl/data/dr-1/", "crud/data-registration-1-ttl");
-        mockOnGet(dispatcher, "/ttl/data/dr-2/", "crud/data-registration-2-ttl");
-        mockOnGet(dispatcher, "/ttl/data/dr-3/", "crud/data-registration-3-ttl");
+        mockOnGet(dispatcher, "/ttl/data/", "data/data-registry-ttl");
+        mockOnGet(dispatcher, "/ttl/empty/data/", "data/data-registry-empty-ttl");
+        mockOnGet(dispatcher, "/ttl/data/dr-1/", "data/data-registration-1-ttl");
+        mockOnGet(dispatcher, "/ttl/data/dr-2/", "data/data-registration-2-ttl");
+        mockOnGet(dispatcher, "/ttl/data/dr-3/", "data/data-registration-3-ttl");
         mockOnPut(dispatcher, "/new/ttl/data/", "http/201");  // create new
         mockOnPut(dispatcher, "/ttl/data/", "http/204");  // update existing
         mockOnDelete(dispatcher, "/ttl/data/", "http/204");  // delete
         // GET agent registry in Turtle with invalid fields
-        mockOnGet(dispatcher, "/invalid-fields/ttl/data/", "crud/data-registry-invalid-ttl");
+        mockOnGet(dispatcher, "/invalid-fields/ttl/data/", "data/data-registry-invalid-ttl");
         // GET data registry in Turtle with links to registrations that don't exist
-        mockOnGet(dispatcher, "/missing-registrations/ttl/data/", "crud/data-registry-missing-registrations-ttl");
+        mockOnGet(dispatcher, "/missing-registrations/ttl/data/", "data/data-registry-missing-registrations-ttl");
         // GET data registry in JSON-LD
-        mockOnGet(dispatcher, "/jsonld/data/", "crud/data-registry-jsonld");
+        mockOnGet(dispatcher, "/jsonld/data/", "data/data-registry-jsonld");
         mockOnPut(dispatcher, "/new/jsonld/data/", "http/201");  // create new
         mockOnPut(dispatcher, "/jsonld/data/", "http/204");  // update existing or delete
         // Initialize the Mock Web Server and assign the initialized dispatcher

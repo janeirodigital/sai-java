@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.crud.SocialAgentRegistration;
 import com.janeirodigital.sai.core.exceptions.SaiException;
-import com.janeirodigital.sai.core.readable.DataInstance;
+import com.janeirodigital.sai.core.data.DataInstance;
 import com.janeirodigital.sai.core.readable.ReadableDataGrant;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;

@@ -1,4 +1,4 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.data;
 
 import com.janeirodigital.mockwebserver.RequestMatchingFixtureDispatcher;
 import com.janeirodigital.sai.authentication.AuthorizedSession;
@@ -43,14 +43,14 @@ class DataRegistrationTests {
         // Initialize request fixtures for the MockWebServer
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher();
         // GET data registration in Turtle
-        mockOnGet(dispatcher, "/ttl/data/dr-1/", "crud/data-registration-1-ttl");
+        mockOnGet(dispatcher, "/ttl/data/dr-1/", "data/data-registration-1-ttl");
         mockOnPut(dispatcher, "/new/ttl/data/dr-1/", "http/201");  // create new
         mockOnPut(dispatcher, "/ttl/data/dr-1/", "http/204");  // update existing
         mockOnDelete(dispatcher, "/ttl/data/dr-1/", "http/204");  // delete
         // GET crud data registration in Turtle with missing fields
-        mockOnGet(dispatcher, "/missing-fields/ttl/data/dr-1/", "crud/data-registration-1-missing-fields-ttl");
+        mockOnGet(dispatcher, "/missing-fields/ttl/data/dr-1/", "data/data-registration-1-missing-fields-ttl");
         // GET crud data registration in JSON-LD
-        mockOnGet(dispatcher, "/jsonld/data/dr-1/", "crud/data-registration-1-jsonld");
+        mockOnGet(dispatcher, "/jsonld/data/dr-1/", "data/data-registration-1-jsonld");
         mockOnPut(dispatcher, "/new/jsonld/data/dr-1/", "http/201");  // create new
         mockOnPut(dispatcher, "/jsonld/data/dr-1/", "http/204");  // update existing or delete
         // Initialize the Mock Web Server and assign the initialized dispatcher

@@ -1,6 +1,8 @@
 package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.crud.*;
+import com.janeirodigital.sai.core.data.DataRegistration;
+import com.janeirodigital.sai.core.data.DataRegistry;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.readable.InheritableDataGrant;
 import com.janeirodigital.sai.core.readable.ReadableAccessGrant;

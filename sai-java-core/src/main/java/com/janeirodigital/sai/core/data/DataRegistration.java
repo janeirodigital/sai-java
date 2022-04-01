@@ -1,5 +1,6 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.data;
 
+import com.janeirodigital.sai.core.crud.CRUDResource;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;

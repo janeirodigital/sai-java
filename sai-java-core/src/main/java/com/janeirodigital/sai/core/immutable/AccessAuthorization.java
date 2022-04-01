@@ -2,7 +2,7 @@ package com.janeirodigital.sai.core.immutable;
 
 import com.janeirodigital.sai.core.crud.AgentRegistration;
 import com.janeirodigital.sai.core.crud.AgentRegistry;
-import com.janeirodigital.sai.core.crud.DataRegistry;
+import com.janeirodigital.sai.core.data.DataRegistry;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.sessions.SaiSession;
 import com.janeirodigital.sai.httputils.ContentType;

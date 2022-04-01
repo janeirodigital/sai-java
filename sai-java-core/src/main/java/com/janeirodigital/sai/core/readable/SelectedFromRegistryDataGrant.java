@@ -1,5 +1,7 @@
 package com.janeirodigital.sai.core.readable;
 
+import com.janeirodigital.sai.core.data.DataInstance;
+import com.janeirodigital.sai.core.data.DataInstanceList;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import lombok.Getter;
 

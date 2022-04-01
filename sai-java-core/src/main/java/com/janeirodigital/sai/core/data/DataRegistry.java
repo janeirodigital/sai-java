@@ -1,5 +1,7 @@
-package com.janeirodigital.sai.core.crud;
+package com.janeirodigital.sai.core.data;
 
+import com.janeirodigital.sai.core.crud.CRUDResource;
+import com.janeirodigital.sai.core.crud.RegistrationList;
 import com.janeirodigital.sai.core.exceptions.SaiAlreadyExistsException;
 import com.janeirodigital.sai.core.exceptions.SaiException;
 import com.janeirodigital.sai.core.exceptions.SaiRuntimeException;
