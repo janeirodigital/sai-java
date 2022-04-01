@@ -112,7 +112,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
     /**
      * Abstract method implemented by specific types of data grants, that allow the {@link DataInstance}s
      * permitted by that grant to be iterated.
-     * @return Map of <DataInstance URI, Parent DataInstance URI>
+     * @return Map of DataInstance URI, Parent DataInstance URI
      * @throws SaiHttpNotFoundException
      * @throws SaiException
      */
@@ -136,7 +136,7 @@ public abstract class ReadableDataGrant extends ReadableResource {
         protected URI delegationOf;
 
         /**
-         * Initialize builder with <code>uri</code and <code>saiSession</code>
+         * Initialize builder with <code>uri</code> and <code>saiSession</code>
          * @param uri URI of the {@link ReadableDataGrant} to build
          * @param saiSession {@link SaiSession} to assign
          */
