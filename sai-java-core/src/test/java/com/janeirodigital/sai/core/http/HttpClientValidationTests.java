@@ -36,7 +36,7 @@ class HttpClientValidationTests {
     static void beforeAll() throws SaiRdfException {
         RequestMatchingFixtureDispatcher dispatcher = new RequestMatchingFixtureDispatcher(List.of(
                 new DispatcherEntry(List.of("http/validating-resource-ttl"), "GET", "/http/validating-resource", null),
-                new DispatcherEntry(List.of("http/put-update-resource"), "PUT", "/http/validating-resource", null),
+                new DispatcherEntry(List.of("http/204"), "PUT", "/http/validating-resource", null),
                 new DispatcherEntry(List.of("http/validating-resource-manager-ttl"), "GET", "/http/validating-resource.shapetree", null),
                 new DispatcherEntry(List.of("http/shapetree-ttl"), "GET", "/http/shapetree", null),
                 new DispatcherEntry(List.of("http/shape-shex"), "GET", "/http/shape", null)
