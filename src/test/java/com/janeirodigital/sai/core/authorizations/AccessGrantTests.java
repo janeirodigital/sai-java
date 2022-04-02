@@ -610,7 +610,7 @@ class AccessGrantTests {
         for (TestableProject project : projects) {
             if (project.getUri().equals(PROJECT_1)) {
                 for (TestableIssue issue : project.getIssues(ISSUE_TREE)) {
-                    if (issue.getUri().equals(PROJECT_1_ISSUE_1)) { issue.delete(); }
+                    if (issue.getUri().equals(PROJECT_1_ISSUE_1)) { assertDoesNotThrow(() -> issue.delete()); }
                 }
             }
         }

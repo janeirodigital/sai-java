@@ -166,7 +166,7 @@ class DataRegistryTests {
         DataRegistration registration = mock(DataRegistration.class);
         when(registration.getUri()).thenReturn(drUri);
         when(registration.getRegisteredShapeTree()).thenReturn(drTree);
-        dataRegistry.add(registration);
+        assertDoesNotThrow(() -> dataRegistry.add(registration));
     }
 
     @Test
@@ -178,7 +178,7 @@ class DataRegistryTests {
         URI drUri = toMockUri(server, "/ttl/data/dr-1/");
         DataRegistration registration = mock(DataRegistration.class);
         when(registration.getUri()).thenReturn(drUri);
-        dataRegistry.remove(registration);
+        assertDoesNotThrow(() -> dataRegistry.remove(registration));
     }
 
     @Test
