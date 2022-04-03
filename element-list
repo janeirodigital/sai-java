@@ -1,10 +1,13 @@
-com.janeirodigital.sai.application
+com.janeirodigital.sai.core
+com.janeirodigital.sai.core.agents
 com.janeirodigital.sai.core.annotations
+com.janeirodigital.sai.core.application
+com.janeirodigital.sai.core.authorizations
 com.janeirodigital.sai.core.contexts
-com.janeirodigital.sai.core.crud
+com.janeirodigital.sai.core.data
 com.janeirodigital.sai.core.exceptions
 com.janeirodigital.sai.core.http
-com.janeirodigital.sai.core.immutable
-com.janeirodigital.sai.core.readable
+com.janeirodigital.sai.core.resources
 com.janeirodigital.sai.core.sessions
+com.janeirodigital.sai.core.utils
 com.janeirodigital.sai.core.vocabularies
