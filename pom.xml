@@ -15,7 +15,7 @@
         <lombok.version>1.18.22</lombok.version>
         <slf4j.version>1.7.36</slf4j.version>
         <jena.version>4.4.0</jena.version>
-        <titanium.version>1.2.0</titanium.version>
+        <titanium.version>1.3.1</titanium.version>
         <junit.version>5.8.2</junit.version>
         <shapetrees.version>0.9.7</shapetrees.version>
         <sai-rdf-utils.version>0.9.2</sai-rdf-utils.version>
