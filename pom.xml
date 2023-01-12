@@ -23,7 +23,7 @@
         <sai-authentication.version>0.9.2</sai-authentication.version>
         <mockwebserverplus-ext.version>0.9.4</mockwebserverplus-ext.version>
         <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M8</maven-surefire-plugin.version>
         <maven-javadoc.version>3.3.2</maven-javadoc.version>
         <snakeyaml.version>1.30</snakeyaml.version>
         <mockito.version>4.4.0</mockito.version>
