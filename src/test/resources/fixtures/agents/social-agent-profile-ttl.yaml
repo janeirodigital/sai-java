@@ -10,6 +10,5 @@ body: >
   alice:id
     a interop:Application ;
     interop:hasAuthorizationAgent <https://trusted.example/alice/> ;
-    interop:hasAccessInbox <${SERVER_BASE}/access/inbox/> ;
     interop:hasRegistrySet <${SERVER_BASE}/registry_set> ;
     solid:oidcIssuer <https://idp.alice.example> .

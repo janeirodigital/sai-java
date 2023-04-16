@@ -30,7 +30,6 @@ public class ReadableSocialAgentProfile extends ReadableResource {
 
     private final URI registrySetUri;
     private final URI authorizationAgentUri;
-    private final URI accessInboxUri;
     private final List<URI> oidcIssuerUris;
 
     /**
@@ -42,7 +41,6 @@ public class ReadableSocialAgentProfile extends ReadableResource {
         super(builder);
         this.registrySetUri = builder.registrySetUri;
         this.authorizationAgentUri = builder.authorizationAgentUri;
-        this.accessInboxUri = builder.accessInboxUri;
         this.oidcIssuerUris = builder.oidcIssuerUris;
     }
 
@@ -91,7 +89,6 @@ public class ReadableSocialAgentProfile extends ReadableResource {
 
         private URI registrySetUri;
         private URI authorizationAgentUri;
-        private URI accessInboxUri;
         private List<URI> oidcIssuerUris;
 
         /**
@@ -132,7 +129,6 @@ public class ReadableSocialAgentProfile extends ReadableResource {
                 this.oidcIssuerUris = getRequiredUriObjects(this.resource, SOLID_OIDC_ISSUER);
                 this.authorizationAgentUri = getRequiredUriObject(this.resource, HAS_AUTHORIZATION_AGENT);
                 this.registrySetUri = getRequiredUriObject(this.resource, HAS_REGISTRY_SET);
-                this.accessInboxUri = getRequiredUriObject(this.resource, HAS_ACCESS_INBOX);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Failed to load social agent profile " + this.uri, ex);
             }

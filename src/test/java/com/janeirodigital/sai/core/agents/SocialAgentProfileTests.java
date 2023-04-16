@@ -26,7 +26,6 @@ class SocialAgentProfileTests {
     private static SaiSession saiSession;
     private static MockWebServer server;
     private static URI aliceAuthzAgent;
-    private static URI aliceAccessInbox;
     private static URI aliceRegistrySet;
     private static URI aliceOidcIssuer;
 
@@ -57,7 +56,6 @@ class SocialAgentProfileTests {
         server.setDispatcher(dispatcher);
 
         aliceAuthzAgent = URI.create("https://trusted.example/alice/");
-        aliceAccessInbox = toMockUri(server, "/access/inbox/");
         aliceRegistrySet = toMockUri(server, "/registry_set");
         aliceOidcIssuer = URI.create("https://idp.alice.example");
     }
@@ -67,8 +65,7 @@ class SocialAgentProfileTests {
     void createNewCrudSocialAgentProfile() throws SaiException {
         URI url = toMockUri(server, "/new/ttl/id");
         SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession);
-        SocialAgentProfile profile = builder.setAuthorizationAgent(aliceAuthzAgent).setAccessInbox(aliceAccessInbox)
-                                            .setRegistrySet(aliceRegistrySet).setOidcIssuerUris(Arrays.asList(aliceOidcIssuer)).build();
+        SocialAgentProfile profile = builder.setAuthorizationAgent(aliceAuthzAgent).setRegistrySet(aliceRegistrySet).setOidcIssuerUris(Arrays.asList(aliceOidcIssuer)).build();
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
     }
@@ -120,8 +117,7 @@ class SocialAgentProfileTests {
     void createNewCrudSocialAgentProfileJsonLd() throws SaiException {
         URI url = toMockUri(server, "/new/jsonld/id");
         SocialAgentProfile.Builder builder = new SocialAgentProfile.Builder(url, saiSession);
-        SocialAgentProfile profile = builder.setContentType(LD_JSON).setAuthorizationAgent(aliceAuthzAgent)
-                                            .setAccessInbox(aliceAccessInbox).setRegistrySet(aliceRegistrySet)
+        SocialAgentProfile profile = builder.setContentType(LD_JSON).setAuthorizationAgent(aliceAuthzAgent).setRegistrySet(aliceRegistrySet)
                                             .setOidcIssuerUris(Arrays.asList(aliceOidcIssuer)).build();
         assertDoesNotThrow(() -> profile.update());
         assertNotNull(profile);
@@ -139,7 +135,6 @@ class SocialAgentProfileTests {
     private void checkProfile(SocialAgentProfile profile) throws SaiException, SaiHttpException {
         assertNotNull(profile);
         assertEquals(URI.create("https://trusted.example/alice/"), profile.getAuthorizationAgentUri());
-        assertEquals(aliceAccessInbox, profile.getAccessInboxUri());
         assertEquals(aliceRegistrySet, profile.getRegistrySetUri());
         assertTrue(profile.getOidcIssuerUris().contains(URI.create("https://idp.alice.example")));
     }
