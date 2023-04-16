@@ -28,7 +28,6 @@ public class InteropVocabulary {
     public static final RDFNode SOCIAL_AGENT = model.getResource(NS + "SocialAgent");
     public static final Property HAS_AUTHORIZATION_AGENT = model.createProperty(NS + "hasAuthorizationAgent");
     public static final Property HAS_REGISTRY_SET = model.createProperty(NS + "hasRegistrySet");
-    public static final Property HAS_ACCESS_INBOX = model.createProperty(NS + "hasAccessInbox");
 
     // Registry Set
     public static final RDFNode REGISTRY_SET = model.getResource(NS + "RegistrySet");

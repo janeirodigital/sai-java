@@ -75,7 +75,6 @@ class ReadableSocialAgentProfileTests {
     private void checkProfile(ReadableSocialAgentProfile profile) throws SaiHttpException {
         assertNotNull(profile);
         assertEquals(URI.create("https://trusted.example/alice/"), profile.getAuthorizationAgentUri());
-        assertEquals(toMockUri(server, "/access/inbox/"), profile.getAccessInboxUri());
         assertEquals(toMockUri(server, "/registry_set"), profile.getRegistrySetUri());
         assertTrue(profile.getOidcIssuerUris().contains(URI.create("https://idp.alice.example")));
     }

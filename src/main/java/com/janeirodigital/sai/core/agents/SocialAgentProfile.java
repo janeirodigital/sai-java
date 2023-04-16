@@ -31,7 +31,6 @@ public class SocialAgentProfile extends CRUDResource {
 
     private URI registrySetUri;
     private URI authorizationAgentUri;
-    private URI accessInboxUri;
     private List<URI> oidcIssuerUris;
 
     /**
@@ -43,7 +42,6 @@ public class SocialAgentProfile extends CRUDResource {
         super(builder);
         this.registrySetUri = builder.registrySetUri;
         this.authorizationAgentUri = builder.authorizationAgentUri;
-        this.accessInboxUri = builder.accessInboxUri;
         this.oidcIssuerUris = builder.oidcIssuerUris;
     }
 
@@ -90,7 +88,6 @@ public class SocialAgentProfile extends CRUDResource {
 
         URI registrySetUri;
         URI authorizationAgentUri;
-        URI accessInboxUri;
         List<URI> oidcIssuerUris;
 
         /**
@@ -147,17 +144,6 @@ public class SocialAgentProfile extends CRUDResource {
         }
 
         /**
-         * Set the <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agents">Access Inbox</a>
-         * for the Social Agent.
-         * @param accessInboxUri URI of the social agent's access inbox
-         */
-        public Builder setAccessInbox(URI accessInboxUri) {
-            Objects.requireNonNull(accessInboxUri, "Must provide an access inbox for the social agent");
-            this.accessInboxUri = accessInboxUri;
-            return this;
-        }
-
-        /**
          * Set the <a href="https://solid.github.io/data-interoperability-panel/specification/#social-agents">OpenID Connect Issuers</a>
          * for the Social Agent
          * @see <a href="https://solid.github.io/solid-oidc/#resource-access-validation">Solid-OIDC - ID Token Validation</a>
@@ -177,7 +163,6 @@ public class SocialAgentProfile extends CRUDResource {
             try {
                 this.registrySetUri = getRequiredUriObject(this.resource, HAS_REGISTRY_SET);
                 this.authorizationAgentUri = getRequiredUriObject(this.resource, HAS_AUTHORIZATION_AGENT);
-                this.accessInboxUri = getRequiredUriObject(this.resource, HAS_ACCESS_INBOX);
                 this.oidcIssuerUris = getRequiredUriObjects(this.resource, SOLID_OIDC_ISSUER);
             } catch (SaiRdfException | SaiRdfNotFoundException ex) {
                 throw new SaiException("Failed to load social agent profile " + this.uri, ex);
@@ -192,7 +177,6 @@ public class SocialAgentProfile extends CRUDResource {
             this.dataset = this.resource.getModel();
             updateObject(this.resource, HAS_REGISTRY_SET, registrySetUri);
             updateObject(this.resource, HAS_AUTHORIZATION_AGENT, authorizationAgentUri);
-            updateObject(this.resource, HAS_ACCESS_INBOX, accessInboxUri);
             updateUriObjects(this.resource, SOLID_OIDC_ISSUER, this.oidcIssuerUris);
         }
 
@@ -206,7 +190,6 @@ public class SocialAgentProfile extends CRUDResource {
         public SocialAgentProfile build() throws SaiException {
             Objects.requireNonNull(registrySetUri, "Must provide a registry set for the social agent");
             Objects.requireNonNull(authorizationAgentUri, "Must provide an authorization agent for the social agent");
-            Objects.requireNonNull(accessInboxUri, "Must provide an access inbox for the social agent");
             Objects.requireNonNull(oidcIssuerUris, "Must provide oidc issuer uris for the social agent");
             if (this.dataset == null) { populateDataset(); }
             return new SocialAgentProfile(this);
