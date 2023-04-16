@@ -21,11 +21,11 @@
         <sai-http-utils.version>0.9.5</sai-http-utils.version>
         <sai-authentication.version>0.9.3</sai-authentication.version>
         <mockwebserverplus-ext.version>0.9.6</mockwebserverplus-ext.version>
-        <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
         <maven-javadoc.version>3.5.0</maven-javadoc.version>
         <snakeyaml.version>1.30</snakeyaml.version>
-        <mockito.version>4.4.0</mockito.version>
+        <mockito.version>4.5.0</mockito.version>
         <maven-release-plugin.version>3.0.0-M5</maven-release-plugin.version>
         <project.scm.id>github</project.scm.id>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
