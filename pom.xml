@@ -4,7 +4,7 @@
 
     <groupId>com.janeirodigital</groupId>
     <artifactId>sai-java</artifactId>
-    <version>0.1.11-SNAPSHOT</version>
+    <version>0.1.11</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -40,7 +40,7 @@
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
         <url>https://github.com/janeirodigital/sai-java.git</url>
-        <tag>HEAD</tag>
+        <tag>v0.1.11</tag>
     </scm>
 
     <dependencies>
