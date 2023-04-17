@@ -26,7 +26,7 @@
         <maven-javadoc.version>3.5.0</maven-javadoc.version>
         <snakeyaml.version>1.32</snakeyaml.version>
         <mockito.version>4.5.0</mockito.version>
-        <maven-release-plugin.version>3.0.0-M5</maven-release-plugin.version>
+        <maven-release-plugin.version>3.0.0</maven-release-plugin.version>
         <project.scm.id>github</project.scm.id>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
