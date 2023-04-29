@@ -3,6 +3,8 @@ package com.janeirodigital.sai.core.vocabularies;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.janeirodigital.sai.core.vocabularies.SkosVocabulary.SKOS_DEFINITION;
+import static com.janeirodigital.sai.core.vocabularies.SkosVocabulary.SKOS_PREF_LABEL;
 import static com.janeirodigital.sai.core.vocabularies.SolidOidcVocabulary.SOLID_OIDC_REDIRECT_URIS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -50,6 +52,15 @@ class VocabularyTests {
         final String ns = "http://www.w3.org/ns/solid/oidc#";
         assertEquals(ns, SolidOidcVocabulary.NAMESPACE.getURI());
         assertEquals(ns + "redirect_uris", SOLID_OIDC_REDIRECT_URIS.getURI());
+    }
+
+    @Test
+    @DisplayName("Evaluate vocabulary for SKOS")
+    void evaluateSkosVocab() {
+        final String ns = "http://www.w3.org/2004/02/skos/core#";
+        assertEquals(ns, SkosVocabulary.NAMESPACE.getURI());
+        assertEquals(ns + "prefLabel", SKOS_PREF_LABEL.getURI());
+        assertEquals(ns + "definition", SKOS_DEFINITION.getURI());
     }
 
 }
