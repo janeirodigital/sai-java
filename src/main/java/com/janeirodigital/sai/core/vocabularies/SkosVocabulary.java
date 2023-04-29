@@ -1,9 +1,6 @@
 package com.janeirodigital.sai.core.vocabularies;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 
 public class SkosVocabulary {
 
@@ -13,7 +10,7 @@ public class SkosVocabulary {
     public static final String NS = "http://www.w3.org/2004/02/skos/core#";
     public static final Resource NAMESPACE = model.createResource(NS);
     // Properties and Classes
-    public static final RDFNode SKOS_PREF_LABEL = model.getResource(NS + "prefLabel");
-    public static final RDFNode SKOS_DEFINITION = model.getResource(NS + "definition");
+    public static final Property SKOS_PREF_LABEL = model.createProperty(NS + "prefLabel");
+    public static final Property SKOS_DEFINITION = model.createProperty(NS + "definition");
 
 }
