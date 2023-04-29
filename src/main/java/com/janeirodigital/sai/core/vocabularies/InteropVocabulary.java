@@ -31,10 +31,15 @@ public class InteropVocabulary {
     public static final Property AUTHENTICATES_AS = model.createProperty(NS + "authenticatesAs");
     public static final Property ACCESS_SCENARIO = model.createProperty(NS + "accessScenario");
     public static final Property ACCESS_NECESSITY = model.createProperty(NS + "accessNecessity");
+    public static final RDFNode PERSONAL_ACCESS = model.getResource(NS + "PersonalAccess");
+    public static final RDFNode SHARED_ACCESS = model.getResource(NS + "SharedAccess");
 
     // Access Need
     public static final RDFNode ACCESS_NEED = model.getResource(NS + "AccessNeed");
+    public static final RDFNode ACCESS_REQUIRED = model.getResource(NS + "AccessRequired");
+    public static final RDFNode ACCESS_OPTIONAL = model.getResource(NS + "AccessOptional");
     public static final Property INHERITS_FROM_NEED = model.createProperty(NS + "inheritsFromNeed");
+
 
     // Access Descriptions
     public static final RDFNode ACCESS_DESCRIPTION_SET = model.getResource(NS + "AccessDescriptionSet");
