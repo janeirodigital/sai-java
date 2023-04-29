@@ -24,7 +24,7 @@
         <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
         <maven-javadoc.version>3.5.0</maven-javadoc.version>
-        <snakeyaml.version>1.32</snakeyaml.version>
+        <snakeyaml.version>2.0</snakeyaml.version>
         <mockito.version>4.5.0</mockito.version>
         <maven-release-plugin.version>3.0.0-M5</maven-release-plugin.version>
         <project.scm.id>github</project.scm.id>
