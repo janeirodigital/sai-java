@@ -24,6 +24,25 @@ public class InteropVocabulary {
     public static final Property APPLICATION_THUMBNAIL = model.createProperty(NS + "applicationThumbnail");
     public static final Property HAS_ACCESS_NEED_GROUP = model.createProperty(NS + "hasAccessNeedGroup");
 
+    // Access Need Group
+    public static final RDFNode ACCESS_NEED_GROUP = model.getResource(NS + "AccessNeedGroup");
+    public static final Property HAS_ACCESS_NEED = model.createProperty(NS + "hasAccessNeed");
+    public static final Property HAS_ACCESS_DESCRIPTION_SET = model.createProperty(NS + "hasAccessDescriptionSet");
+    public static final Property AUTHENTICATES_AS = model.createProperty(NS + "authenticatesAs");
+    public static final Property ACCESS_SCENARIO = model.createProperty(NS + "accessScenario");
+    public static final Property ACCESS_NECESSITY = model.createProperty(NS + "accessNecessity");
+
+    // Access Need
+    public static final RDFNode ACCESS_NEED = model.getResource(NS + "AccessNeed");
+    public static final Property INHERITS_FROM_NEED = model.createProperty(NS + "inheritsFromNeed");
+
+    // Access Descriptions
+    public static final RDFNode ACCESS_DESCRIPTION_SET = model.getResource(NS + "AccessDescriptionSet");
+    public static final RDFNode ACCESS_NEED_GROUP_DESCRIPTION = model.getResource(NS + "AccessNeedGroupDescription");
+    public static final RDFNode ACCESS_NEED_DESCRIPTION = model.getResource(NS + "AccessNeedDescription");
+    public static final Property USES_LANGUAGE = model.createProperty(NS + "usesLanguage");
+    public static final Property IN_ACCESS_DESCRIPTION_SET = model.createProperty(NS + "inAccessDescriptionSet");
+
     // Social Agent
     public static final RDFNode SOCIAL_AGENT = model.getResource(NS + "SocialAgent");
     public static final Property HAS_AUTHORIZATION_AGENT = model.createProperty(NS + "hasAuthorizationAgent");
