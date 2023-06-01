@@ -20,7 +20,7 @@
         <shapetrees.version>0.9.11</shapetrees.version>
         <sai-rdf-utils.version>0.9.9</sai-rdf-utils.version>
         <sai-http-utils.version>0.9.8</sai-http-utils.version>
-        <sai-authentication.version>0.9.4</sai-authentication.version>
+        <sai-authentication.version>0.9.5-SNAPSHOT</sai-authentication.version>
         <mockwebserverplus-ext.version>0.9.6</mockwebserverplus-ext.version>
         <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
