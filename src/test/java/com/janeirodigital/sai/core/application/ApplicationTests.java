@@ -60,15 +60,25 @@ class ApplicationTests {
     void initializeApplicationSessionAccessor() throws SaiException {
         Application app = new Application(URI.create(PROJECTRON_ID), false, true, false, sessionAccessor);
         ApplicationSessionAccessor applicationSessions = new BasicApplicationSessionAccessor();
+
         AuthorizedSession mockSession = mock(AuthorizedSession.class, CALLS_REAL_METHODS);
         when(mockSession.getSocialAgentId()).thenReturn(socialAgentId);
         when(mockSession.getApplicationId()).thenReturn(applicationId);
         when(mockSession.getOidcProviderId()).thenReturn(oidcProviderId);
+
+        AuthorizedSession otherMockSession = mock(AuthorizedSession.class, CALLS_REAL_METHODS);
+        when(otherMockSession.getSocialAgentId()).thenReturn(socialAgentId);
+        when(otherMockSession.getApplicationId()).thenReturn(otherApplicationId);
+        when(otherMockSession.getOidcProviderId()).thenReturn(oidcProviderId);
+
         ApplicationSession applicationSession = ApplicationSessionFactory.get(app, mockSession);
         applicationSessions.store(applicationSession);
         applicationSessions.get(applicationSession);
         assertEquals(applicationSession, applicationSessions.get(applicationSession));
+        assertNull(applicationSessions.get(otherMockSession));
+        assertEquals(applicationSession, applicationSessions.get(socialAgentId, applicationId, oidcProviderId));
         assertEquals(applicationSession, applicationSessions.get(mockSession));
+        assertEquals(1, applicationSessions.size());
     }
 
 }

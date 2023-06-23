@@ -42,4 +42,10 @@ public interface ApplicationSessionAccessor {
      */
     void store(ApplicationSession session) throws SaiException;
 
+    /**
+     * Get the number of {@link ApplicationSession} sessions
+     * @return int number of sessions
+     */
+    int size();
+
 }

@@ -67,6 +67,7 @@ BasicApplicationSessionAccessor implements ApplicationSessionAccessor {
      * Returns the size of the in-memory session store
      * @return number of sessions
      */
+    @Override
     public int size() { return this.sessions.size(); }
 
 }
